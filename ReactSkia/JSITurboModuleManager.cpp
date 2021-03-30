@@ -1,5 +1,5 @@
 #include "ReactSkia/JSITurboModuleManager.h"
-
+#include "modules/RSkTVNavigationEventEmitter.h"
 #include "cxxreact/Instance.h"
 #include "jsi/JSIDynamic.h"
 
@@ -239,6 +239,9 @@ JSITurboModuleManager::JSITurboModuleManager(Instance *bridgeInstance)
 
   modules_["Timing"] =
       std::make_shared<TimingModule>("Timing", jsInvoker, bridgeInstance);
+
+  modules_["TVNavigationEventEmitter"] =
+      std::make_shared<RSkTVNavigationEventEmitter>("TVNavigationEventEmitter", jsInvoker, bridgeInstance);
 
   modules_["AppState"] =
       std::make_shared<AppStateModule>("AppState", jsInvoker);

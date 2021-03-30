@@ -15,6 +15,8 @@
 #include <GL/glx.h>
 #include <X11/Xlib.h>
 
+#include "../../ReactSkia/modules/RSkNotificationCenter.h"
+
 typedef Window XWindow;
 
 namespace sk_app {
@@ -78,6 +80,7 @@ public:
 
 private:
     void closeWindow();
+    void onKey(const char *keyType, skui::InputState inputState, skui::ModifierKey modifierKey);
 
     Display*     fDisplay;
     XWindow      fWindow;
@@ -96,6 +99,7 @@ private:
     BackendType fBackend;
 
     typedef Window INHERITED;
+    facebook::react::RSkNotificationCenter keyNotification;
 };
 
 }   // namespace sk_app

@@ -11,14 +11,14 @@
 */
 
 //#include <tchar.h>
-
+//#include<string>
 #include "unix/WindowContextFactory_unix.h"
 
 #include "src/utils/SkUTF.h"
 #include "GLWindowContext.h"
 #include "unix/Window_unix.h"
-//#include "tools/skui/ModifierKey.h"
-//#include "tools/timer/Timer.h"
+#include "tools/skui/ModifierKey.h"
+#include "tools/timer/Timer.h"
 
 extern "C" {
     #include "unix/keysym2ucs.h"
@@ -46,6 +46,14 @@ Window* Window::CreateNativeWindow(void* platformData) {
 const long kEventMask = ExposureMask | StructureNotifyMask |
                         KeyPressMask | KeyReleaseMask |
                         PointerMotionMask | ButtonPressMask | ButtonReleaseMask;
+
+void Window_unix::onKey(const char *keyType, skui::InputState inputState, skui::ModifierKey modifierKey) {
+    facebook::react::RSkNotificationCenter notification;
+    std::string eventName = "RCTTVNavigationEventNotification";
+    // 0xFFFF is treated as invalid tag
+    keyNotification.emit(eventName, keyType/*, 0xFFFF*/);
+    return;
+}
 
 bool Window_unix::initWindow(Display* display) {
     if (fRequestedDisplayParams.fMSAASampleCount != fMSAASampleCount) {
@@ -190,46 +198,66 @@ void Window_unix::closeWindow() {
     }
 }
 
-#if 0
-static skui::Key get_key(KeySym keysym) {
+#if 1
+static const char *getKeyType(KeySym keysym) {
     static const struct {
         KeySym      fXK;
-        skui::Key fKey;
+        const char * keyType;
     } gPair[] = {
-        { XK_BackSpace, skui::Key::kBack     },
-        { XK_Clear,     skui::Key::kBack     },
-        { XK_Return,    skui::Key::kOK       },
-        { XK_Up,        skui::Key::kUp       },
-        { XK_Down,      skui::Key::kDown     },
-        { XK_Left,      skui::Key::kLeft     },
-        { XK_Right,     skui::Key::kRight    },
-        { XK_Tab,       skui::Key::kTab      },
-        { XK_Page_Up,   skui::Key::kPageUp   },
-        { XK_Page_Down, skui::Key::kPageDown },
-        { XK_Home,      skui::Key::kHome     },
-        { XK_End,       skui::Key::kEnd      },
-        { XK_Delete,    skui::Key::kDelete   },
-        { XK_Escape,    skui::Key::kEscape   },
-        { XK_Shift_L,   skui::Key::kShift    },
-        { XK_Shift_R,   skui::Key::kShift    },
-        { XK_Control_L, skui::Key::kCtrl     },
-        { XK_Control_R, skui::Key::kCtrl     },
-        { XK_Alt_L,     skui::Key::kOption   },
-        { XK_Alt_R,     skui::Key::kOption   },
-        { 'A',          skui::Key::kA        },
-        { 'C',          skui::Key::kC        },
-        { 'V',          skui::Key::kV        },
-        { 'X',          skui::Key::kX        },
-        { 'Y',          skui::Key::kY        },
-        { 'Z',          skui::Key::kZ        },
+        { XK_BackSpace, "back"     },
+        { XK_Return,    "select"       },
+        { XK_Up,        "up"       },
+        { XK_Down,      "down"     },
+        { XK_Left,      "left"     },
+        { XK_Right,     "right"    },
     };
     for (size_t i = 0; i < SK_ARRAY_COUNT(gPair); i++) {
         if (gPair[i].fXK == keysym) {
-            return gPair[i].fKey;
+            return gPair[i].keyType;
         }
     }
-    return skui::Key::kNONE;
+    return "invalid";
 }
+
+// static skui::Key get_key(KeySym keysym) {
+//     static const struct {
+//         KeySym      fXK;
+//         skui::Key fKey;
+//     } gPair[] = {
+//         { XK_BackSpace, skui::Key::kBack     },
+//         { XK_Clear,     skui::Key::kBack     },
+//         { XK_Return,    skui::Key::kOK       },
+//         { XK_Up,        skui::Key::kUp       },
+//         { XK_Down,      skui::Key::kDown     },
+//         { XK_Left,      skui::Key::kLeft     },
+//         { XK_Right,     skui::Key::kRight    },
+//         { XK_Tab,       skui::Key::kTab      },
+//         { XK_Page_Up,   skui::Key::kPageUp   },
+//         { XK_Page_Down, skui::Key::kPageDown },
+//         { XK_Home,      skui::Key::kHome     },
+//         { XK_End,       skui::Key::kEnd      },
+//         { XK_Delete,    skui::Key::kDelete   },
+//         { XK_Escape,    skui::Key::kEscape   },
+//         { XK_Shift_L,   skui::Key::kShift    },
+//         { XK_Shift_R,   skui::Key::kShift    },
+//         { XK_Control_L, skui::Key::kCtrl     },
+//         { XK_Control_R, skui::Key::kCtrl     },
+//         { XK_Alt_L,     skui::Key::kOption   },
+//         { XK_Alt_R,     skui::Key::kOption   },
+//         { 'A',          skui::Key::kA        },
+//         { 'C',          skui::Key::kC        },
+//         { 'V',          skui::Key::kV        },
+//         { 'X',          skui::Key::kX        },
+//         { 'Y',          skui::Key::kY        },
+//         { 'Z',          skui::Key::kZ        },
+//     };
+//     for (size_t i = 0; i < SK_ARRAY_COUNT(gPair); i++) {
+//         if (gPair[i].fXK == keysym) {
+//             return gPair[i].fKey;
+//         }
+//     }
+//     return skui::Key::kNONE;
+// }
 
 static skui::ModifierKey get_modifiers(const XEvent& event) {
     static const struct {
@@ -265,6 +293,16 @@ bool Window_unix::handleEvent(const XEvent& event) {
                 return true;
             }
             break;
+        
+        case KeyRelease: {
+            int shiftLevel = (event.xkey.state & ShiftMask) ? 1 : 0;
+            KeySym keysym = XkbKeycodeToKeysym(fDisplay, event.xkey.keycode,
+                                               0, shiftLevel);
+            const char *keyType = getKeyType(keysym);
+            (void) this->onKey(keyType, skui::InputState::kUp,
+                               get_modifiers(event));
+        } 
+        break;
 
         case ButtonPress:
 #if 0
@@ -312,14 +350,6 @@ bool Window_unix::handleEvent(const XEvent& event) {
             }
         } break;
 
-        case KeyRelease: {
-            int shiftLevel = (event.xkey.state & ShiftMask) ? 1 : 0;
-            KeySym keysym = XkbKeycodeToKeysym(fDisplay, event.xkey.keycode,
-                                               0, shiftLevel);
-            skui::Key key = get_key(keysym);
-            (void) this->onKey(key, skui::InputState::kUp,
-                               get_modifiers(event));
-        } break;
 #endif
 
 
