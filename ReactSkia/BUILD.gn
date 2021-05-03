@@ -37,6 +37,8 @@ source_set("ReactSkia") {
     "components/RSkComponentText.h",
     "components/RSkComponentView.cpp",
     "components/RSkComponentView.h",
+    "modules/WebSocketModule.cpp",
+    "modules/WebSocketModule.h",
   ]
 
   if (is_mac) {
@@ -101,6 +103,11 @@ source_set("ReactSkia") {
   configs += [
     ":ReactSkia_config",
   ]
+if(is_linux){
+configs += [
+     "//third_party/nopoll:nopoll_from_pkgconfig",
+]
+}
 }
 
 executable("ReactSkiaApp") {
