@@ -1,16 +1,34 @@
 /*  * Copyright (C) 1994-2021 OpenTV, Inc. and Nagravision S.A.  
 *  * This source code is licensed under the MIT license found in the  
 * LICENSE file in the root directory of this source tree.  */
-
-#include "ReactCommon/TurboModule.h"
-#include "cxxreact/Instance.h"
-#include <better/map.h>
 #include <nopoll.h>
+#include <better/map.h>
+
+#include "cxxreact/Instance.h"
+#include "ReactCommon/TurboModule.h"
+
 namespace facebook {
 namespace react {
-class WebSocketModule: public TurboModule {
+class RSKWebSocketModuleBase {
+        virtual jsi::Value getConnect(
+            std::string,
+            folly::dynamic,
+            jsi::Object,
+            int){
+		return {};
+	}
+
+        virtual jsi::Value getClose(
+            int,
+            std::string,
+            int){
+		return {};
+	}
+
+};
+class RSkWebSocketModule: public TurboModule , public RSKWebSocketModuleBase {
     public:
-        WebSocketModule(
+        RSkWebSocketModule(
             const std::string &name,
             std::shared_ptr<CallInvoker> jsInvoker,
             Instance *bridgeInstance);
@@ -31,25 +49,26 @@ class WebSocketModule: public TurboModule {
             const jsi::Value *args,
             size_t count);
 
-        jsi::Value getConnect(
-            std::string,
-            std::string,
-            jsi::Object,
-            int);
-
         static jsi::Value getCloseWrapper(
             jsi::Runtime &rt,
             TurboModule &turboModule,
             const jsi::Value *args,
             size_t count);
+	
+	jsi::Value getConnect(
+            std::string,
+            folly::dynamic,
+            jsi::Object,
+            int) override;
 
-        jsi::Value getClose(
+	jsi::Value getClose(
             int,
             std::string,
-            int);
+            int) override;
+
 #ifdef NOPOLL_ENABLED
-        better::map <int , noPollConn*> socketList;
-        noPollCtx * ctx_;
+        better::map <int , noPollConn*> connectionList_;
+        noPollCtx* ctx_;
 #endif
 };
 } // namespace react

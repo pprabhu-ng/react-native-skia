@@ -5,7 +5,8 @@
 
 #include <folly/io/async/ScopedEventBaseThread.h>
 #include <glog/logging.h>
-#include "modules/WebSocketModule.h"
+#include "modules/RSkWebSocketModule.h"
+
 namespace facebook {
 namespace react {
 
@@ -228,7 +229,7 @@ JSITurboModuleManager::JSITurboModuleManager(Instance *bridgeInstance)
       std::make_shared<AppStateModule>("AppState", jsInvoker);
 
   modules_["WebSocketModule"] =
-      std::make_shared<WebSocketModule>("WebSocketModule", jsInvoker, bridgeInstance);
+      std::make_shared<RSkWebSocketModule>("WebSocketModule", jsInvoker, bridgeInstance);
 
   modules_["Networking"] =
       std::make_shared<UnimplementedTurboModule>("Networking", jsInvoker);
