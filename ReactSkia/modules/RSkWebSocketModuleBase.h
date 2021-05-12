@@ -9,26 +9,10 @@
 
 namespace facebook {
 namespace react {
-class RSKWebSocketModuleBase {
-        virtual jsi::Value getConnect(
-            std::string,
-            folly::dynamic,
-            jsi::Object,
-            int){
-		return {};
-	}
 
-        virtual jsi::Value getClose(
-            int,
-            std::string,
-            int){
-		return {};
-	}
-
-};
-class RSkWebSocketModule: public TurboModule , public RSKWebSocketModuleBase {
-    public:
-        RSkWebSocketModule(
+class RSkWebSocketModuleBase: public TurboModule { 
+   public :
+	RSkWebSocketModuleBase(
             const std::string &name,
             std::shared_ptr<CallInvoker> jsInvoker,
             Instance *bridgeInstance);
@@ -38,10 +22,8 @@ class RSkWebSocketModule: public TurboModule , public RSKWebSocketModuleBase {
             TurboModule &turboModule,
             const jsi::Value *args,
             size_t count) {
-
             return jsi::Value::undefined();
         }
-
     private:
         static jsi::Value getConnectWrapper(
             jsi::Runtime &rt,
@@ -49,27 +31,23 @@ class RSkWebSocketModule: public TurboModule , public RSKWebSocketModuleBase {
             const jsi::Value *args,
             size_t count);
 
-        static jsi::Value getCloseWrapper(
+	static jsi::Value getCloseWrapper(
             jsi::Runtime &rt,
             TurboModule &turboModule,
             const jsi::Value *args,
             size_t count);
-	
-	jsi::Value getConnect(
+
+	virtual jsi::Value getConnect(
             std::string,
             folly::dynamic,
-            jsi::Object,
-            int) override;
+            folly::dynamic,
+            int) { return {}; }
 
-	jsi::Value getClose(
+	virtual jsi::Value getClose(
             int,
             std::string,
-            int) override;
+            int) { return {}; }
 
-#ifdef NOPOLL_ENABLED
-        better::map <int , noPollConn*> connectionList_;
-        noPollCtx* ctx_;
-#endif
 };
-} // namespace react
-} // namespace facebook
+}
+}

@@ -5,7 +5,7 @@
 
 #include <folly/io/async/ScopedEventBaseThread.h>
 #include <glog/logging.h>
-#include "modules/RSkWebSocketModule.h"
+#include "modules/platform/nopoll/RSkWebSocketModule.h"
 
 namespace facebook {
 namespace react {

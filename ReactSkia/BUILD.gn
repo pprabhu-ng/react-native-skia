@@ -37,8 +37,8 @@ source_set("ReactSkia") {
     "components/RSkComponentText.h",
     "components/RSkComponentView.cpp",
     "components/RSkComponentView.h",
-    "modules/RSkWebSocketModule.cpp",
-    "modules/RSkWebSocketModule.h",
+    "modules/RSkWebSocketModuleBase.h",
+    "modules/RSkWebSocketModuleBase.cpp",
   ]
 
   if (is_mac) {
@@ -58,6 +58,8 @@ source_set("ReactSkia") {
       "platform/linux/MainRunLoopEventBeat.cpp",
       "platform/linux/RuntimeEventBeat.h",
       "platform/linux/RuntimeEventBeat.cpp",
+      "modules/platform/nopoll/RSkWebSocketModule.cpp",
+      "modules/platform/nopoll/RSkWebSocketModule.h",
     ]
     defines = ["OS_LINUX"]
   }
