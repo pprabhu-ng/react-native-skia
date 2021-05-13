@@ -41,13 +41,14 @@ class RSkWebSocketModuleBase: public TurboModule {
             std::string,
             folly::dynamic,
             folly::dynamic,
-            int) { return {}; }
+            int) = 0;
 
 	virtual jsi::Value getClose(
             int,
             std::string,
-            int) { return {}; }
+            int) = 0;
 
+  
 };
-}
-}
+}//namespace react
+}//namespace facebook

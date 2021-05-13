@@ -16,7 +16,7 @@
 
 #define WEBSOCKET_URL 0
 #define WEBSOCKET_PORTNO 1
-#define WEBSOCKET_RETURN_SUCESSS 0
+#define WEBSOCKET_RETURN_SUCESS 0
 #define WEBSOCKET_RETURN_FAILURE -1
 
 namespace facebook {
@@ -59,42 +59,44 @@ jsi::Value RSkWebSocketModule::getConnect(
       LOG(ERROR) << "nopoll_ctx is NULL ";
       return jsi::Value(WEBSOCKET_RETURN_FAILURE);
   }
-
   /* creating a connection 
    * TO DO: NULL/optional arguments has to be verified */
   noPollConn* conn = nopoll_conn_new(ctx_,  parsedUrl[0].c_str() , parsedUrl[1].c_str() ,  NULL , "/", NULL , NULL);
-
   
- delete []parsedUrl;
+  delete []parsedUrl;
 
-  if(!nopoll_conn_is_ok(conn)) {
-     LOG(ERROR) << "Expected to find proper client connection status, but found error..";
-    return jsi::Value(WEBSOCKET_RETURN_FAILURE);
+  if(conn == NULL) {
+      LOG(ERROR) << "websocket connection is NULL";
+      return jsi::Value(WEBSOCKET_RETURN_FAILURE);
   }
 
   LOG(WARNING) << "waiting until connection is ok";
-  nopoll_conn_wait_until_connection_ready (conn, 5);
+  if(!nopoll_conn_wait_until_connection_ready (conn, 5)) {
+      LOG(ERROR) << "websocket connection is not ready";
+      nopoll_conn_unref(conn);
+      return jsi::Value(WEBSOCKET_RETURN_FAILURE);
+  }
   LOG(WARNING) << "websocket connection sucess";
   connectionList_[socketID] = conn;
 
-  return jsi::Value(WEBSOCKET_RETURN_SUCESSS);
+  return jsi::Value(WEBSOCKET_RETURN_SUCESS);
 }
 
 jsi::Value RSkWebSocketModule::getClose(
   int code,
   std::string reason,
-  int socketID)  {
+  int socketID)  {  
+
 	noPollConn* conn =  connectionList_[socketID];
 	if(conn != NULL) {
 	    nopoll_conn_close_ext(conn, code, reason.c_str(), reason.size());
             connectionList_.erase(socketID);
 	    nopoll_conn_unref(conn);
-	    return jsi::Value(WEBSOCKET_RETURN_SUCESSS);
+	    return jsi::Value(WEBSOCKET_RETURN_SUCESS);
 	}
 
   return jsi::Value(WEBSOCKET_RETURN_FAILURE);
 }
-
 
 } // namespace react
 } // namespace facebook

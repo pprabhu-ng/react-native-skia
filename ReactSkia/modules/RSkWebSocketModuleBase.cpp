@@ -57,7 +57,6 @@ jsi::Value RSkWebSocketModuleBase::getCloseWrapper(
   if(count != 3) {
       return jsi::Value::undefined();
   }
-  LOG(INFO) << "Websocket close call";
   auto &self = static_cast<RSkWebSocketModuleBase &>(turboModule);
   int code = args[0].getNumber();
   std::string reason = args[1].getString(rt).utf8(rt);
@@ -66,5 +65,5 @@ jsi::Value RSkWebSocketModuleBase::getCloseWrapper(
   return self.getClose(code, reason.c_str(), socketID);
 }
 
-}
-}
+}// namespace react
+}// namespace facebook
