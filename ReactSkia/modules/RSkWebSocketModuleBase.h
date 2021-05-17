@@ -37,6 +37,24 @@ class RSkWebSocketModuleBase: public TurboModule {
             const jsi::Value *args,
             size_t count);
 
+      static jsi::Value sendWrapper(
+            jsi::Runtime &rt,
+            TurboModule &turboModule,
+            const jsi::Value *args,
+            size_t count);
+
+      static jsi::Value sendBinaryWrapper(
+            jsi::Runtime &rt,
+            TurboModule &turboModule,
+            const jsi::Value *args,
+            size_t count);
+
+      static jsi::Value pingWrapper(
+            jsi::Runtime &rt,
+            TurboModule &turboModule,
+            const jsi::Value *args,
+            size_t count);
+
 	virtual jsi::Value getConnect(
             std::string,
             folly::dynamic,
@@ -46,6 +64,17 @@ class RSkWebSocketModuleBase: public TurboModule {
 	virtual jsi::Value getClose(
             int,
             std::string,
+            int) = 0;
+
+	virtual jsi::Value send(
+            std::string,
+            int) = 0;
+
+        virtual jsi::Value sendBinary(
+            std::string,
+            int) = 0;
+
+        virtual jsi::Value ping(
             int) = 0;
 
   

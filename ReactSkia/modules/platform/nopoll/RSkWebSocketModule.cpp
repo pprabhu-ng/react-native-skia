@@ -18,7 +18,7 @@
 #define WEBSOCKET_PORTNO 1
 #define WEBSOCKET_RETURN_SUCESS 0
 #define WEBSOCKET_RETURN_FAILURE -1
-
+#define WEBSOCKET_MAX_BUFFER_SIZE 1024
 namespace facebook {
 namespace react {
 
@@ -96,6 +96,51 @@ jsi::Value RSkWebSocketModule::getClose(
 	}
 
   return jsi::Value(WEBSOCKET_RETURN_FAILURE);
+}
+
+jsi::Value RSkWebSocketModule::send(
+  std::string message,
+  int socketID)  {
+	noPollConn* conn =  connectionList_[socketID];
+        if(conn == NULL || nopoll_conn_send_text(conn,  message.c_str(), message.length()) != message.length()) {
+            LOG(ERROR) << "Expected to find proper send operation..";
+	    return jsi::Value(WEBSOCKET_RETURN_FAILURE);
+
+        }
+  return jsi::Value(WEBSOCKET_RETURN_SUCESS);
+
+}
+
+jsi::Value RSkWebSocketModule::sendBinary(
+  std::string base64String,
+  int socketID)  {
+  	char webSocketBuffer[WEBSOCKET_MAX_BUFFER_SIZE];
+  	int wsBufferSize = WEBSOCKET_MAX_BUFFER_SIZE;
+  	noPollConn* conn =  connectionList_[socketID];
+	nopoll_base64_decode(base64String.c_str(), base64String.length(),
+		       	webSocketBuffer, &wsBufferSize);
+
+        if(conn == NULL || nopoll_conn_send_binary(conn, webSocketBuffer 
+				, strlen(webSocketBuffer)) != strlen(webSocketBuffer)) {
+            LOG(ERROR) << "Expected to find proper send operation..";
+            return jsi::Value(WEBSOCKET_RETURN_FAILURE);
+
+        }
+  return jsi::Value(WEBSOCKET_RETURN_SUCESS);
+
+
+}
+
+jsi::Value RSkWebSocketModule::ping(
+  int socketID)  {
+        noPollConn* conn =  connectionList_[socketID];
+        if(conn == NULL || !nopoll_conn_send_ping(conn)) {
+            LOG(ERROR) << "ping operation failed";
+	    return jsi::Value(WEBSOCKET_RETURN_FAILURE);
+
+        }
+  return jsi::Value(WEBSOCKET_RETURN_SUCESS);
+
 }
 
 } // namespace react

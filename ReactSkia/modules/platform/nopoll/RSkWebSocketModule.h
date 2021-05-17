@@ -25,6 +25,16 @@ class RSkWebSocketModule:  public RSkWebSocketModuleBase {
             std::string,
             int) override;
 
+        jsi::Value send(
+            std::string,
+            int) override;
+
+        jsi::Value sendBinary(
+            std::string,
+            int) override;
+
+        jsi::Value ping(
+            int) override;
 
   private:
         std::string* parseUrl(std::string&);

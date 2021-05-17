@@ -22,9 +22,9 @@ RSkWebSocketModuleBase::RSkWebSocketModuleBase(
     : TurboModule(name, jsInvoker) {
 
     methodMap_["connect"] = MethodMetadata{4, getConnectWrapper};
-    methodMap_["send"] = MethodMetadata{2, NoOp};
-    methodMap_["sendBinary"] = MethodMetadata{2, NoOp};
-    methodMap_["ping"] = MethodMetadata{1, NoOp};
+    methodMap_["send"] = MethodMetadata{2, sendWrapper};
+    methodMap_["sendBinary"] = MethodMetadata{2,sendBinaryWrapper};
+    methodMap_["ping"] = MethodMetadata{1, pingWrapper};
     methodMap_["close"] = MethodMetadata{3, getCloseWrapper};
     methodMap_["addListener"] = MethodMetadata{1, NoOp};
     methodMap_["removeListeners"] = MethodMetadata{1, NoOp};
@@ -63,6 +63,53 @@ jsi::Value RSkWebSocketModuleBase::getCloseWrapper(
   int socketID = args[2].getNumber();
 
   return self.getClose(code, reason.c_str(), socketID);
+}
+
+jsi::Value RSkWebSocketModuleBase::sendWrapper(
+     jsi::Runtime &rt,
+     TurboModule &turboModule,
+     const jsi::Value *args,
+     size_t count)  {
+  if(count != 2) {
+      return jsi::Value::undefined();
+  }
+  auto &self = static_cast<RSkWebSocketModuleBase &>(turboModule);
+  std::string message = args[0].getString(rt).utf8(rt);
+  int socketID = args[1].getNumber();
+
+  return self.send(message, socketID);
+
+}
+
+jsi::Value RSkWebSocketModuleBase::sendBinaryWrapper(
+     jsi::Runtime &rt,
+     TurboModule &turboModule,
+     const jsi::Value *args,
+     size_t count)  {
+  if(count != 2) {
+      return jsi::Value::undefined();
+  }
+  auto &self = static_cast<RSkWebSocketModuleBase &>(turboModule);
+  std::string base64String = args[0].getString(rt).utf8(rt);
+  int socketID = args[1].getNumber();
+
+  return self.sendBinary(base64String, socketID);
+
+}
+
+jsi::Value RSkWebSocketModuleBase::pingWrapper(
+     jsi::Runtime &rt,
+     TurboModule &turboModule,
+     const jsi::Value *args,
+     size_t count)  {
+  if(count != 1) {
+      return jsi::Value::undefined();
+  }
+  auto &self = static_cast<RSkWebSocketModuleBase &>(turboModule);
+  int socketID = args[0].getNumber();
+
+  return self.ping(socketID);
+
 }
 
 }// namespace react
