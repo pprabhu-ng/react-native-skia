@@ -12,15 +12,14 @@
 #include "ReactSkia/JSITurboModuleManager.h"
 #include "RSkWebSocketModuleBase.h"
 
+
 namespace facebook {
 namespace react {
-
 RSkWebSocketModuleBase::RSkWebSocketModuleBase(
     const std::string &name,
     std::shared_ptr<CallInvoker> jsInvoker,
     Instance *bridgeInstance)
     : TurboModule(name, jsInvoker) {
-
     methodMap_["connect"] = MethodMetadata{4, getConnectWrapper};
     methodMap_["send"] = MethodMetadata{2, sendWrapper};
     methodMap_["sendBinary"] = MethodMetadata{2,sendBinaryWrapper};
@@ -28,7 +27,6 @@ RSkWebSocketModuleBase::RSkWebSocketModuleBase(
     methodMap_["close"] = MethodMetadata{3, getCloseWrapper};
     methodMap_["addListener"] = MethodMetadata{1, NoOp};
     methodMap_["removeListeners"] = MethodMetadata{1, NoOp};
-
 }
 
 jsi::Value RSkWebSocketModuleBase::getConnectWrapper(
@@ -36,8 +34,8 @@ jsi::Value RSkWebSocketModuleBase::getConnectWrapper(
      TurboModule &turboModule,
      const jsi::Value *args,
      size_t count)  {
-
   if(count != 4) {
+      LOG(ERROR) <<"argumets is not matching"; 
       return jsi::Value::undefined();
   }
   auto &self = static_cast<RSkWebSocketModuleBase &>(turboModule);
@@ -55,13 +53,13 @@ jsi::Value RSkWebSocketModuleBase::getCloseWrapper(
      const jsi::Value *args,
      size_t count)  {
   if(count != 3) {
+      LOG(ERROR) <<"argumets is not matching";
       return jsi::Value::undefined();
   }
   auto &self = static_cast<RSkWebSocketModuleBase &>(turboModule);
   int code = args[0].getNumber();
   std::string reason = args[1].getString(rt).utf8(rt);
   int socketID = args[2].getNumber();
-
   return self.getClose(code, reason.c_str(), socketID);
 }
 
@@ -71,6 +69,7 @@ jsi::Value RSkWebSocketModuleBase::sendWrapper(
      const jsi::Value *args,
      size_t count)  {
   if(count != 2) {
+      LOG(ERROR) <<"argumets is not matching";
       return jsi::Value::undefined();
   }
   auto &self = static_cast<RSkWebSocketModuleBase &>(turboModule);
@@ -87,6 +86,7 @@ jsi::Value RSkWebSocketModuleBase::sendBinaryWrapper(
      const jsi::Value *args,
      size_t count)  {
   if(count != 2) {
+      LOG(ERROR) <<"argumets is not matching";
       return jsi::Value::undefined();
   }
   auto &self = static_cast<RSkWebSocketModuleBase &>(turboModule);
@@ -103,6 +103,7 @@ jsi::Value RSkWebSocketModuleBase::pingWrapper(
      const jsi::Value *args,
      size_t count)  {
   if(count != 1) {
+      LOG(ERROR) <<"argumets is not matching";
       return jsi::Value::undefined();
   }
   auto &self = static_cast<RSkWebSocketModuleBase &>(turboModule);

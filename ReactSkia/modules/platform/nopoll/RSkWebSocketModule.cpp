@@ -13,15 +13,15 @@
 #include "ReactSkia/JSITurboModuleManager.h"
 #include "RSkWebSocketModule.h"
 
-
 #define WEBSOCKET_URL 0
 #define WEBSOCKET_PORTNO 1
 #define WEBSOCKET_RETURN_SUCESS 0
 #define WEBSOCKET_RETURN_FAILURE -1
-#define WEBSOCKET_MAX_BUFFER_SIZE 1024
+#define MAX_SEND_RETRIES 5
+#define B64DECODE_OUT_SAFESIZE(x) (((x)*3)/4)
+
 namespace facebook {
 namespace react {
-
 
 std::string * RSkWebSocketModule::parseUrl(std::string& url) {
 // finding the "s://" substring in the url ex: wss://echo.websocket.org:80
@@ -42,7 +42,6 @@ std::string * RSkWebSocketModule::parseUrl(std::string& url) {
   return webSocketUrl;
 }
 
-
 jsi::Value RSkWebSocketModule::getConnect(
   std::string url,
   folly::dynamic protocols,
@@ -62,7 +61,6 @@ jsi::Value RSkWebSocketModule::getConnect(
   /* creating a connection 
    * TO DO: NULL/optional arguments has to be verified */
   noPollConn* conn = nopoll_conn_new(ctx_,  parsedUrl[0].c_str() , parsedUrl[1].c_str() ,  NULL , "/", NULL , NULL);
-  
   delete []parsedUrl;
 
   if(conn == NULL) {
@@ -77,56 +75,106 @@ jsi::Value RSkWebSocketModule::getConnect(
       return jsi::Value(WEBSOCKET_RETURN_FAILURE);
   }
   LOG(WARNING) << "websocket connection sucess";
-  connectionList_[socketID] = conn;
-
+  
+  connectionList_[socketID] = conn;  
+  
   return jsi::Value(WEBSOCKET_RETURN_SUCESS);
 }
+
+
 
 jsi::Value RSkWebSocketModule::getClose(
   int code,
   std::string reason,
-  int socketID)  {  
-
+  int socketID)  {
 	noPollConn* conn =  connectionList_[socketID];
 	if(conn != NULL) {
-	    nopoll_conn_close_ext(conn, code, reason.c_str(), reason.size());
-            connectionList_.erase(socketID);
-	    nopoll_conn_unref(conn);
+            nopoll_conn_close_ext(conn, code, reason.c_str(), reason.size());
+	    connectionList_.erase(socketID);
 	    return jsi::Value(WEBSOCKET_RETURN_SUCESS);
 	}
-
+  LOG(ERROR) << "close connection is failed";
   return jsi::Value(WEBSOCKET_RETURN_FAILURE);
 }
 
 jsi::Value RSkWebSocketModule::send(
   std::string message,
   int socketID)  {
+	int result = 0;
+        int num_retries = 0;
 	noPollConn* conn =  connectionList_[socketID];
-        if(conn == NULL || nopoll_conn_send_text(conn,  message.c_str(), message.length()) != message.length()) {
-            LOG(ERROR) << "Expected to find proper send operation..";
-	    return jsi::Value(WEBSOCKET_RETURN_FAILURE);
+        if(conn != NULL ) {
+            result = nopoll_conn_send_text(conn,  message.c_str(), message.length());
+	    if (result== message.length()) {
+		LOG(INFO) << "sending data sucessfully";
+		return jsi::Value(WEBSOCKET_RETURN_SUCESS);
+	    } 
+	    else {
+		/* may be not all data were sent */
+                while((num_retries < MAX_SEND_RETRIES) && nopoll_conn_pending_write_bytes(conn) > 0) {
+                    /* wait a little bit before re-trying */
+                    nopoll_sleep(10000);
 
-        }
-  return jsi::Value(WEBSOCKET_RETURN_SUCESS);
+                    /* flush and check if write operation completed */
+                    if(nopoll_conn_complete_pending_write(conn) == 0) {
+                        /* finally all data is sent */
+			LOG(INFO) << "sending all data sucessfully";
+                        return jsi::Value(WEBSOCKET_RETURN_SUCESS);;
+                    }
+
+                    num_retries++;
+                }
+            }
+	        
+	    
+	}
+  LOG(ERROR) << "send data is failed";
+  return jsi::Value(WEBSOCKET_RETURN_FAILURE);
 
 }
 
 jsi::Value RSkWebSocketModule::sendBinary(
   std::string base64String,
   int socketID)  {
-  	char webSocketBuffer[WEBSOCKET_MAX_BUFFER_SIZE];
-  	int wsBufferSize = WEBSOCKET_MAX_BUFFER_SIZE;
+	int result = 0;
+	int num_retries = 0;
+	char webSocketBuffer[B64DECODE_OUT_SAFESIZE(base64String.length())];
+	int size = B64DECODE_OUT_SAFESIZE(base64String.length()); 
+  	int wsBufferSize = B64DECODE_OUT_SAFESIZE(base64String.length());
   	noPollConn* conn =  connectionList_[socketID];
-	nopoll_base64_decode(base64String.c_str(), base64String.length(),
-		       	webSocketBuffer, &wsBufferSize);
+	if(!nopoll_base64_decode(base64String.c_str(), base64String.length(),
+		       	webSocketBuffer, &wsBufferSize)) {
+             LOG(ERROR) << "nopoll base64 decoding is failed";
+             return jsi::Value(WEBSOCKET_RETURN_FAILURE);
 
-        if(conn == NULL || nopoll_conn_send_binary(conn, webSocketBuffer 
-				, strlen(webSocketBuffer)) != strlen(webSocketBuffer)) {
-            LOG(ERROR) << "Expected to find proper send operation..";
-            return jsi::Value(WEBSOCKET_RETURN_FAILURE);
+	}
+	else if(conn != NULL ) {
+            result = nopoll_conn_send_binary(conn, webSocketBuffer,strlen(webSocketBuffer) );
+	    if (result == strlen(webSocketBuffer)) {
+		LOG(INFO) << "sending binary data sucessfully";
+		return jsi::Value(WEBSOCKET_RETURN_SUCESS);
+	    } 
+	    else {
+		/* may be not all data were sent */
+                while((num_retries < MAX_SEND_RETRIES) &&  nopoll_conn_pending_write_bytes(conn) > 0) {
+                    /* wait a little bit before re-trying */
+                    nopoll_sleep(10000);
 
-        }
-  return jsi::Value(WEBSOCKET_RETURN_SUCESS);
+                    /* flush and check if write operation completed */
+                    if(nopoll_conn_complete_pending_write(conn) == 0) {
+                        /* finally all data is sent */
+			LOG(INFO) << "sending all binary data sucessfully";
+                        return jsi::Value(WEBSOCKET_RETURN_SUCESS);
+                    }
+
+                    num_retries++;
+                }
+            }
+	        
+	    
+	}
+  LOG(ERROR) << "sending binary data is failed";
+  return jsi::Value(WEBSOCKET_RETURN_FAILURE);
 
 
 }
@@ -134,12 +182,16 @@ jsi::Value RSkWebSocketModule::sendBinary(
 jsi::Value RSkWebSocketModule::ping(
   int socketID)  {
         noPollConn* conn =  connectionList_[socketID];
-        if(conn == NULL || !nopoll_conn_send_ping(conn)) {
-            LOG(ERROR) << "ping operation failed";
-	    return jsi::Value(WEBSOCKET_RETURN_FAILURE);
+
+        if(conn != NULL ) {
+	    if(nopoll_conn_send_ping(conn)) {
+                LOG(INFO) << "ping operation sucess";
+	        return jsi::Value(WEBSOCKET_RETURN_SUCESS);
+	    }
 
         }
-  return jsi::Value(WEBSOCKET_RETURN_SUCESS);
+  LOG(ERROR) << "ping operation failed";
+  return jsi::Value(WEBSOCKET_RETURN_FAILURE);
 
 }
 
