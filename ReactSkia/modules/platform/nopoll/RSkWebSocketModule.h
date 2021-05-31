@@ -11,8 +11,8 @@ class RSkWebSocketModule:  public RSkWebSocketModuleBase {
 	RSkWebSocketModule(
             const std::string &name,
             std::shared_ptr<CallInvoker> jsInvoker,
-            Instance *bridgeInstance) : RSkWebSocketModuleBase(name, 
-		         jsInvoker, bridgeInstance){}
+            Instance *bridgeInstance);
+	~ RSkWebSocketModule();
 
   	jsi::Value getConnect(
 	    std::string,
@@ -36,9 +36,12 @@ class RSkWebSocketModule:  public RSkWebSocketModuleBase {
         jsi::Value ping(
             int) override;
 
+        std::thread wsMessageThread_;
+        better::map <int , noPollConn*> connectionList_;
+        std::vector<std::string> events_ = {"websocketOpen","websocketClosed",
+                                    "websocketMessage","websocketFailed"};
   private:
         std::string* parseUrl(std::string&);
-        better::map <int , noPollConn*> connectionList_;
         noPollCtx* ctx_;
 
 };
