@@ -31,6 +31,9 @@ struct Component {
   EventEmitter::Shared eventEmitter{};
   LayoutMetrics layoutMetrics{EmptyLayoutMetrics};
   State::Shared state{};
+  // TO DO: Setup the data types correctly
+  int bottomY;
+  int rightX;
 };
 
 class RSkComponent;
