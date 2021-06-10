@@ -17,7 +17,6 @@
 #define WEBSOCKET_PORTNO 1
 #define WEBSOCKET_RETURN_SUCESS 0
 #define WEBSOCKET_RETURN_FAILURE -1
-#define MAX_SEND_RETRIES 5
 #define B64DECODE_OUT_SAFESIZE(x) (((x)*3)/4)
 
 namespace facebook {
@@ -145,7 +144,7 @@ jsi::Value RSkWebSocketModule::getClose(
 	    parameters["id"] = socketID;
             parameters["code"] = getCode;
             parameters["reason"] = reason; 	    
-            nopoll_conn_close(conn, code, reason.c_str(), reason.size());
+            nopoll_conn_close_ext(conn, code, reason.c_str(), reason.size());
 	    connectionList_.erase(socketID);
 	    sendEventWithName(events_[1], folly::dynamic(parameters));
 	    return jsi::Value(WEBSOCKET_RETURN_SUCESS);
@@ -162,7 +161,6 @@ jsi::Value RSkWebSocketModule::send(
   std::string message,
   int socketID)  {
 	int result = 0;
-        int num_retries = 0;
 	folly::dynamic parameters = folly::dynamic::object();
 	noPollConn* conn =  connectionList_[socketID];
         if(conn != NULL ) {
@@ -171,25 +169,8 @@ jsi::Value RSkWebSocketModule::send(
 		LOG(INFO) << "sending data sucessfully";
 		return jsi::Value(WEBSOCKET_RETURN_SUCESS);
 	    } 
-	    else {
-		/* may be not all data were sent */
-                while((num_retries < MAX_SEND_RETRIES) && nopoll_conn_pending_write_bytes(conn) > 0) {
-                    /* wait a little bit before re-trying */
-                    nopoll_sleep(10000);
-
-                    /* flush and check if write operation completed */
-                    if(nopoll_conn_complete_pending_write(conn) == 0) {
-                        /* finally all data is sent */
-			LOG(INFO) << "sending all data sucessfully";
-                        return jsi::Value(WEBSOCKET_RETURN_SUCESS);;
-                    }
-
-                    num_retries++;
-                }
-            }
+        }
 	        
-	    
-	}
   parameters["id"] = socketID;
   parameters["message"] = "sending data is failed";
   sendEventWithName(events_[3], folly::dynamic(parameters));
@@ -202,7 +183,6 @@ jsi::Value RSkWebSocketModule::sendBinary(
   std::string base64String,
   int socketID)  {
 	int result = 0;
-	int num_retries = 0;
 	folly::dynamic parameters = folly::dynamic::object();
 	char webSocketBuffer[B64DECODE_OUT_SAFESIZE(base64String.length())];
 	int size = B64DECODE_OUT_SAFESIZE(base64String.length()); 
@@ -224,24 +204,7 @@ jsi::Value RSkWebSocketModule::sendBinary(
 		LOG(INFO) << "sending binary data sucessfully";
 		return jsi::Value(WEBSOCKET_RETURN_SUCESS);
 	    } 
-	    else {
-		/* may be not all data were sent */
-                while((num_retries < MAX_SEND_RETRIES) &&  nopoll_conn_pending_write_bytes(conn) > 0) {
-                    /* wait a little bit before re-trying */
-                    nopoll_sleep(10000);
-
-                    /* flush and check if write operation completed */
-                    if(nopoll_conn_complete_pending_write(conn) == 0) {
-                        /* finally all data is sent */
-			LOG(INFO) << "sending all binary data sucessfully";
-                        return jsi::Value(WEBSOCKET_RETURN_SUCESS);
-                    }
-
-                    num_retries++;
-                }
-            }
 	        
-	    
 	}
   parameters = folly::dynamic::object();
   parameters["id"] = socketID;
