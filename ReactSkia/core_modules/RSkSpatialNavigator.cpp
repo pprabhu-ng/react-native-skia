@@ -7,11 +7,19 @@
 #include <string>
 #include <algorithm>
 
-// TO DO: Add newly created Key IDs and import the file
-
 #include "RSkSpatialNavigator.h"
+#include "ReactSkia/components/RSkComponent.h"
+// TO DO: Add newly created Key IDs and import the file
+// Delete these once above TO DO is completed
+#define RNS_KEY_SELECT 1000
+#define RNS_KEY_RIGHT 1001  
+#define RNS_KEY_LEFT 1002
+#define RNS_KEY_UP 1003
+#define RNS_KEY_DOWN 1004
 
 namespace SpatialNavigator {
+
+RSkSpatialNavigator *RSkSpatialNavigator::instance_ = NULL;
 
 RSkSpatialNavigator::RSkSpatialNavigator() {
         // Setup RCU / Keyboard events
@@ -34,46 +42,48 @@ RSkSpatialNavigator *RSkSpatialNavigator::getInstance() {
  * isTVSelectable, accessible are true
  * TO DO: Check if the above list has a priority order OR interdependency 
 */
-void RSkSpatialNavigator::addToNavList(std::shared_ptr<facebook::react::Component> candidate) {
+void RSkSpatialNavigator::addToNavList(facebook::react::RSkComponent &candidate) {
+    facebook::react::Component canData = candidate.getComponentData(); 
 #if 0
-    if (candidate->accessible == true ||
-    candidate->isTVSelectable == true ) {
+    if (candidate.props->accessible == true ||
+    candidate.isTVSelectable == true ) {
 #else
-    if(1)
+    if(1) {
 #endif
         // Check if a method is more appropriate to update values of candidate?
-        //candidate->centerX = candidate->layoutMetrics.frame.origin.x + (candidate->layoutMetrics.frame.size.width / 2);
-        //candidate->centerY = candidate->layoutMetrics.frame.origin.y + (candidate->layoutMetrics.frame.size.height / 2);
+        //candidate.centerX = candidate.layoutMetrics.frame.origin.x + (candidate.layoutMetrics.frame.size.width / 2);
+        //candidate.centerY = candidate.layoutMetrics.frame.origin.y + (candidate.layoutMetrics.frame.size.height / 2);
 
-        candidate->rightX = candidate->layoutMetrics.frame.origin.x + candidate->layoutMetrics.frame.size.width;
-        candidate->bottomY = candidate->layoutMetrics.frame.origin.y + candidate->layoutMetrics.frame.size.height;
+        canData.rightX = canData.layoutMetrics.frame.origin.x + canData.layoutMetrics.frame.size.width;
+        canData.bottomY = canData.layoutMetrics.frame.origin.y + canData.layoutMetrics.frame.size.height;
 
-        navList_.push_back(candidate);
+        navList_.push_back(&candidate);
 
         // Trigger required focus / blur events if the  
-        if (candidate->props.hasTVPreferredFocus == true) {
+        if (1/*uncomment later candidate.props.hasTVPreferredFocus == true*/) {
             // Check and trigger blur for the currently selected candidate
             if (reference_ != NULL) {
                 // TO DO: Add code for triggering onBlur event
             }
 
-            reference_ = candidate;
+            reference_ = &candidate;
             // TO DO: Add code for triggering onFocus event
 
         }
     }
 }
 
-void RSkSpatialNavigator::removeFromNavList(std::shared_ptr<facebook::react::Component> candidate) {
-    if (candidate->accessible == true ||
-    candidate->isTVSelectable == true ) {
+void RSkSpatialNavigator::removeFromNavList(facebook::react::RSkComponent &candidate) {
+    facebook::react::Component canData = candidate.getComponentData();
+    if (/*uncomment canData.accessible == true ||
+    canData.isTVSelectable == true */1 ) {
         CandidateList::iterator it;
 
-        it = std::find(navList_.begin(), navList_.end(), candidate);
-
+        it = std::find(navList_.begin(), navList_.end(), &candidate);
+        
         if (it != navList_.end()) {
             // Reset data if candidate being removed is currently focused
-            if (reference_ == candidate) {
+            if (reference_ == &candidate) {
                 reference_ = NULL;
             }
 
@@ -82,18 +92,19 @@ void RSkSpatialNavigator::removeFromNavList(std::shared_ptr<facebook::react::Com
     }
 }
 
-void RSkSpatialNavigator::updateInNavList(std::shared_ptr<facebook::react::Component> candidate) {
+void RSkSpatialNavigator::updateInNavList(facebook::react::RSkComponent &candidate) {
+    facebook::react::Component canData = candidate.getComponentData();
     CandidateList::iterator it;
 
-    it = std::find(navList_.begin(), navList_.end(), candidate);
+    it = std::find(navList_.begin(), navList_.end(), &candidate);
 
     if (it != navList_.end()) {
         // Candidate found in the navigatable list
         // Reset data if candidate's focusable props have changed
         // TO DO: Check the interdependency / priority of the props below
-        if (candidate->accessible == false ||
-        candidate->isTVSelectable == false ) {
-            if (reference_ == candidate) {
+        if (/*uncomment canData.accessible == false ||
+        canData.isTVSelectable == false*/1 ) {
+            if (reference_ == &candidate) {
                 reference_ = NULL;
             }
 
@@ -101,11 +112,11 @@ void RSkSpatialNavigator::updateInNavList(std::shared_ptr<facebook::react::Compo
         } else {
             // Just update the position info
             // Check if a method is more appropriate to update values of candidate?
-            //candidate->centerX = candidate->layoutMetrics.frame.origin.x + (candidate->layoutMetrics.frame.size.width / 2);
-            //candidate->centerY = candidate->layoutMetrics.frame.origin.y + (candidate->layoutMetrics.frame.size.height / 2);
+            //candidate.centerX = candidate.layoutMetrics.frame.origin.x + (candidate.layoutMetrics.frame.size.width / 2);
+            //candidate.centerY = candidate.layoutMetrics.frame.origin.y + (candidate.layoutMetrics.frame.size.height / 2);
 
-            candidate->rightX = candidate->layoutMetrics.frame.origin.x + candidate->layoutMetrics.frame.size.width;
-            candidate->bottomY = candidate->layoutMetrics.frame.origin.y + candidate->layoutMetrics.frame.size.height;
+            canData.rightX = canData.layoutMetrics.frame.origin.x + canData.layoutMetrics.frame.size.width;
+            canData.bottomY = canData.layoutMetrics.frame.origin.y + canData.layoutMetrics.frame.size.height;
         }
     } else {
         // Candidate not found in the current list
@@ -114,17 +125,23 @@ void RSkSpatialNavigator::updateInNavList(std::shared_ptr<facebook::react::Compo
     }
 }
 
-void RSkSpatialNavigator::compareX(std::shared_ptr<facebook::react::Component> candidate1, std::shared_ptr<facebook::react::Component> candidate2) {
-    return (candidate1->layoutMetrics.frame.origin.x <= candidate2->layoutMetrics.frame.origin.x)    
+bool RSkSpatialNavigator::compareX(facebook::react::RSkComponent *candidate1, facebook::react::RSkComponent *candidate2) {
+    facebook::react::Component canData1 = candidate1->getComponentData();
+    facebook::react::Component canData2 = candidate2->getComponentData();
+    return (canData1.layoutMetrics.frame.origin.x <= canData2.layoutMetrics.frame.origin.x);    
 }
 
-void RSkSpatialNavigator::compareY(std::shared_ptr<facebook::react::Component> candidate1, std::shared_ptr<facebook::react::Component> candidate2) {
-    return (candidate1->layoutMetrics.frame.origin.y <= candidate2->layoutMetrics.frame.origin.y)    
+bool RSkSpatialNavigator::compareY(facebook::react::RSkComponent *candidate1, facebook::react::RSkComponent *candidate2) {
+    facebook::react::Component canData1 = candidate1->getComponentData();
+    facebook::react::Component canData2 = candidate2->getComponentData();
+    return (canData1.layoutMetrics.frame.origin.y <= canData2.layoutMetrics.frame.origin.y);    
 }
 
-void RSkSpatialNavigator::compareArea(std::shared_ptr<facebook::react::Component> candidate1, std::shared_ptr<facebook::react::Component> candidate2) {
-    return ((candidate1->layoutMetrics.frame.size.width * candidate1->layoutMetrics.frame.size.height) <= 
-            (candidate2->layoutMetrics.frame.size.width * candidate2->layoutMetrics.frame.size.height))    
+bool RSkSpatialNavigator::compareArea(facebook::react::RSkComponent *candidate1, facebook::react::RSkComponent *candidate2) {
+    facebook::react::Component canData1 = candidate1->getComponentData();
+    facebook::react::Component canData2 = candidate2->getComponentData();
+    return ((canData1.layoutMetrics.frame.size.width * canData1.layoutMetrics.frame.size.height) <= 
+            (canData2.layoutMetrics.frame.size.width * canData2.layoutMetrics.frame.size.height));    
 }
 
 void RSkSpatialNavigator::navigateInDirection(int keyEvent) {
@@ -135,14 +152,20 @@ void RSkSpatialNavigator::navigateInDirection(int keyEvent) {
     CandidateList overlappingCanList; // List of candidates whose body has a projected overlap with reference in a direction
     CandidateList sameXOverlappingCanList; // List of candidates closest to reference in a direction on X plane
     CandidateList sameYOverlappingCanList; // List of candidates closest to reference in a direction on Y plane
+    facebook::react::RSkComponent *prevCandidate = NULL;
+    // Bad hack !!! some initialization required to set canData 
+    facebook::react::Component canData = reference_->getComponentData();
+    facebook::react::Component prevCanData = reference_->getComponentData();
 
+    facebook::react::Component refData = reference_->getComponentData();
     switch(keyEvent) {
-        case KEY_TYPE_RIGHT:
+        case RNS_KEY_RIGHT:
             // Step 1: Filter out a list of candidates from navList_ whose x is greater than reference_'s x
             for (auto candidate = navList_.begin(); candidate != navList_.end(); candidate++) {
-                if ( candidate != reference_ && 
-                (*candidate)->layoutMetrics.frame.origin.x >= reference_->layoutMetrics.frame.origin.x) {
-                    canList.push_back(candidate);
+                canData = (*candidate)->getComponentData();
+                if (*candidate != reference_ && 
+                canData.layoutMetrics.frame.origin.x >= refData.layoutMetrics.frame.origin.x) {
+                    canList.push_back(*candidate);
                 }
             }
 
@@ -153,11 +176,12 @@ void RSkSpatialNavigator::navigateInDirection(int keyEvent) {
 
             // Step 2: Filter the candidates (canList) whose body has a projected overlap in Eastern region of the reference
             for (auto candidate = canList.begin(); candidate != canList.end(); candidate++) {
-                if ( (candidate != reference_) && 
-                !((*candidate)->bottomY <= reference_->layoutMetrics.frame.origin.y && 
-                (*candidate)->layoutMetrics.frame.origin.y > reference_->bottomY)
+                canData = (*candidate)->getComponentData();
+                if ( (*candidate != reference_) && 
+                !(canData.bottomY <= refData.layoutMetrics.frame.origin.y && 
+                canData.layoutMetrics.frame.origin.y > refData.bottomY)
                 ) {
-                    overlappingCanList.push_back(candidate);
+                    overlappingCanList.push_back(*candidate);
                 }
             }
 
@@ -171,71 +195,77 @@ void RSkSpatialNavigator::navigateInDirection(int keyEvent) {
             // there may be multiple, if many candidates with same X
             sort(overlappingCanList.begin(), overlappingCanList.end(), compareX);
             // filter components which have the same X
-            static std::shared_ptr<facebook::react::Component> prevCandidate = NULL;
+            prevCandidate = overlappingCanList[0];
             
-            for (auto candidate = overlappingCanList.begin(), prevCandidate = candidate; candidate != overlappingCanList.end(); candidate++) {
+            for (auto candidate = overlappingCanList.begin(); candidate != overlappingCanList.end(); ++candidate) {
+                canData = (*candidate)->getComponentData();
+                prevCanData = prevCandidate->getComponentData();
                 // skip the first one, to start comparison from next
-                if (prevCandidate == candidate) {
-                    sameXOverlappingCanList.push_back(candidate);
+                if (prevCandidate == *candidate) {
+                    sameXOverlappingCanList.push_back(*candidate);
                     continue;
                 }
 
-                if ( (*prevCandidate)->layoutMetrics.frame.origin.x == (*candidate)->layoutMetrics.frame.origin.x) {
-                    sameXOverlappingCanList.push_back(candidate);
+                if ( prevCanData.layoutMetrics.frame.origin.x == canData.layoutMetrics.frame.origin.x) {
+                    sameXOverlappingCanList.push_back(*candidate);
                 } else {
                     // break out of the loop
                     break;
                 }
-                prevCandidate = candidate;
+                prevCandidate = *candidate;
             }
 
             // Step 5: If only one candidate left, found the one
             if (sameXOverlappingCanList.size() == 1) {
                 // Trigger blur event
                 if (reference_ != NULL) {
-                    reference_->onBlur();
+                    refData.onBlur();
                     // Trigger TV navigation "blur" event
-                    tvNotification.emit(tvNavigationEventName, "blur", reference_->tag);
+                    tvNotification.emit(tvNavigationEventName, "blur", refData.tag);
                 }
                 
                 // Trigger focus event
                 reference_ = sameXOverlappingCanList[0];
-                reference_->onFocus();
+                refData.onFocus();
                 // Trigger TV navigation "focus" event
-                tvNotification.emit(tvNavigationEventName, "focus", reference_->tag);
+                tvNotification.emit(tvNavigationEventName, "focus", refData.tag);
             } else {
                 // Step 6: More than one candidates with same X: Select the one with the lowest Y
                 // there may be multiple, if many candidates with same Y
                 sort(sameXOverlappingCanList.begin(), sameXOverlappingCanList.end(), compareY);
-                for (auto candidate = sameXOverlappingCanList.begin(), prevCandidate = candidate; candidate != sameXOverlappingCanList.end(); candidate++) {
+                
+                prevCandidate = sameXOverlappingCanList[0];
+                for (auto candidate = sameXOverlappingCanList.begin(); candidate != sameXOverlappingCanList.end(); candidate++) {
+                    canData = (*candidate)->getComponentData();
+                    prevCanData = prevCandidate->getComponentData();
                     // skip the first one, to start comparison from next
-                    if (prevCandidate == candidate) {
-                        sameYOverlappingCanList.push_back(candidate);
+                    if (prevCandidate == *candidate) {
+                        sameYOverlappingCanList.push_back(*candidate);
                         continue;
                     }
 
-                    if ( (*prevCandidate)->layoutMetrics.frame.origin.x == (*candidate)->layoutMetrics.frame.origin.x) {
-                        sameYOverlappingCanList.push_back(candidate);
+                    if ( prevCanData.layoutMetrics.frame.origin.y == canData.layoutMetrics.frame.origin.y) {
+                        sameYOverlappingCanList.push_back(*candidate);
                     } else {
                         // break out of the loop
                         break;
                     }
-                    prevCandidate = candidate;
+                    prevCandidate = *candidate;
                 }    
                 // Step 7: If only one candidate left, found the one
                 if (sameYOverlappingCanList.size() == 1) {
                     // Trigger blur event
                     if (reference_ != NULL) {
-                        reference_->onBlur();
+                        refData.onBlur();
                         // Trigger TV navigation "blur" event
-                        tvNotification.emit(tvNavigationEventName, "blur", reference_->tag);
+                        tvNotification.emit(tvNavigationEventName, "blur", refData.tag);
                     }
                     
                     // Trigger focus event
                     reference_ = sameYOverlappingCanList[0];
-                    reference_->onFocus();
+                    refData.onFocus();
                     // Trigger TV navigation "focus" event
-                    tvNotification.emit(tvNavigationEventName, "focus", reference_->tag);
+                    tvNotification.emit(tvNavigationEventName, "focus", refData.tag);
                 } else {
                     // Step 8: More than one candidates with same Y: Select the candidate with the lowest area
                     // find the first one: TO DO: if area is same, look for zIndex???
@@ -244,16 +274,16 @@ void RSkSpatialNavigator::navigateInDirection(int keyEvent) {
 
                     // Trigger blur event
                     if (reference_ != NULL) {
-                        reference_->onBlur();
+                        refData.onBlur();
                         // Trigger TV navigation "blur" event
-                        tvNotification.emit(tvNavigationEventName, "blur", reference_->tag);
+                        tvNotification.emit(tvNavigationEventName, "blur", refData.tag);
                     }
                     
                     // Trigger focus event
                     reference_ = sameYOverlappingCanList[0];
-                    reference_->onFocus();
+                    refData.onFocus();
                     // Trigger TV navigation "focus" event
-                    tvNotification.emit(tvNavigationEventName, "focus", reference_->tag);
+                    tvNotification.emit(tvNavigationEventName, "focus", refData.tag);
                 }
             }
         break;
@@ -265,23 +295,24 @@ void RSkSpatialNavigator::navigateInDirection(int keyEvent) {
 */
 void RSkSpatialNavigator::onTVKeyEvent(int keyEvent) {
     // TO DO: Use Key IDs (not string) upto this point for faster operations
+    facebook::react::Component refData = reference_->getComponentData();
     std::string eventName = "RCTTVNavigationEventNotification";
 
     if (keyEvent == RNS_KEY_SELECT) {
         // Send select event on the currntly focused event
-        keyNotification.emit(eventName, keyEvent, reference_ !== NULL ? reference_.tag : 0xFFFF);
+        keyEventNotification.emit(eventName, keyEvent, reference_ != NULL ? refData.tag : 0xFFFF);
         return;
     }
 
     switch(keyEvent) {
         case RNS_KEY_SELECT:
             // Send select event on the currntly focused event
-            keyNotification.emit(eventName, "select", reference_ !== NULL ? reference_.tag : 0xFFFF);
+            keyEventNotification.emit(eventName, "select", reference_ != NULL ? refData.tag : 0xFFFF);
         break;
-        case KEY_TYPE_UP:
-        case KEY_TYPE_DOWN:
-        case KEY_TYPE_LEFT:
-        case KEY_TYPE_RIGHT:
+        case RNS_KEY_UP:
+        case RNS_KEY_DOWN:
+        case RNS_KEY_LEFT:
+        case RNS_KEY_RIGHT:
             navigateInDirection(keyEvent);
         break;
     }

@@ -17,13 +17,18 @@
 
 ////#include "ReactSkia/utils/RnsLog.h"
 ////#include "ReactSkia/utils/RnsUtils.h"
+namespace facebook {
+    namespace react {
+        class RSkComponent;
+    }    
+}
 
-#include "ReactSkia/components/RSkComponent.h"
+//#include "ReactSkia/components/RSkComponent.h"
 #include "sdk/NotificationCenter.h"
 
 namespace SpatialNavigator {
 
-typedef std::vector<std::shared_ptr<facebook::react::Component>> CandidateList;
+typedef std::vector<facebook::react::RSkComponent*> CandidateList;
 
 /*
  * This Class manages Spatial Navigation 
@@ -39,7 +44,7 @@ class RSkSpatialNavigator {
     static RSkSpatialNavigator *instance_;
 
     // Currently focused component
-    facebook::react::Component *reference_ = NULL;
+    facebook::react::RSkComponent *reference_ = NULL;
 
     // List of Navigatable Components
     CandidateList navList_;
@@ -51,15 +56,18 @@ class RSkSpatialNavigator {
     NotificationCenter keyEventNotification;
     void onTVKeyEvent(int keyEvent);
     void navigateInDirection(int keyEvent);
+    static bool compareX(facebook::react::RSkComponent *candidate1, facebook::react::RSkComponent *candidate2);
+    static bool compareY(facebook::react::RSkComponent *candidate1, facebook::react::RSkComponent *candidate2);
+    static bool compareArea(facebook::react::RSkComponent *candidate1, facebook::react::RSkComponent *candidate2);
 
     public:
     static RSkSpatialNavigator *getInstance();
 
-    void addToNavList(std::shared_ptr<facebook::react::Component> candidate);
+    void addToNavList(facebook::react::RSkComponent &candidate);
 
-    void removeFromNavList(std::shared_ptr<facebook::react::Component> candidate);
+    void removeFromNavList(facebook::react::RSkComponent &candidate);
 
-    void updateInNavList(std::shared_ptr<facebook::react::Component> candidate);
+    void updateInNavList(facebook::react::RSkComponent &candidate);
 };
 
 } // namespace SpatialNavigator

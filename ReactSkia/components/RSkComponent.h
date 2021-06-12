@@ -5,6 +5,11 @@
 #include "sk_app/Window.h"
 #include <glog/logging.h>
 
+//#include "ReactSkia/core_modules/RSkSpatialNavigator.h"
+namespace SpatialNavigator {
+  class RSkSpatialNavigator;
+}
+
 namespace facebook {
 namespace react {
 
@@ -25,18 +30,21 @@ struct Component {
     , eventEmitter(shadowView.eventEmitter)
     , layoutMetrics(shadowView.layoutMetrics)
     , state(shadowView.state)
+    , tag (shadowView.tag)
   {}
 
   Props::Shared props{};
   EventEmitter::Shared eventEmitter{};
   LayoutMetrics layoutMetrics{EmptyLayoutMetrics};
   State::Shared state{};
+  Tag tag{};
   // TO DO: Setup the data types correctly
   int bottomY;
   int rightX;
-};
+  bool onBlur() { return false; }
+  bool onFocus() { return false; }
 
-class RSkComponent;
+};
 
 class RSkComponent : public sk_app::Window::Layer {
  public:
@@ -70,6 +78,8 @@ class RSkComponent : public sk_app::Window::Layer {
   RSkComponent *parent_;
   Point absOrigin_;
   Component component_;
+
+  SpatialNavigator::RSkSpatialNavigator *spatialNavigator_; 
 };
 
 } // namespace react

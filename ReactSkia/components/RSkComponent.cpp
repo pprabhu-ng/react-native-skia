@@ -1,4 +1,5 @@
 #include "ReactSkia/components/RSkComponent.h"
+#include "ReactSkia/core_modules/RSkSpatialNavigator.h"
 
 #include "include/core/SkPaint.h"
 #include "include/core/SkSurface.h"
@@ -10,7 +11,9 @@ RSkComponent::RSkComponent(const ShadowView &shadowView)
     : parent_(nullptr)
     , absOrigin_(shadowView.layoutMetrics.frame.origin)
     , component_(shadowView)
-    {}
+    {
+        spatialNavigator_ = SpatialNavigator::RSkSpatialNavigator::getInstance();
+    }
 
 RSkComponent::~RSkComponent() {}
 
@@ -28,6 +31,8 @@ void RSkComponent::updateComponentData(const ShadowView &newShadowView , const u
       component_.eventEmitter = newShadowView.eventEmitter;
    if(updateMask & ComponentUpdateMaskLayoutMetrics)
       component_.layoutMetrics = newShadowView.layoutMetrics;
+
+    spatialNavigator_->updateInNavList(*this);
 }
 
 void RSkComponent::mountChildComponent(
@@ -37,6 +42,7 @@ void RSkComponent::mountChildComponent(
     if(newChildComponent) {
         newChildComponent->parent_ = this;
         newChildComponent->absOrigin_ =  absOrigin_ + newChildComponent->component_.layoutMetrics.frame.origin;
+        spatialNavigator_->addToNavList(*newChildComponent);
     }
     /* TODO : Add the new child to children list */
 }
@@ -48,6 +54,7 @@ void RSkComponent::unmountChildComponent(
     if(oldChildComponent) {
         oldChildComponent->parent_ = nullptr ;
         oldChildComponent->absOrigin_ = oldChildComponent->component_.layoutMetrics.frame.origin;
+        spatialNavigator_->removeFromNavList(*oldChildComponent);
     }
     /* TODO : Remove the old child from children list */
 }
