@@ -24,43 +24,43 @@ class RSkWebSocketModuleBase: public RSkEventEmitter {
             TurboModule &turboModule,
             const jsi::Value *args,
             size_t count);
-
-	static jsi::Value getCloseWrapper(
+        
+        static jsi::Value getCloseWrapper(
             jsi::Runtime &rt,
             TurboModule &turboModule,
             const jsi::Value *args,
             size_t count);
 
-      static jsi::Value sendWrapper(
+        static jsi::Value sendWrapper(
             jsi::Runtime &rt,
             TurboModule &turboModule,
             const jsi::Value *args,
             size_t count);
 
-      static jsi::Value sendBinaryWrapper(
+        static jsi::Value sendBinaryWrapper(
             jsi::Runtime &rt,
             TurboModule &turboModule,
             const jsi::Value *args,
             size_t count);
 
-      static jsi::Value pingWrapper(
+        static jsi::Value pingWrapper(
             jsi::Runtime &rt,
             TurboModule &turboModule,
             const jsi::Value *args,
             size_t count);
 
-	virtual jsi::Value getConnect(
+        virtual jsi::Value getConnect(
             std::string,
             folly::dynamic,
             folly::dynamic,
             int) = 0;
 
-	virtual jsi::Value getClose(
+        virtual jsi::Value getClose(
             int,
             std::string,
             int) = 0;
 
-	virtual jsi::Value send(
+        virtual jsi::Value send(
             std::string,
             int) = 0;
 

@@ -20,29 +20,29 @@ class RSkWebSocketModule:  public RSkWebSocketModuleBase {
             folly::dynamic,
             int) override;
 
-        jsi::Value getClose(
+    jsi::Value getClose(
             int,
             std::string,
             int) override;
 
-        jsi::Value send(
+    jsi::Value send(
             std::string,
             int) override;
 
-        jsi::Value sendBinary(
+    jsi::Value sendBinary(
             std::string,
             int) override;
 
-        jsi::Value ping(
+    jsi::Value ping(
             int) override;
 
-        std::thread wsMessageThread_;
-        better::map <int , noPollConn*> connectionList_;
-        std::vector<std::string> events_ = {"websocketOpen","websocketClosed",
+    std::thread wsMessageThread_;
+    better::map <int , noPollConn*> connectionList_;
+    std::vector<std::string> events_ = {"websocketOpen","websocketClosed",
                                     "websocketMessage","websocketFailed"};
   private:
-        std::string* parseUrl(std::string&);
-        noPollCtx* ctx_;
+    std::string* parseUrl(std::string&);
+    noPollCtx* ctx_;
 
 };
 }
