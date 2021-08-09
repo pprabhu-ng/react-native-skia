@@ -3,6 +3,8 @@
 #include "include/core/SkImageFilter.h"
 #include "include/effects/SkImageFilters.h"
 
+#include "react/renderer/components/image/ImageEventEmitter.h"
+
 #include "ReactSkia/components/RSkComponentImage.h"
 #include "ReactSkia/views/common/RSkDrawUtils.h"
 #include "ReactSkia/views/common/RSkImageUtils.h"
@@ -30,6 +32,7 @@ void RSkComponentImage::OnPaint(
     RNS_LOG_ERROR("Empty Source ....");
     return;
   }
+  auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
   const auto source = imageProps.sources[0];
 
   if (source.type == ImageSource::Type::Local && !source.uri.empty()) {
@@ -45,6 +48,7 @@ void RSkComponentImage::OnPaint(
     RNS_PROFILE_START(drawImage)
     sk_sp<SkImage> imageData=getImageData(path.c_str());
     if(imageData) {
+      imageEventEmitter->onLoad(); /*Emitting Image Load completed Event*/
       canvas->save();
 
       SkRect targetRect = computeTargetRect({imageData->width(),imageData->height()},frameRect,imageProps.resizeMode);
@@ -62,6 +66,7 @@ void RSkComponentImage::OnPaint(
       canvas->drawImageRect(imageData,targetRect,&paint);
       canvas->restore();
     } else {
+      imageEventEmitter->onError(); /*Emitting Image Load failed Event*/
       RNS_LOG_ERROR("Draw Image Failed for:" << path);
     }
     RNS_PROFILE_END(path.c_str(),drawImage)
