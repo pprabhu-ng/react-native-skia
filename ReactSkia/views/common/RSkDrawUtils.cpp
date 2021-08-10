@@ -280,7 +280,7 @@ void  drawBackground(SkCanvas *canvas,
                                SharedColor backgroundColor,
                                Float opacity)
 {
-    if(isDrawVisible(backgroundColor,opacity)){
+    if( backgroundColor && isDrawVisible(backgroundColor,opacity) ){
       drawRect(Background,canvas,frame,borderProps,backgroundColor,opacity);
     }
 }
