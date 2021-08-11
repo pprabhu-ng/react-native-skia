@@ -64,18 +64,18 @@ void setStyle(int strokeWidth,SkPaint::Style style,BorderStyle borderStyle,SkPai
 void setColor(SharedColor Color,Float opacity,SkPaint *paint)
 {
     float ratio = 255.9999;
+    opacity = (opacity >1.0 ? 1.0:opacity);
     paint->setAntiAlias(true);
     if(Color){
         auto colorValue=colorComponentsFromColor(Color);
         paint->setColor(SkColorSetARGB(
-            colorValue.alpha * ratio,
+            colorValue.alpha * ratio * opacity,
             colorValue.red * ratio,
             colorValue.green * ratio,
             colorValue.blue * ratio));
     }else{
         paint->setColor(DEFAULT_COLOUR);
     }
-    paint->setAlphaf((opacity >1.0 ? 1.0:opacity));
 }
 bool isDrawVisible(SharedColor Color,Float opacity,Float thickness=1.0)
 {
