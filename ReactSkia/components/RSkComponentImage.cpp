@@ -32,6 +32,12 @@ void RSkComponentImage::OnPaint(
   }
   const auto source = imageProps.sources[0];
 
+  /*Draw image not needed, if fully transparent*/
+  if(imageProps.opacity <= 0.0) {
+    RNS_LOG_DEBUG("Image is fully transparent,So skipping draw");
+    return;
+  }
+
   if (source.type == ImageSource::Type::Local && !source.uri.empty()) {
     assert(source.uri.substr(0, 14) == "file://assets/");
     std::string path = "./" + source.uri.substr(7);
@@ -39,7 +45,10 @@ void RSkComponentImage::OnPaint(
     Rect frame = getAbsoluteFrame();
     SkRect frameRect = SkRect::MakeXYWH(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
     auto const &imageBorderMetrics=imageProps.resolveBorderMetrics(component.layoutMetrics);
-	
+
+    SkPaint paint;
+    paint.setAlphaf((imageProps.opacity >1.0 ? 1.0:imageProps.opacity));
+
     /* Draw order 1. Background 2. Image 3. Border*/
     drawBackground(canvas,frame,imageBorderMetrics,imageProps.backgroundColor,imageProps.opacity);
     RNS_PROFILE_START(drawImage)
@@ -52,7 +61,6 @@ void RSkComponentImage::OnPaint(
       if(( frameRect.width() < targetRect.width()) || ( frameRect.height() < targetRect.height())) {
         canvas->clipRect(frameRect,SkClipOp::kIntersect);
       }
-      SkPaint paint;
       if(imageProps.resizeMode == ImageResizeMode::Repeat){
         sk_sp<SkImageFilter> imageFilter(SkImageFilters::Tile(targetRect,frameRect ,nullptr));
         paint.setImageFilter(std::move(imageFilter));
