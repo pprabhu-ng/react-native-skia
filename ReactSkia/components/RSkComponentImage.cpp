@@ -48,9 +48,9 @@ void RSkComponentImage::OnPaint(
 
     SkPaint paint;
     paint.setAlphaf((imageProps.opacity >1.0 ? 1.0:imageProps.opacity));
+    /*TO DO: Handle filter quality based of configuration. Setting Low Filter Quality as default for now*/
+    paint.setFilterQuality(DEFAULT_IMAGE_FILTER_QUALITY);
 
-    /* Draw order 1. Background 2. Image 3. Border*/
-    drawBackground(canvas,frame,imageBorderMetrics,imageProps.backgroundColor,imageProps.opacity);
     RNS_PROFILE_START(drawImage)
     sk_sp<SkImage> imageData=getImageData(path.c_str());
     if(imageData) {
@@ -61,13 +61,14 @@ void RSkComponentImage::OnPaint(
       if(( frameRect.width() < targetRect.width()) || ( frameRect.height() < targetRect.height())) {
         canvas->clipRect(frameRect,SkClipOp::kIntersect);
       }
-      if(imageProps.resizeMode == ImageResizeMode::Repeat){
+      if(imageProps.resizeMode == ImageResizeMode::Repeat) {
         sk_sp<SkImageFilter> imageFilter(SkImageFilters::Tile(targetRect,frameRect ,nullptr));
         paint.setImageFilter(std::move(imageFilter));
       }
-      /*TO DO: Handle filter quality based of configuration. Setting Low Filter Quality as default for now*/
-      paint.setFilterQuality(DEFAULT_IMAGE_FILTER_QUALITY);
+      /* Draw order 1. Background 2. Image 3. Border*/
+      drawBackground(canvas,frame,imageBorderMetrics,imageProps.backgroundColor,imageProps.opacity);
       canvas->drawImageRect(imageData,targetRect,&paint);
+      drawBorder(canvas,frame,imageBorderMetrics,imageProps.backgroundColor,imageProps.opacity);
       canvas->restore();
     } else {
       RNS_LOG_ERROR("Draw Image Failed for:" << path);
@@ -76,7 +77,6 @@ void RSkComponentImage::OnPaint(
 #ifdef RNS_IMAGE_CACHE_USAGE_DEBUG
       printCacheUsage();
 #endif //RNS_IMAGECACHING_DEBUG
-    drawBorder(canvas,frame,imageBorderMetrics,imageProps.backgroundColor,imageProps.opacity);
   }
 }
 
