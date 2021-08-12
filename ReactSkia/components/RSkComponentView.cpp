@@ -25,10 +25,15 @@ void RSkComponentView::OnPaint(SkCanvas *canvas) {
   shadowMetrics.shadowOpacity=viewProps.shadowOpacity;
   shadowMetrics.shadowRadius=viewProps.shadowRadius;
 
+  if(viewProps.opacity >= 0.0) {
+    Float opacity =  ( viewProps.opacity > 1.0 ) ? 255 : viewProps.opacity *255;
 /*Draw Order : 1. Shadow 2. BackGround 3 Border*/
-  drawShadow(canvas,frame,borderMetrics,shadowMetrics);
-  drawBackground(canvas,frame,borderMetrics,viewProps.backgroundColor,viewProps.opacity);
-  drawBorder(canvas,frame,borderMetrics,viewProps.backgroundColor,viewProps.opacity);
+    canvas->saveLayerAlpha(nullptr, opacity);
+    drawShadow(canvas,frame,borderMetrics,shadowMetrics);
+    drawBackground(canvas,frame,borderMetrics,viewProps.backgroundColor);
+    drawBorder(canvas,frame,borderMetrics,viewProps.backgroundColor);
+    canvas->restore();
+  }
 }
 
 } // namespace react

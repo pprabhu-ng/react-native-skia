@@ -32,11 +32,12 @@ void RSkComponentImage::OnPaint(
   }
   const auto source = imageProps.sources[0];
 
-  /*Draw image not needed, if fully transparent*/
+/*Draw image not needed, if fully transparent*/
   if(imageProps.opacity <= 0.0) {
     RNS_LOG_DEBUG("Image is fully transparent,So skipping draw");
     return;
   }
+  Float opacity =  ( imageProps.opacity > 1.0 ) ? 255 : imageProps.opacity *255;
 
   if (source.type == ImageSource::Type::Local && !source.uri.empty()) {
     assert(source.uri.substr(0, 14) == "file://assets/");
@@ -47,17 +48,16 @@ void RSkComponentImage::OnPaint(
     auto const &imageBorderMetrics=imageProps.resolveBorderMetrics(component.layoutMetrics);
 
     SkPaint paint;
-    paint.setAlphaf((imageProps.opacity >1.0 ? 1.0:imageProps.opacity));
-    /*TO DO: Handle filter quality based of configuration. Setting Low Filter Quality as default for now*/
+/*TO DO: Handle filter quality based of configuration. Setting Low Filter Quality as default for now*/
     paint.setFilterQuality(DEFAULT_IMAGE_FILTER_QUALITY);
 
     RNS_PROFILE_START(drawImage)
     sk_sp<SkImage> imageData=getImageData(path.c_str());
     if(imageData) {
-      canvas->save();
+      int globalSave = canvas->save();
 
       SkRect targetRect = computeTargetRect({imageData->width(),imageData->height()},frameRect,imageProps.resizeMode);
-      /* clipping logic to be applied if computed Frame is greater than the target.*/
+/* clipping logic to be applied if computed Frame is greater than the target.*/
       if(( frameRect.width() < targetRect.width()) || ( frameRect.height() < targetRect.height())) {
         canvas->clipRect(frameRect,SkClipOp::kIntersect);
       }
@@ -65,11 +65,13 @@ void RSkComponentImage::OnPaint(
         sk_sp<SkImageFilter> imageFilter(SkImageFilters::Tile(targetRect,frameRect ,nullptr));
         paint.setImageFilter(std::move(imageFilter));
       }
-      /* Draw order 1. Background 2. Image 3. Border*/
-      drawBackground(canvas,frame,imageBorderMetrics,imageProps.backgroundColor,imageProps.opacity);
+/* Draw order 1. Background 2. Image 3. Border*/
+      int preDrawSave = canvas->saveLayerAlpha(nullptr, opacity);
+      drawBackground(canvas,frame,imageBorderMetrics,imageProps.backgroundColor);
       canvas->drawImageRect(imageData,targetRect,&paint);
-      drawBorder(canvas,frame,imageBorderMetrics,imageProps.backgroundColor,imageProps.opacity);
-      canvas->restore();
+      drawBorder(canvas,frame,imageBorderMetrics,imageProps.backgroundColor);
+      canvas->restoreToCount(preDrawSave);
+      canvas->restoreToCount(globalSave);
     } else {
       RNS_LOG_ERROR("Draw Image Failed for:" << path);
     }

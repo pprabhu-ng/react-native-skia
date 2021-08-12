@@ -27,13 +27,11 @@ struct ShadowMetrics{
   void drawBackground(SkCanvas *canvas,
                                Rect frame,
                                BorderMetrics borderMetrics,
-                               SharedColor bgColor,
-                               Float opacity);
+                               SharedColor bgColor);
   void drawBorder(SkCanvas *canvas,
                                Rect frame,
                                BorderMetrics borderMetrics,
-                               SharedColor bgColor,
-                               Float opacity);
+                               SharedColor bgColor);
   void drawShadow(SkCanvas *canvas,
                                Rect frame,
                                BorderMetrics borderMetrics,
