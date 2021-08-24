@@ -7,7 +7,6 @@ let fontSize1 = resolution.textStyle.fontSize;
 
 const ShadowProps = (props) => {
 
-    let test = 0;
     let text = <Text />
     var subViewWidth= resolution.maincontainer.width * .4;
     var subViewHeight=resolution.maincontainer.height * .67;
@@ -24,7 +23,6 @@ const ShadowProps = (props) => {
     let borderWidth = 0;
     let borderRadius = 0;
 
-
     let justifyContent = 'center';
     let alignItems = 'center';
 
@@ -33,22 +31,21 @@ const ShadowProps = (props) => {
     useEffect( () =>   {
         console.log("---moveRect:" + JSON.stringify(value))
         if(props.flag == 2){
-        console.log("---moveRect:" + JSON.stringify(value))
-        Animated.timing(value,{
-            toValue: {x: resolution.maincontainer.width * .28, y: resolution.maincontainer.height * 0.167},
-            duration: 2000,
-            velocity: 1,
-            tension: 40,
-            useNativeDriver:false
-        }).start();
+			Animated.timing(value,{
+				toValue: {x: resolution.maincontainer.width * .28, y: resolution.maincontainer.height * 0.167},
+				duration: 2000,
+				velocity: 1,
+				tension: 40,
+				useNativeDriver:false
+			}).start();
         } else if (props.flag == 3){
-        Animated.timing(value,{
-            toValue: {x:resolution.maincontainer.width * 0.2, y:  resolution.maincontainer.height * -0.167},
-            duration: 2000,
-            velocity: 1,
-            tension: 40,
-            useNativeDriver:false
-            }).start();
+			Animated.timing(value,{
+				toValue: {x:resolution.maincontainer.width * 0.2, y:  resolution.maincontainer.height * -0.167},
+				duration: 2000,
+				velocity: 1,
+				tension: 40,
+				useNativeDriver:false
+			}).start();
         } else {
             Animated.timing(value,{
                 toValue: {x:0, y:0},
@@ -68,12 +65,19 @@ const ShadowProps = (props) => {
         borderWidth = 0;
         borderRadius = 0;
         subViewWidth =  resolution.maincontainer.width * 0.6;
-        bgColor = Config.main.tilesBackground;
+        bgColor= Config.main.tilesBackground;
         bColor = Config.main.tilesBackground;
         mVbgColor = Config.main.tilesBackground;
-        text = <Text style={{textAlign:'center', 
-        fontSize:fontSize1,
-         color:'white', fontWeight:'bold', textShadowRadius:0, textShadowColor:'#3F454C', textShadowOffset:{width:3,height:3}}}> Shadow Properties </Text>
+        text = <Text 
+		style={{
+			textAlign:'center', 
+			fontSize:fontSize1,
+			color:'white', fontWeight:'bold', 
+			textShadowRadius:0, textShadowColor:'#3F454C',
+			textShadowOffset:{width:3,height:3}}}
+		 >
+			  Shadow Properties 
+		</Text>
     } else if(props.flag == 1) {
         sRadius = 5;
         sOpacity = 1;
@@ -111,44 +115,43 @@ const ShadowProps = (props) => {
         bColor = Config.shadowProps.view.bgColor;
         justifyContent = 'center';
         alignItems = 'center';
-        //sColor = '#212529';
         text = <Text> DIff shadow Radius and color</Text>
     }
 
     return (
         <View style={[styles.MainContainer, {flex: 1, justifyContent:justifyContent, alignItems:alignItems, backgroundColor:mVbgColor, borderWidth:5, borderRadius:10, borderColor:mVbgColor}]}>
-        <Animated.View style={value.getLayout()}>
-            <View
-            style={{
-                width:subViewWidth ,
-                height : subViewHeight,
-                backgroundColor: bgColor,
-                shadowOffset: {
-                  width: sOffsetWidth,
-                  height:sOffsetheight
-                },
-                shadowRadius:sRadius,
-                shadowColor:sColor,
-                shadowOpacity: sOpacity,
-                borderWidth:borderWidth,
-                borderRadius:borderRadius,
-                borderColor: bgColor,
-                justifyContent: 'center',
-                alignItems: 'center'
-            }}>
-              {text}
-            </View>
-        </Animated.View>
+			<Animated.View style={value.getLayout()}>
+				<View
+				style={{
+					width:subViewWidth ,
+					height : subViewHeight,
+					backgroundColor: bgColor,
+					shadowOffset: {
+					width: sOffsetWidth,
+					height:sOffsetheight
+					},
+					shadowRadius:sRadius,
+					shadowColor:sColor,
+					shadowOpacity: sOpacity,
+					borderWidth:borderWidth,
+					borderRadius:borderRadius,
+					borderColor: bgColor,
+					justifyContent: 'center',
+					alignItems: 'center'
+				}}>
+					{text}
+				</View>
+			</Animated.View>
         </View>
     );
     
 }
 
 const styles = StyleSheet.create({
-  MainContainer: {
-    width:resolution.maincontainer.width,
-    height: resolution.maincontainer.height
-  }
+	MainContainer: {
+		width:resolution.maincontainer.width,
+		height: resolution.maincontainer.height
+	}
 });
 
 AppRegistry.registerComponent('ShadowProps', () => ShadowProps);
