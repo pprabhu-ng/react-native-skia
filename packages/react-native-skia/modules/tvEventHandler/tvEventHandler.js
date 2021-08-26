@@ -20,6 +20,7 @@ class SimpleViewApp extends React.Component {
     console.log('APP: TVEventHandler ',this._tvEventHandler);
     this._tvEventHandler.enable(this, function(cmp, evt) {
       console.log('APP: TV Key event received: ', evt);
+      console.log('APP: TV Key event received:  [evt.eventType]',  evt.eventType);
 
       if (evt && evt.eventType === 'right') {
         that.setState({bgColor: '#FF0000'})
