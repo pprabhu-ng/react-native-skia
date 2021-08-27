@@ -135,12 +135,12 @@ rnsKey  RnsShell::WindowLibWPE::keyIdentifierForWPEKeyCode(int keyCode){
     case WPE_KEY_exclam: return RNS_KEY_Exclam;
     case WPE_KEY_at : return RNS_KEY_At;
     case WPE_KEY_numbersign: return RNS_KEY_Numbersign;
-    case WPE_KEY_dollar: return RNS_KEY_Dolar;
+    case WPE_KEY_dollar: return RNS_KEY_Dollar;
     case WPE_KEY_asciicircum: return RNS_KEY_Asciicircum;
     case WPE_KEY_ampersand: return RNS_KEY_Ampersand;
     case WPE_KEY_asterisk: return RNS_KEY_Asterisk;
-    case WPE_KEY_braceleft: return RNS_KEY_Braceleft;
-    case WPE_KEY_braceright: return RNS_KEY_Braceright;
+    case WPE_KEY_braceleft: return RNS_KEY_BraceLeft;
+    case WPE_KEY_braceright: return RNS_KEY_BraceRight;
     case WPE_KEY_underscore: return RNS_KEY_Underscore;
     case WPE_KEY_Delete: return RNS_KEY_Delete;
     case WPE_KEY_Page_Up: return RNS_KEY_Page_Up;

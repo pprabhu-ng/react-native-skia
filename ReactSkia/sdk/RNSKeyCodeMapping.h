@@ -119,7 +119,7 @@ typedef enum rnsKey{
     RNS_KEY_Exclam,
     RNS_KEY_At,
     RNS_KEY_Numbersign,
-    RNS_KEY_Dolar,
+    RNS_KEY_Dollar,
     RNS_KEY_Asciicircum,
     RNS_KEY_Ampersand,
     RNS_KEY_Asterisk,
@@ -139,8 +139,8 @@ typedef enum rnsKey{
     RNS_KEY_Colon,
     RNS_KEY_Bar,
     RNS_KEY_BackSlash,
-    RNS_KEY_Braceleft,
-    RNS_KEY_Braceright,
+    RNS_KEY_BraceLeft,
+    RNS_KEY_BraceRight,
     RNS_KEY_BracketLeft,
     RNS_KEY_BracketRight,
     RNS_KEY_Escape,
@@ -268,13 +268,13 @@ static std::string RNSKeyMap[RNS_KEY_End]={
     "y",
     "z",
     /*Modfier Keys*/
-    "CapsLock",
-    "AltL",
-    "AltR",
-    "ShiftL",
-    "ShiftR",
-    "ControlL",
-    "ControlR",
+    "capsLock",
+    "altL",
+    "altR",
+    "shiftL",
+    "shiftR",
+    "controlL",
+    "controlR",
     /*Special chars*/
     "tab",
     "`",
@@ -308,8 +308,8 @@ static std::string RNSKeyMap[RNS_KEY_End]={
     "]",
     "escape",
     " ",
-    "Home",
-    "End",
+    "home",
+    "end",
     "insert",
     /*
      * Arthematic Opps
@@ -321,6 +321,6 @@ static std::string RNSKeyMap[RNS_KEY_End]={
     ">",
     "<",
 
-    "UnKnown"
+    "unKnown"
 };
 #endif// __RNSKeyCodeMapping_h__

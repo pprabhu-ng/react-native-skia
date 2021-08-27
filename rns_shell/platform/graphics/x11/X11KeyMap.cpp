@@ -98,7 +98,7 @@ rnsKey  RnsShell::WindowX11::keyIdentifierForX11KeyCode(KeySym keycode){
     case XK_exclam: return RNS_KEY_Exclam;
     case XK_at: return RNS_KEY_At;
     case XK_numbersign: return RNS_KEY_Numbersign;
-    case XK_dollar: return RNS_KEY_Dolar;
+    case XK_dollar: return RNS_KEY_Dollar;
     case XK_asciicircum: return RNS_KEY_Asciicircum;
     case XK_ampersand: return RNS_KEY_Ampersand;
     case XK_asterisk: return RNS_KEY_Asterisk;
@@ -118,8 +118,8 @@ rnsKey  RnsShell::WindowX11::keyIdentifierForX11KeyCode(KeySym keycode){
     case XK_semicolon: return RNS_KEY_Semicolon;
     case XK_bar: return RNS_KEY_Bar;
     case XK_backslash : return RNS_KEY_BackSlash;
-    case XK_braceleft: return RNS_KEY_Braceleft;
-    case XK_braceright: return RNS_KEY_Braceright;
+    case XK_braceleft: return RNS_KEY_BraceLeft;
+    case XK_braceright: return RNS_KEY_BraceRight;
     case XK_bracketleft : return RNS_KEY_BracketLeft;
     case XK_bracketright: return RNS_KEY_BracketRight;
     case XK_Escape: return RNS_KEY_Escape;
