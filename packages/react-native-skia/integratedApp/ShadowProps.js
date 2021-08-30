@@ -1,3 +1,7 @@
+/**
+ * This Component Shows the Shadow properties of View.
+*/
+
 import React, {useEffect} from 'react'
 import {View, AppRegistry, Text, StyleSheet, Animated} from 'react-native'
 import Config from './config.json'
@@ -11,9 +15,10 @@ const ShadowProps = (props) => {
     var subViewWidth= resolution.maincontainer.width * .4;
     var subViewHeight=resolution.maincontainer.height * .67;
     var bgColor='';
-    var bColor = '';
+    let left1 = 0;
+    let top1 = 0;
 
-    var mVbgColor = Config.main.mainBackground;
+    var mVbgColor = Config.main.focusBackground;
     var sOffsetWidth= 0;
     var sOffsetheight=0;
     var sRadius = 0;
@@ -32,7 +37,7 @@ const ShadowProps = (props) => {
         console.log("---moveRect:" + JSON.stringify(value))
         if(props.flag == 2){
 			Animated.timing(value,{
-				toValue: {x: resolution.maincontainer.width * .28, y: resolution.maincontainer.height * 0.167},
+				toValue: {x: resolution.maincontainer.width * .29, y: resolution.maincontainer.height * 0.12},
 				duration: 2000,
 				velocity: 1,
 				tension: 40,
@@ -40,7 +45,7 @@ const ShadowProps = (props) => {
 			}).start();
         } else if (props.flag == 3){
 			Animated.timing(value,{
-				toValue: {x:resolution.maincontainer.width * 0.2, y:  resolution.maincontainer.height * -0.167},
+				toValue: {x:resolution.maincontainer.width * 0.19, y:  resolution.maincontainer.height * -0.10},
 				duration: 2000,
 				velocity: 1,
 				tension: 40,
@@ -64,16 +69,25 @@ const ShadowProps = (props) => {
         sOpacity = 0;
         borderWidth = 0;
         borderRadius = 0;
-        subViewWidth =  resolution.maincontainer.width * 0.6;
-        bgColor= Config.main.tilesBackground;
-        bColor = Config.main.tilesBackground;
-        mVbgColor = Config.main.tilesBackground;
+        //subViewWidth =  resolution.maincontainer.width * 0.6;
+      if(props.bg == 1) {
+			mVbgColor = Config.main.subtileFocus;
+			mVbgColor = Config.main.subtileFocus;
+			bgColor = Config.main.subtileFocus;
+			bColor = Config.main.subtileFocus;
+      } else {
+			mVbgColor = Config.main.tilesBackground;
+			mVbgColor = Config.main.tilesBackground;
+			bgColor= Config.main.tilesBackground;
+			bColor = Config.main.tilesBackground;
+      }
+        top1=-100;
         text = <Text 
 		style={{
 			textAlign:'center', 
 			fontSize:fontSize1,
 			color:'white', fontWeight:'bold', 
-			textShadowRadius:0, textShadowColor:'#3F454C',
+			textShadowRadius:0, textShadowColor: Config.main.textBackground,
 			textShadowOffset:{width:3,height:3}}}
 		 >
 			  Shadow Properties 
@@ -83,39 +97,46 @@ const ShadowProps = (props) => {
         sOpacity = 1;
         borderWidth = 5;
         borderRadius = 5;
-        sOffsetWidth= subViewWidth/ 5;
-        sOffsetheight= subViewHeight/ 5;
+        sOffsetWidth= subViewWidth/ 10;
+        sOffsetheight= subViewHeight/ 10;
         bgColor= Config.shadowProps.view.bgColor;
         bColor = Config.shadowProps.view.bgColor;
         justifyContent = 'flex-start';
         alignItems = 'flex-start';
-        text = <Text>  With Shadows</Text>
+        text = <Text style={{color:'white', fontWeight:'bold'}}>  With Shadows</Text>
+        top1= 65;
+        left1 = 170
     } else if(props.flag == 2) {
         sRadius = 20;
         sOpacity = 1;
         borderWidth = 5;
         borderRadius = 5;
-        sOffsetWidth= subViewWidth/ 5;
-        sOffsetheight= subViewHeight/ 5;
+        sOffsetWidth= subViewWidth/ 10;
+        sOffsetheight= subViewHeight/ 10;
         bgColor= Config.shadowProps.view.bgColor;
         bColor = Config.shadowProps.view.bgColor;
         justifyContent = 'flex-start';
         alignItems = 'flex-start';
-        text = <Text> With DIff shadow Radius</Text>
+        text = <Text style={{color:'white', fontWeight:'bold'}}> With shadow Radius</Text>
+        top1= 65;
+        left1 = 170;
     } else if(props.flag == 3){
         sOffsetWidth= 0;
         sOffsetheight=0;
-        sRadius = 40;
+        sRadius = 30;
         sOpacity = 1;
         borderWidth = 5;
         borderRadius = 5;
-        sOffsetWidth= subViewWidth/ 5;
-        sOffsetheight= subViewHeight/ 5;
+        sOffsetWidth= subViewWidth/ 10;
+        sOffsetheight= subViewHeight/ 10;
         bgColor= Config.shadowProps.view.bgColor;
         bColor = Config.shadowProps.view.bgColor;
         justifyContent = 'center';
         alignItems = 'center';
-        text = <Text> DIff shadow Radius and color</Text>
+        text = <Text style={{color:'white', fontWeight:'bold'}}> With shadow color </Text>
+        top1= 30;
+        left1 = 10;
+        sColor = "green"
     }
 
     return (
@@ -139,9 +160,12 @@ const ShadowProps = (props) => {
 					justifyContent: 'center',
 					alignItems: 'center'
 				}}>
-					{text}
+
 				</View>
 			</Animated.View>
+        <View style={{left:left1, top:top1}}>
+        	{text}
+        </View>
         </View>
     );
     

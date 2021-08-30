@@ -1,5 +1,9 @@
+/**
+ * This Component Shows the Image properties.
+*/
+
 import React from 'react'
-import {View, Text, Image} from 'react-native'
+import {View, Image} from 'react-native'
 import Config from './config.json'
 
 let resolution = Config.size.low;
@@ -32,23 +36,30 @@ const ImageProps = (props) => {
 	console.log("Flag: ", props.flag);
 	if(props.flag == 0){
 		index = 2;
-		bgColor = Config.main.tilesBackground;
 		width = resolution.maincontainer.width * 0.76;
+    if(props.bg == 1) {
+      bgColor = Config.main.subtileFocus;
+      bColor = Config.main.subtileFocus;
+    } else {
+      bgColor= Config.main.tilesBackground;
+      bColor = Config.main.tilesBackground;
+    }
 	} else if(props.flag == 1){
 		index = 1;
 		bgColor = Config.main.focusBackground;
 		bwidth = 0;
 		resizeCase = 1;
-	} else if( props.flag ==2){
+	} else if( props.flag == 2){
 		index = 1;
-		resizeCase = 3;
+		resizeCase = 1;
 		opacityValue = 0.5;
 		bgColor = Config.main.focusBackground;
 	} else if(props.flag == 3) {
 		index = 0;
 		resizeCase = 4;
 		bwidth = 10;
-		bColor = '#F8F9FA';
+		bColor = Config.animation.backgroundColor;
+    bgColor = Config.main.focusBackground;
 	} 
 
   return(
@@ -56,7 +67,8 @@ const ImageProps = (props) => {
 		style={{
 			justifyContent:'center', alignItems:'center', 
 			width:resolution.maincontainer.width, 
-			height:resolution.maincontainer.height}}
+			height:resolution.maincontainer.height,
+      backgroundColor:bgColor, borderWidth:5, borderRadius:10, borderColor:bgColor}}
 		> 
 		<Image 
 			style={{width:width,height:height,

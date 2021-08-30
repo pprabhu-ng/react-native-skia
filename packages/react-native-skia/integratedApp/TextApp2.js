@@ -1,3 +1,7 @@
+/**
+ * This Component Shows the Text properties
+*/
+
 import React from 'react'
 import {View, Text, StyleSheet} from 'react-native'
 import Config from './config.json'
@@ -25,9 +29,14 @@ const TextApp2 = (props) =>{
 	let text6 = <Text />;
 
     if(props.flag == 0){
-		backgroundColor = Config.main.tilesBackground;
-		borderColor = Config.main.tilesBackground;
-		text3 = <Text style={{fontSize:fontSize1, fontWeight:'bold', color:'white', textShadowRadius:0, textShadowColor:'#3F454C', textShadowOffset:{width:3,height:3} }} > Text Shadow Properties </Text>
+		if(props.bg == 1) {
+			backgroundColor = Config.main.subtileFocus;
+			borderColor = Config.main.subtileFocus;
+		} else {
+			backgroundColor = Config.main.tilesBackground;
+			borderColor = Config.main.tilesBackground;
+		}
+		text3 = <Text style={{fontSize:fontSize1, fontWeight:'bold', color:'white', textShadowRadius:0, textShadowColor: Config.main.textBackground, textShadowOffset:{width:3,height:3} }} > Text Shadow Properties </Text>
 		sWidth = 0;
 		sHeight = 0;
 		sRadius = 0;

@@ -1,3 +1,7 @@
+/**
+ * This Component Shows the Border properties of View.
+*/
+
 import React, {useEffect} from 'react'
 import {View, AppRegistry, Text, StyleSheet, Animated} from 'react-native'
 import Config from './config.json'
@@ -10,8 +14,8 @@ const BorderProps = (props) => {
 	let text = <Text /> 
 	let subViewWidth= resolution.maincontainer.width * 0.6;
 	let subViewHeight= resolution.maincontainer.height * 0.6;
-	let bgColor= Config.main.tilesBackground;
-	var mVbgColor = Config.main.mainBackground
+	let bgColor= '';
+	var mVbgColor = Config.main.focusBackground
 
 	let borderRadius=0;
 	let borderWidth=0;
@@ -53,19 +57,26 @@ const BorderProps = (props) => {
 
 
     if(props.flag == 0) {
+      if(props.bg == 1) {
+        mVbgColor = Config.main.subtileFocus;
+        mVbgColor = Config.main.subtileFocus;
+        bgColor = Config.main.subtileFocus;
+      } else {
+        mVbgColor = Config.main.tilesBackground;
+        mVbgColor = Config.main.tilesBackground;
+        bgColor= Config.main.tilesBackground ;
+      }
 		text = <Text 
 			style={[styles.textStyle, 
 			{
 				color:'white', fontSize:fontSize1, textShadowRadius:0,
-				textShadowColor:'#3F454C', 
+				textShadowColor:Config.main.textBackground, 
 				textShadowOffset:{width:3,height:3}
 			}]} > 
 			Border Properties 
 		</Text>
       console.log("j = ", justifyContent, alignItems);
-      mVbgColor = Config.main.tilesBackground;
     }else if(props.flag == 1) {
-		textColor = 'black';
 		text = <Text> With Border </Text>;
 		bgColor='#1a7599' ;
 		borderWidth = 30 ;
@@ -81,7 +92,6 @@ const BorderProps = (props) => {
 		alignItems = 'flex-start';
     }  else if(props.flag == 2) {
 		text = <Text> With different border width </Text>;
-		textColor = 'black';
 		bgColor='#1a7599' ;
 		borderLeftColor ='#2196c4';
 		borderRightColor ='#2196c4';
@@ -95,7 +105,6 @@ const BorderProps = (props) => {
 		alignItems = 'flex-start';
     } else if(props.flag == 3){
 		text = <Text> With Border radius </Text>
-		textColor = 'black';
 		bgColor ='#1a7599';
 		borderLeftColor='#2196c4';
 		borderRightColor='#2196c4';

@@ -1,3 +1,8 @@
+/**
+ * This Component is about JS Animation, It maybe changed to transform 
+ * animation when RNS is supporting transform feature.
+*/
+
 import React, { useEffect} from "react";
 import { Animated, View } from "react-native";
 import Config from './config.json'
@@ -12,20 +17,21 @@ const Animation = (props) => {
 
 	useEffect( () =>   {
 		console.log("---moveRect:" + JSON.stringify(value))
+    if(props.flag == 1) {
 		Animated.loop(Animated.sequence([
 			Animated.timing(value,{
-				toValue: {x:10, y:400},
-				duration: 4000,
+				toValue: {x:10, y:540},
+				duration: 2000,
 				useNativeDriver:false
 			}),
 			Animated.timing(fading,{
 				toValue: 120,
-				duration: 4000,
+				duration: 2000,
 				useNativeDriver: false
 			}),
 			Animated.timing(fading,{
 				toValue: 50,
-				duration: 4000,
+				duration: 2000,
 				useNativeDriver: false
 			}),
 			Animated.timing(fading,{
@@ -35,15 +41,11 @@ const Animation = (props) => {
 			}),
 			Animated.timing(value,{
 				toValue: {x:10, y:10},
-				duration: 4000,
+				duration: 2000,
 				useNativeDriver:false
-			}),
-			Animated.timing(fading,{
-				toValue: 70,
-				duration: 4000,
-				useNativeDriver: false
 			})			
 		]),{}).start();
+    }
 	})
  
 	return(

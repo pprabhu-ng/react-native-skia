@@ -1,3 +1,7 @@
+/**
+ * This Component Shows the Text properties
+*/
+
 import React, {useEffect} from 'react'
 import {View, Text, StyleSheet, Animated} from 'react-native'
 import Config from './config.json'
@@ -16,7 +20,7 @@ const TextApp = (props) =>{
 	let text5 = <Text />;
 	let text6 = <Text />;
 	let text7 = <Text />;
-	let textBackground = Config.textApp.textBackground;
+	let textBackground = "#D00000";
 	let bColor = '';
 	let justifyContent = 'center';
 	let alignItems = 'center';
@@ -38,8 +42,12 @@ const TextApp = (props) =>{
 
     console.log("Flag: ", props.flag, "fontSize1:", fontSize1);
     if(props.flag == 0) {
-		text1 = <Text style={[styles.textStyle, {color:'white', fontSize:fontSize1, textShadowRadius:0, textShadowColor:'#3F454C', textShadowOffset:{width:3,height:3}}]} > Text Properties </Text>
-		bColor = Config.main.tilesBackground;
+		text1 = <Text style={[styles.textStyle, {color:'white', fontSize:fontSize1, textShadowRadius:0, textShadowColor: Config.main.textBackground, textShadowOffset:{width:3,height:3}}]} > Text Properties </Text>
+    if(props.bg == 1) {
+      bColor = Config.main.subtileFocus;
+    } else {
+		  bColor = Config.main.tilesBackground;
+    }
 		justifyContent = 'center';
 		alignItems = 'center';
 		width1 = '100%';
@@ -55,22 +63,24 @@ const TextApp = (props) =>{
         bColor = Config.main.focusBackground;
     } else if(props.flag == 2){
         justifyContent = 'center';
-        alignItems = 'flext-start';
-        margin = 5
+        alignItems = 'center';
+        margin = 10
         bColor = Config.main.focusBackground;
-        text1 = <Text style={[styles.textStyle,{ color:'black'}]}>Default lineHeight</Text>
-        text2 = <Text style={[styles.textStyle, { lineHeight:40, color:'black' }]}>lineHeight:40</Text>
-        text3 = <Text style={[styles.textStyle, { lineHeight:30,color:'black'}]}>lineHeight:30</Text>
-        text4 = <Text style={[styles.textStyle, { lineHeight:20, color:'black'}]}>lineHeight:30</Text>
-        text5 = <Text style={[styles.textStyle, { lineHeight:12, color:'black'}]}>lineHeight:12</Text>
-        text6 = <Text style={[styles.textStyle, { lineHeight:5, color:'black'}]}>lineHeight:5</Text>
-        text7 = <Text style={[styles.textStyle, { lineHeight:0,color:'black'}]}>lineHeight:0</Text>
+        text1 = <Text style={[styles.textStyle,{ color:'white'}]}>Default lineHeight</Text>
+        text2 = <Text style={[styles.textStyle, { lineHeight:40, color:'white' }]}>lineHeight:40</Text>
+        text3 = <Text style={[styles.textStyle, { lineHeight:30,color:'white'}]}>lineHeight:30</Text>
+        text4 = <Text style={[styles.textStyle, { lineHeight:20, color:'white'}]}>lineHeight:30</Text>
+        text5 = <Text style={[styles.textStyle, { lineHeight:12, color:'white'}]}>lineHeight:12</Text>
+        text6 = <Text style={[styles.textStyle, { lineHeight:5, color:'white'}]}>lineHeight:5</Text>
+        text7 = <Text style={[styles.textStyle, { lineHeight:0,color:'white'}]}>lineHeight:0</Text>
     } else if(props.flag == 3){
         textBackground = '';
         justifyContent = 'center';
         alignItems = 'center';
         bColor = Config.main.focusBackground;
-        text4 = <Text style={{color:'white', fontWeight:'bold', fontFamily: 'Arial', fontSize:fontSize1 - 4, margin: 20}}>Font Properties with font size {fontSize1 - 4}</Text>
+        let tempText = "Font Properties with font size"
+        tempText = tempText.concat(" ",fontSize1 - 4)	    
+        text4 = <Text style={{color:'white', fontWeight:'bold', fontFamily: 'Arial', fontSize:fontSize1 - 4, margin: 20}}>{tempText}</Text>
         text5 = <Text style={{fontWeight:'bold', color:'orange', fontFamily: 'Arial', fontSize:fontSize1 -4}}>fontFamily: Arial</Text>
         text6 = <Text style={{ lineHeight:40 ,  color:'white', fontStyle:'italic', fontSize:fontSize1 -4}}>fontStyle: Italic</Text>
         text7 = <Text style={{ lineHeight:30, fontWeight:'bold', color:'green', fontSize:fontSize1 -4 }}>fontWeight: Bold</Text>
@@ -79,8 +89,8 @@ const TextApp = (props) =>{
 
 return (
   <View style={[ styles.MainContainer,{ flex:1, flexDirection:'row' ,justifyContent:justifyContent, alignItems:alignItems, backgroundColor:bColor, borderWidth:5, borderRadius:10, borderColor:bColor,} ]}>
-        <View style={{justifyContent:justifyContent, alignItems:alignItems}}>
-			<View style={{ margin:margin, backgroundColor: textBackground }}>
+        <View style={{justifyContent:justifyContent, alignItems:alignItems, margin:20}}>
+			<View style={{ margin:margin, backgroundColor: textBackground}}>
 				{text1}
 			</View>
 			<View style={{ margin:margin, backgroundColor: textBackground }}>

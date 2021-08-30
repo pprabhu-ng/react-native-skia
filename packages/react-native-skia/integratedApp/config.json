@@ -1,14 +1,15 @@
 {
-	"main": {
-		"mainBackground" : "#5B636A",
-		"tilesBackground" : "#8D959D",
-		"focusBackground" : "#3F454C",
-		"shadowColor" : "black",
-		"subtileFocus" : "#3F454C",
-		"subtileBackground" : "#8D959D"
-	},
+  "main": {
+      "mainBackground" : "#5B636A",
+      "tilesBackground" : "#35393C",
+      "focusBackground" : "#35393C",
+      "shadowColor" : "black",
+      "subtileFocus" : "#FFBA08",
+      "subtileBackground" : "#8D959D",
+      "textBackground" : "black"
+  },
 	"textApp" : {
-		"textBackground": "#F8F9FA",
+		"textBackground": "yellow",
 		"textColor":"white"
 	},
 	"textApp2" : {
@@ -26,7 +27,7 @@
 		"view" : {
 			"bgColor" : "#FFBA08",
 			"borderColor" : "#A9D6E5",
-			"shadowColor" : "#272640"
+			"shadowColor" : "#E9ECEF"
 		}
 	},
 	"size" : {

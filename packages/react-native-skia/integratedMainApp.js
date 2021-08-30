@@ -1,3 +1,8 @@
+/**
+ * This is an Integrated app where we show all the properties supported by the RNS currently.
+ * This will be updated further based on the feture list supported by RNS
+*/
+
 import React, { useState, useRef} from "react";
 import { Pressable, AppRegistry, Text, View, StyleSheet, ImageBackground} from "react-native";
 import TextApp from './integratedApp/TextApp'
@@ -20,18 +25,16 @@ let fontSize1 = resolution.textStyle.fontSize;
 const MyComponent = (props) =>  {
 
 	let myRef = useRef(null);
-	let top = 0;
-	let left = 0;
 	let width = resolution.maincontainer.width;
 	let height = resolution.maincontainer.height;
 	let pos = 'absolute';
-	let subackground = testBackground;
 	let [state, setState] = useState({
 		bw:0,
 		color1: 'red',
 		bg: tilesBackground,
 		sowidth: 0,
-		soheight: 0
+		soheight: 0, 
+    bgChange:0
 	});
 
 	let [test, setTest] = useState(0)
@@ -46,65 +49,70 @@ const MyComponent = (props) =>  {
 
 	setTest((test + 1) % 4);
 	console.log("test: ", test, "props.count", props.count);
-		if(test == 3){
+		if(test == 3 && props.count !=6){
 			setState({
-			bg: tilesBackground,
+			bg: Config.main.subtileFocus,
 			sowidth:15,
-			soheight: 15})
+			soheight: 15,
+      bgChange:1})
 		} else {
 		setState({
 			bg:focusBackground,
 			sowidth:15,
-			soheight:15
+			soheight:15,
+      bgChange:1
 		});
 		}
 	}
 
 	const onBlur1 = (e) => {
-	console.log("onBlur1---------" +  " x:"+ top + " y:"+left)
+	console.log("onBlur1---------", e)
 		setState({
 			bw:0,
 			bg:tilesBackground,
 			sowidth: 0,
-			soheight: 0
+			soheight: 0,
+      bgChange:0
 		});
 
 		setTest(0);
 	}
 
 
-	const onLayout1 = (e) => {
-		console.log("*** e.layout:"+ e.nativeEvent.layout + " x:"+ top + " y:"+left)
-		top = e.nativeEvent.layout.y;
-		left = e.nativeEvent.layout.x;
-	}
-
 	const onFocus1 = (e) => {
-		console.log("**** focus props.layout: ********" + test)
-		setState({
-			bg: tilesBackground,
-			sowidth:15,
-			soheight: 15
-		})
-
+		console.log("**** focus props.layout: ********", e)
+    if(props.count != 6) {
+      setState({
+        bg: Config.main.subtileFocus,
+        sowidth:15,
+        soheight: 15,
+        bgChange:1
+      })
+    }
 	}
 
 	const display = () => {
 		console.log("Display call:", props.count);
 		if(props.count == 0){
-			return  <TextApp flag = {test} />
+			return  <TextApp flag = {test}  bg = {state.bgChange} />
 		} else if(props.count == 1){
-			return <TextApp2 flag = {test} />
+			return <TextApp2 flag = {test}  bg = {state.bgChange} />
 		} else if(props.count == 2){
-			return   <BorderProps flag = {test} />
+			return   <BorderProps flag = {test}  bg = {state.bgChange} />
 		} else if(props.count == 3) {
-			return   <ShadowProps flag = {test} />
+			return   <ShadowProps flag = {test} bg = {state.bgChange}/>
 		} else if(props.count == 4){
-			return <ImageProps flag = {test} />
+			return <ImageProps flag = {test}  bg = {state.bgChange} />
 		} else if(props.count == 5){
-			return <WebSocketHelper flag = {test} />
+			return <WebSocketHelper flag = {test}  bg = {state.bgChange} />
 		} else if(props.count == 6){
-			return  <Animation />
+			return  (< View style={{alignContent:'center'}}>
+        <View style={{left:30}}> 
+          <Text style={{color:'white', fontWeight:'bold'}}> JS Animation</Text>
+        </View>
+        <Animation flag = {test}  bg = {state.bgChange} />
+      </View>
+      );
 		}
 	}
 
@@ -113,7 +121,6 @@ const MyComponent = (props) =>  {
 			onBlur={onBlur1} 
 			onFocus={onFocus1} 
 			changeCursor={changeCursor} 
-			onLayout={ onLayout1} 
 			style={{zIndex: 100, borderColor: state.color1, 
 				borderWidth: state.bw, 
 				marginTop:50, position: pos, 
@@ -142,14 +149,15 @@ const MyComponent = (props) =>  {
 						//{x:700,y:0,w:500,h:50},
 						{x:10,y:100},{x:550,y:100},{x:1090, y:100},
 						{x:10,y:500},{x:550,y:500},{x:1090, y:500},
-						//{x:1620, y:100, w:150, h:700}
+						{x:1620, y:100, w:150, h:700}
 					];
 
+		// Below list is for 720p, will be configured in future
 		// let list1 = [
 		//                  //{x:350,y:0,w:500,h:50},
 		//                  {x:10,y:100},{x: 400,y:100},{x:800, y:100},
 		//                  {x:10,y:368},{x:400,y:368},{x:800, y:368},
-		//                  //{x:1190, y:100, w:80, h:470}
+		//                  {x:1190, y:100, w:80, h:470}
 		//             ];
 
 		const addItems = () => {
@@ -163,13 +171,10 @@ const MyComponent = (props) =>  {
 
 		const addItem = () =>{
 			return (
-				<ImageBackground style = {styles.image} source={require('./integratedApp/images/bg2_2.png')} resizeMode='cover'>
+				<ImageBackground style = {styles.image} source={require('./integratedApp/images/bg.jpg')} resizeMode='cover'>
 					{addItems()}
-					<View style={[styles.header1,styles.header, {backgroundColor:'#8D959D', borderWidth:5, borderRadius:10, borderColor:'#8D959D', justifyContent:'center', alignItems:'center'}]}>
-						<Text style={{fontSize:fontSize1, fontWeight:'bold', letterSpacing:3}}> Demo of First MileStone </Text>
-					</View>
-					<View style={[styles.header2, styles.header, {backgroundColor:'#8D959D', borderWidth:5, borderRadius:10, borderColor:'#8D959D'}]}>
-						<Animation />
+					<View style={[styles.header1,styles.header, {backgroundColor:tilesBackground, borderWidth:5, borderRadius:10, borderColor:tilesBackground, justifyContent:'center', alignItems:'center'}]}>
+						<Text style={{fontSize:fontSize1, fontWeight:'bold', letterSpacing:3, color:"white"}}> Demo of First MileStone </Text>
 					</View>
 				</ImageBackground>
 			);
@@ -180,6 +185,7 @@ const MyComponent = (props) =>  {
 	}
 
 const styles = StyleSheet.create({
+	//Below Commented code is for 720p, will be configured in future.
 	// header1 : {
 	//   left:380,
 	//   top:50,
@@ -188,29 +194,29 @@ const styles = StyleSheet.create({
 	// },
 	// header2 : {
 	//   left:1170,
-	//   top:105,
+	//   top:100,
 	//   width:90,
-	//   height:470
+	//   height:495
 	// },
 	header1 : {
-		left:550,
+		left:570,
 		top:50,
 		width:500,
 		height:50
 	},
 	header2 : {
 		left:1620,
-		top:105,
+		top:100,
 		width:150,
-		height:690
+		height:700
 	},
 	header: {
 		shadowOffset: {
-			width: 3,
-			height: 3
+			width: 1,
+			height: 1
 		},
-		shadowRadius:2,
-		shadowColor:shadowColor,
+		shadowRadius:0,
+		shadowColor:'#FFBA08',
 		shadowOpacity: 1
 	},
 	image: {

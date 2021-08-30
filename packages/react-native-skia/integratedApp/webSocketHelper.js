@@ -24,6 +24,8 @@ let fontSize1 = resolution.textStyle.fontSize;
 const multi_url = 'ws://localhost:9898';
 let TextSent = <Text />
 
+let bgColor = '';
+
 type State = {
 	url1: string,
 	fetchStatus1: ?string,
@@ -193,20 +195,28 @@ class WebSocketTest extends React.Component<{...}, State> {
 	render(): React.Node {
 		console.log("prop.flag11:", this.props.flag);
 		if(this.props.flag == 0){
-			TextSent = <Text style={{fontSize:fontSize1, color:'white', fontWeight:'bold', textShadowRadius:0, textShadowColor:'#3F454C', textShadowOffset:{width:3,height:3}}}> Websocket Testing </Text>
+    if(this.props.bg == 1) {
+      bgColor = Config.main.subtileFocus;
+    } else {
+      bgColor= Config.main.tilesBackground;
+    }
+			TextSent = <Text style={{fontSize:fontSize1, color:'white', fontWeight:'bold', textShadowRadius:0, textShadowColor:Config.main.textBackground, textShadowOffset:{width:3,height:3}}}> Websocket Testing </Text>
 		} else if((this.props.flag == 3 || this.props.flag == 3)&& this.state.testFlag == 0) {
+      bgColor = Config.main.focusBackground;
 			const state: any = {
 				testFlag : 1 ,
 				testExpectedResponse1: ""
 			};
 			this.setState(state);
 		} else if(this.props.flag == 1){
+      bgColor = Config.main.focusBackground;
 			TextSent = <Text style={{fontSize:fontSize1 - 7, color:'white', fontWeight:'bold'}}> Click to send "Message to server" </Text>
 		} else {
+      bgColor = Config.main.focusBackground;
 			TextSent = <Text style={{fontSize:fontSize1 - 7, color:'white', fontWeight:'bold'}}> {this.state.testExpectedResponse1} </Text>
 		}
 		return  (
-			<View style={{flex:1, justifyContent:'center', alignItems:'center'}}> 
+			<View style={{flex:1, justifyContent:'center', alignItems:'center', backgroundColor:bgColor, borderWidth:5, borderRadius:10, borderColor:bgColor }}>
 				{TextSent}
 			</View>
 		);
