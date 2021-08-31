@@ -1,7 +1,6 @@
 #include <X11/Xutil.h>
 #include "ReactSkia/sdk/RNSKeyCodeMapping.h"
 #include "WindowX11.h"
-#include "ReactSkia/utils/RnsLog.h"
 using namespace std;
 rnsKey  RnsShell::WindowX11::keyIdentifierForX11KeyCode(KeySym keycode){
     switch (keycode) {
@@ -14,7 +13,6 @@ rnsKey  RnsShell::WindowX11::keyIdentifierForX11KeyCode(KeySym keycode){
     case XK_Menu: return RNS_KEY_Menu;
     case XK_Pause: return RNS_KEY_AudioPause;
     case XK_BackSpace: return RNS_KEY_Back;
-    case XK_Next: return RNS_KEY_AudioNext;
     case XK_0: return RNS_KEY_0;
     case XK_1: return RNS_KEY_1;
     case XK_2: return RNS_KEY_2;
@@ -106,8 +104,8 @@ rnsKey  RnsShell::WindowX11::keyIdentifierForX11KeyCode(KeySym keycode){
     case XK_parenright: return RNS_KEY_ParenRight;
     case XK_underscore: return RNS_KEY_Underscore;
     case XK_Delete: return RNS_KEY_Delete;
-    case XK_KP_Page_Up: return RNS_KEY_Page_Up;
-    case XK_KP_Page_Down: return RNS_KEY_Page_Down;
+    case XK_Page_Up: return RNS_KEY_Page_Up;
+    case XK_Page_Down: return RNS_KEY_Page_Down;
     case XK_slash: return RNS_KEY_Shash;
     case XK_period: return RNS_KEY_Period;
     case XK_comma: return RNS_KEY_Comma;
@@ -123,7 +121,7 @@ rnsKey  RnsShell::WindowX11::keyIdentifierForX11KeyCode(KeySym keycode){
     case XK_bracketleft : return RNS_KEY_BracketLeft;
     case XK_bracketright: return RNS_KEY_BracketRight;
     case XK_Escape: return RNS_KEY_Escape;
-    case XK_KP_Space: return RNS_KEY_Space;
+    case XK_space: return RNS_KEY_Space;
     case XK_Home: return RNS_KEY_Home;
     case XK_End: return RNS_KEY_EndKey;
     case XK_Insert: return RNS_KEY_Insert;
