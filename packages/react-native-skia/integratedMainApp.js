@@ -88,6 +88,13 @@ const MyComponent = (props) =>  {
         soheight: 15,
         bgChange:1
       })
+    } else if(props.count == 6 ) {
+      setState({
+        bg:tilesBackground,
+        sowidth:15,
+        soheight: 15,
+        bgChange:1
+      }) 
     }
 	}
 
@@ -107,8 +114,8 @@ const MyComponent = (props) =>  {
 			return <WebSocketHelper flag = {test}  bg = {state.bgChange} />
 		} else if(props.count == 6){
 			return  (< View style={{alignContent:'center'}}>
-        <View style={{left:30}}> 
-          <Text style={{color:'white', fontWeight:'bold'}}> JS Animation</Text>
+        <View style={{left:10, top:5}}> 
+          <Text style={{color:'white', fontWeight:'bold', fontSize:fontSize1 - 10 }}> JS Animation</Text>
         </View>
         <Animation flag = {test}  bg = {state.bgChange} />
       </View>
@@ -157,7 +164,7 @@ const MyComponent = (props) =>  {
 		//                  //{x:350,y:0,w:500,h:50},
 		//                  {x:10,y:100},{x: 400,y:100},{x:800, y:100},
 		//                  {x:10,y:368},{x:400,y:368},{x:800, y:368},
-		//                  {x:1190, y:100, w:80, h:470}
+		//                  {x:1180, y:100, w:80, h:495}
 		//             ];
 
 		const addItems = () => {

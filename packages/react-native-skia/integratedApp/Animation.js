@@ -17,7 +17,7 @@ const Animation = (props) => {
 
 	useEffect( () =>   {
 		console.log("---moveRect:" + JSON.stringify(value))
-    if(props.flag == 1) {
+    if(props.bg == 1)  {
 		Animated.loop(Animated.sequence([
 			Animated.timing(value,{
 				toValue: {x:10, y:540},
@@ -45,9 +45,18 @@ const Animation = (props) => {
 				useNativeDriver:false
 			})			
 		]),{}).start();
+    } else {
+        Animated.timing(value,{
+            toValue: {x:10, y:10},
+            duration: 2000,
+            velocity: 1,
+            tension: 40,
+            useNativeDriver:false
+        }).start();
     }
 	})
  
+  console.log("Start");
 	return(
 		<View>
 			<Animated.View 

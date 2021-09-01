@@ -20,8 +20,8 @@ const ImageProps = (props) => {
     let resizeCase = 2;
   
     const imagePath = [
-		require('./images/snackexpo.png'),
-		require('./images/logo.png'),
+		require('./images/logo256.png'),
+		require('./images/logo128.png'),
 		require('./images/tImage13.png') 
     ]
   
@@ -48,14 +48,14 @@ const ImageProps = (props) => {
 		index = 1;
 		bgColor = Config.main.focusBackground;
 		bwidth = 0;
-		resizeCase = 1;
+		resizeCase = 0;
 	} else if( props.flag == 2){
 		index = 1;
-		resizeCase = 1;
+		resizeCase = 2;
 		opacityValue = 0.5;
 		bgColor = Config.main.focusBackground;
 	} else if(props.flag == 3) {
-		index = 0;
+		index = 1;
 		resizeCase = 4;
 		bwidth = 10;
 		bColor = Config.animation.backgroundColor;

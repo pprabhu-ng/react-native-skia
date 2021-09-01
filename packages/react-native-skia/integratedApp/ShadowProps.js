@@ -74,12 +74,10 @@ const ShadowProps = (props) => {
 			mVbgColor = Config.main.subtileFocus;
 			mVbgColor = Config.main.subtileFocus;
 			bgColor = Config.main.subtileFocus;
-			bColor = Config.main.subtileFocus;
       } else {
 			mVbgColor = Config.main.tilesBackground;
 			mVbgColor = Config.main.tilesBackground;
 			bgColor= Config.main.tilesBackground;
-			bColor = Config.main.tilesBackground;
       }
         top1=-100;
         text = <Text 
@@ -100,7 +98,6 @@ const ShadowProps = (props) => {
         sOffsetWidth= subViewWidth/ 10;
         sOffsetheight= subViewHeight/ 10;
         bgColor= Config.shadowProps.view.bgColor;
-        bColor = Config.shadowProps.view.bgColor;
         justifyContent = 'flex-start';
         alignItems = 'flex-start';
         text = <Text style={{color:'white', fontWeight:'bold'}}>  With Shadows</Text>
@@ -114,7 +111,6 @@ const ShadowProps = (props) => {
         sOffsetWidth= subViewWidth/ 10;
         sOffsetheight= subViewHeight/ 10;
         bgColor= Config.shadowProps.view.bgColor;
-        bColor = Config.shadowProps.view.bgColor;
         justifyContent = 'flex-start';
         alignItems = 'flex-start';
         text = <Text style={{color:'white', fontWeight:'bold'}}> With shadow Radius</Text>
@@ -130,12 +126,11 @@ const ShadowProps = (props) => {
         sOffsetWidth= subViewWidth/ 10;
         sOffsetheight= subViewHeight/ 10;
         bgColor= Config.shadowProps.view.bgColor;
-        bColor = Config.shadowProps.view.bgColor;
         justifyContent = 'center';
         alignItems = 'center';
         text = <Text style={{color:'white', fontWeight:'bold'}}> With shadow color </Text>
         top1= 30;
-        left1 = 10;
+        left1 = 0;
         sColor = "green"
     }
 

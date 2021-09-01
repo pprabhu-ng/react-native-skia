@@ -69,7 +69,7 @@ const TextApp = (props) =>{
         text1 = <Text style={[styles.textStyle,{ color:'white'}]}>Default lineHeight</Text>
         text2 = <Text style={[styles.textStyle, { lineHeight:40, color:'white' }]}>lineHeight:40</Text>
         text3 = <Text style={[styles.textStyle, { lineHeight:30,color:'white'}]}>lineHeight:30</Text>
-        text4 = <Text style={[styles.textStyle, { lineHeight:20, color:'white'}]}>lineHeight:30</Text>
+        text4 = <Text style={[styles.textStyle, { lineHeight:20, color:'white'}]}>lineHeight:20</Text>
         text5 = <Text style={[styles.textStyle, { lineHeight:12, color:'white'}]}>lineHeight:12</Text>
         text6 = <Text style={[styles.textStyle, { lineHeight:5, color:'white'}]}>lineHeight:5</Text>
         text7 = <Text style={[styles.textStyle, { lineHeight:0,color:'white'}]}>lineHeight:0</Text>
