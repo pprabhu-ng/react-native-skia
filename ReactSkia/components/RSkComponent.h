@@ -23,6 +23,14 @@ enum ComponentUpdateMask {
       ComponentUpdateMaskState | ComponentUpdateMaskLayoutMetrics
 };
 
+struct props{
+    SkColor backgroundColor;
+    SkColor foregroundColor;
+    int pointerEvents;
+    EdgeInsets hitSlop;
+    bool masksToBounds_;
+
+};
 struct Component {
   Component( const ShadowView &shadowView)
     : tag(shadowView.tag)
@@ -40,6 +48,7 @@ struct Component {
   LayoutMetrics layoutMetrics{EmptyLayoutMetrics};
   State::Shared state{};
   int zIndex{};
+  struct props _props_;
 };
 
 class RSkComponent;
@@ -67,7 +76,7 @@ class RSkComponent : public RnsShell::Layer, public std::enable_shared_from_this
   RSkComponent *getParent() {return parent_; };
  
   void requiresLayer(const ShadowView &shadowView);
-
+  void updateProps(const ShadowView &newShadowView,const ShadowView &oldShadowView);
  protected:
   virtual void OnPaint(SkCanvas *canvas) = 0;
 

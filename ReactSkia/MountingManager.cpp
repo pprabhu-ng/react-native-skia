@@ -1,5 +1,6 @@
 #include "ReactSkia/MountingManager.h"
 #include "ReactSkia/RSkSurfaceWindow.h"
+#include "ReactSkia/components/RSkComponent.h"
 
 #include "react/renderer/scheduler/Scheduler.h"
 #include <glog/logging.h>
@@ -167,6 +168,7 @@ void MountingManager::UpdateMountInstruction(
        if(oldChildShadowView.props != newChildShadowView.props) {
            newChildComponent->updateComponentData(mutation.newChildShadowView,ComponentUpdateMaskProps);
            surface_->navigator()->updateInNavList(newChildComponent); //TODO only if TV related proeprties have changed ?
+	   newChildComponent->updateProps(mutation.newChildShadowView,mutation.oldChildShadowView);
        }
        if(oldChildShadowView.state != newChildShadowView.state)
            newChildComponent->updateComponentData(mutation.newChildShadowView,ComponentUpdateMaskState);
