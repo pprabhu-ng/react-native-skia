@@ -111,5 +111,8 @@
 			"borderColor" : "#A9D6E5",
 			"shadowColor" : "#E9ECEF"
 		}
-	}
+	},
+    "websocket" : {
+		  "url" : "ws://localhost:9898"
+	  }
   }

@@ -19,7 +19,7 @@ import Config from './config.json'
 
 let fontSize1 = Config.resolution.headerFont.fontSize;
 
-const multi_url = 'ws://localhost:9898';
+const multi_url = Config.websocket.url;
 let TextSent = <Text />
 
 let bgColor = '';
