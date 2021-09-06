@@ -6,13 +6,12 @@ import React, {useEffect} from 'react'
 import {View, Text, StyleSheet, Animated} from 'react-native'
 import Config from './config.json'
 
-let resolution = Config.size.low;
-let fontSize1 = resolution.textStyle.fontSize;
+let resolution = Config.resolution;
+let textfontSize = Config.resolution.headerFont.fontSize;
 
 const TextApp = (props) =>{
  
 	let value = new Animated.ValueXY({x:0,y:10})  
-	let test = 1;
 	let text1 = <Text />;
 	let text2 = <Text />;
 	let text3 = <Text />;
@@ -24,12 +23,11 @@ const TextApp = (props) =>{
 	let bColor = '';
 	let justifyContent = 'center';
 	let alignItems = 'center';
-	let width1 = '90%';
 	let margin = 0;
 
 	useEffect( () =>   {
-		console.log("---moveRect:" + fontSize1)
-		if(props.flag == 3) {
+		console.log("---moveRect:" + textfontSize)
+		if(props.flag === 3) {
 			Animated.loop(Animated.timing(value,{
 				toValue: {x:150, y:10},
 				duration: 4000,
@@ -40,28 +38,61 @@ const TextApp = (props) =>{
 		}
 	})
 
-    console.log("Flag: ", props.flag, "fontSize1:", fontSize1);
-    if(props.flag == 0) {
-		text1 = <Text style={[styles.textStyle, {color:'white', fontSize:fontSize1, textShadowRadius:0, textShadowColor: Config.main.textBackground, textShadowOffset:{width:3,height:3}}]} > Text Properties </Text>
-    if(props.bg == 1) {
-      bColor = Config.main.subtileFocus;
+    console.log("Flag: ", props.flag, "textfontSize:", textfontSize);
+    if(props.flag === 0) {
+		text1 = <Text 
+					style={[
+					styles.textStyle, 
+					{color:'white', fontSize:textfontSize, 
+					textShadowRadius:0, textShadowColor: Config.main.textBackground, 
+					textShadowOffset:{width:3,height:3}}]} 
+				>
+					 Text Properties 
+				</Text>
+    if(props.bg === 1) {
+    	bColor = Config.main.subtileFocus;
     } else {
-		  bColor = Config.main.tilesBackground;
+		bColor = Config.main.tilesBackground;
     }
 		justifyContent = 'center';
 		alignItems = 'center';
 		width1 = '100%';
 		textBackground = '';
-    } else if(props.flag == 1){
+    } else if(props.flag === 1){
         textBackground = '';
         justifyContent = 'center';
         alignItems = 'center';
         margin = 5;
-        text1 =  <Text  style={[styles.textStyle, { color:'orange' }]} > Default Letter Spacing. </Text>
-        text2 = <Text style={[styles.textStyle, { letterSpacing:5, fontFamily: "Arial", color:'orange' }]}>Letter Spacing Value as 5</Text>
-        text3 =<Text style={[styles.textStyle, { letterSpacing:-3 , color:'orange'}]}>Letter Spacing Value as -3. </Text>
+        text1 =  <Text  
+					style={[
+						styles.textStyle, 
+						{ color:'orange' }
+					]} 
+				> 
+					Default Letter Spacing. 
+				</Text>
+        text2 = <Text 
+					style={[
+						styles.textStyle, 
+						{
+							letterSpacing:5, 
+							fontFamily: "Arial", 
+							color:'orange' 
+						}
+					]}
+				>
+					Letter Spacing Value as 5
+				</Text>
+        text3 =<Text 
+					style={[
+						styles.textStyle, 
+						{ letterSpacing:-3 , color:'orange'}
+					]}
+				>
+					Letter Spacing Value as -3. 
+				</Text>
         bColor = Config.main.focusBackground;
-    } else if(props.flag == 2){
+    } else if(props.flag === 2){
         justifyContent = 'center';
         alignItems = 'center';
         margin = 10
@@ -73,49 +104,105 @@ const TextApp = (props) =>{
         text5 = <Text style={[styles.textStyle, { lineHeight:12, color:'white'}]}>lineHeight:12</Text>
         text6 = <Text style={[styles.textStyle, { lineHeight:5, color:'white'}]}>lineHeight:5</Text>
         text7 = <Text style={[styles.textStyle, { lineHeight:0,color:'white'}]}>lineHeight:0</Text>
-    } else if(props.flag == 3){
+    } else if(props.flag === 3){
         textBackground = '';
         justifyContent = 'center';
         alignItems = 'center';
         bColor = Config.main.focusBackground;
         let tempText = "Font Properties with font size"
-        tempText = tempText.concat(" ",fontSize1 - 4)	    
-        text4 = <Text style={{color:'white', fontWeight:'bold', fontFamily: 'Arial', fontSize:fontSize1 - 4, margin: 20}}>{tempText}</Text>
-        text5 = <Text style={{fontWeight:'bold', color:'orange', fontFamily: 'Arial', fontSize:fontSize1 -4}}>fontFamily: Arial</Text>
-        text6 = <Text style={{ lineHeight:40 ,  color:'white', fontStyle:'italic', fontSize:fontSize1 -4}}>fontStyle: Italic</Text>
-        text7 = <Text style={{ lineHeight:30, fontWeight:'bold', color:'green', fontSize:fontSize1 -4 }}>fontWeight: Bold</Text>
+        tempText = tempText.concat(" ",textfontSize - 4)	    
+        text4 = <Text 
+					style={{
+						color:'white', 
+						fontWeight:'bold', 
+						fontFamily: 'Arial', 
+						fontSize:textfontSize - 4, 
+						margin: 20
+					}}
+				>
+					{tempText}
+				</Text>
+        text5 = <Text 
+					style={{
+						fontWeight:'bold', 
+						color:'orange', 
+						fontFamily: 'Arial', 
+						fontSize:textfontSize -4
+					}}
+				>
+					fontFamily: Arial
+				</Text>
+        text6 = <Text 
+					style={{ 
+						lineHeight:40 ,  
+						color:'white', 
+						fontStyle:'italic', 
+						fontSize:textfontSize -4
+					}}
+				>
+					fontStyle: Italic
+				</Text>
+        text7 = <Text 
+					style={{ 
+						lineHeight:30, 
+						fontWeight:'bold', 
+						color:'green', 
+						fontSize:textfontSize -4 
+					}}
+				>
+					fontWeight: Bold
+				</Text>
     } 
 
 
-return (
-  <View style={[ styles.MainContainer,{ flex:1, flexDirection:'row' ,justifyContent:justifyContent, alignItems:alignItems, backgroundColor:bColor, borderWidth:5, borderRadius:10, borderColor:bColor,} ]}>
-        <View style={{justifyContent:justifyContent, alignItems:alignItems, margin:20}}>
-			<View style={{ margin:margin, backgroundColor: textBackground}}>
-				{text1}
+	return (
+		<View 
+			style={[ 
+				styles.MainContainer,
+				{ 
+					flex:1, flexDirection:'row' ,
+					justifyContent:justifyContent, 
+					alignItems:alignItems, 
+					backgroundColor:bColor, 
+					borderWidth:5, 
+					borderRadius:10, 
+					borderColor:bColor,
+				} 
+			]}
+		>
+			<View 
+				style={{
+					justifyContent:justifyContent, 
+					alignItems:alignItems, 
+					margin:20
+				}}
+			>
+				<View style={{ margin:margin, backgroundColor: textBackground}}>
+					{text1}
+				</View>
+				<View style={{ margin:margin, backgroundColor: textBackground }}>
+					{text2}
+				</View>
+				<View style={{ margin:margin, backgroundColor: textBackground }}>
+					{text3}
+				</View>
 			</View>
-			<View style={{ margin:margin, backgroundColor: textBackground }}>
-				{text2}
-			</View>
-			<View style={{ margin:margin, backgroundColor: textBackground }}>
-				{text3}
-			</View>
-        </View>
-        <View style={{justifyContent:justifyContent, alignItems:alignItems}}>
-			<View style={{ margin:margin, backgroundColor: textBackground }}>
-				{text4}
-			</View>
-			<View style={{ margin:margin, backgroundColor: textBackground }}>
-				{text5}
-			</View>
-			<View style={{ margin:margin, backgroundColor: textBackground }}>
-				{text6}
-			</View>
-			<View style={{ margin:margin, backgroundColor: textBackground }}>
-				{text7}
+			<View style={{justifyContent:justifyContent, alignItems:alignItems}}>
+				<View style={{ margin:margin, backgroundColor: textBackground }}>
+					{text4}
+				</View>
+				<View style={{ margin:margin, backgroundColor: textBackground }}>
+					{text5}
+				</View>
+				<View style={{ margin:margin, backgroundColor: textBackground }}>
+					{text6}
+				</View>
+				<View style={{ margin:margin, backgroundColor: textBackground }}>
+					{text7}
+				</View>
 			</View>
 		</View>
-  </View>
-);
+	);
 }
 
 const styles = StyleSheet.create({
@@ -124,7 +211,7 @@ const styles = StyleSheet.create({
 		height: resolution.maincontainer.height
 	},
 	textStyle: {
-		fontSize: fontSize1 - 4,
+		fontSize: textfontSize - 4,
 		color: Config.textApp.textColor, 
 		fontWeight: 'bold',
 		margin: 1
@@ -132,3 +219,4 @@ const styles = StyleSheet.create({
 });
 
 export default TextApp
+

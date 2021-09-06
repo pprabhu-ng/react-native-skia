@@ -6,8 +6,8 @@ import React, {useEffect} from 'react'
 import {View, AppRegistry, Text, StyleSheet, Animated} from 'react-native'
 import Config from './config.json'
 
-let resolution = Config.size.low;
-let fontSize1 = resolution.textStyle.fontSize;
+let resolution = Config.resolution;
+let textfontSize = Config.resolution.headerFont.fontSize;
 
 const BorderProps = (props) => {
 
@@ -15,7 +15,7 @@ const BorderProps = (props) => {
 	let subViewWidth= resolution.maincontainer.width * 0.6;
 	let subViewHeight= resolution.maincontainer.height * 0.6;
 	let bgColor= '';
-	var mVbgColor = Config.main.focusBackground
+	var mVbgColor = Config.main.focusBackground;
 
 	let borderRadius=0;
 	let borderWidth=0;
@@ -56,27 +56,33 @@ const BorderProps = (props) => {
 	})
 
 
-    if(props.flag == 0) {
-      if(props.bg == 1) {
-        mVbgColor = Config.main.subtileFocus;
-        mVbgColor = Config.main.subtileFocus;
-        bgColor = Config.main.subtileFocus;
-      } else {
-        mVbgColor = Config.main.tilesBackground;
-        mVbgColor = Config.main.tilesBackground;
-        bgColor= Config.main.tilesBackground ;
-      }
-		text = <Text 
-			style={[styles.textStyle, 
-			{
-				color:'white', fontSize:fontSize1, textShadowRadius:0,
-				textShadowColor:Config.main.textBackground, 
-				textShadowOffset:{width:3,height:3}
-			}]} > 
-			Border Properties 
-		</Text>
-      console.log("j = ", justifyContent, alignItems);
-    }else if(props.flag == 1) {
+    if(props.flag === 0) {
+		if(props.bg === 1) {
+			mVbgColor = Config.main.subtileFocus;
+			mVbgColor = Config.main.subtileFocus;
+			bgColor = Config.main.subtileFocus;
+		} else {
+			mVbgColor = Config.main.tilesBackground;
+			mVbgColor = Config.main.tilesBackground;
+			bgColor= Config.main.tilesBackground ;
+		}
+		text = 
+			<Text 
+				style= {[
+					styles.textStyle, 
+					{
+						color:'white', 
+						fontSize:textfontSize,
+						textShadowRadius:0,
+						textShadowColor:Config.main.textBackground, 
+						textShadowOffset:{width:3,height:3}
+					}
+				]}
+			> 
+				Border Properties 
+			</Text>
+    	console.log("j = ", justifyContent, alignItems);
+    }else if(props.flag === 1) {
 		text = <Text> With Border </Text>;
 		bgColor='#1a7599' ;
 		borderWidth = 30 ;
@@ -90,7 +96,7 @@ const BorderProps = (props) => {
 		borderBottomWidth= 30;
 		justifyContent = 'flex-start';
 		alignItems = 'flex-start';
-    }  else if(props.flag == 2) {
+    }  else if(props.flag === 2) {
 		text = <Text> With different border width </Text>;
 		bgColor='#1a7599' ;
 		borderLeftColor ='#2196c4';
@@ -103,7 +109,7 @@ const BorderProps = (props) => {
 		borderBottomWidth= 50;
 		justifyContent = 'flex-start';
 		alignItems = 'flex-start';
-    } else if(props.flag == 3){
+    } else if(props.flag === 3){
 		text = <Text> With Border radius </Text>
 		bgColor ='#1a7599';
 		borderLeftColor='#2196c4';
@@ -120,7 +126,20 @@ const BorderProps = (props) => {
     }
 
     return (
-        <View style={[styles.MainContainer, {flex: 1, justifyContent:justifyContent, alignItems:alignItems, backgroundColor:mVbgColor, borderWidth:5, borderRadius:10, borderColor:mVbgColor}]}>
+        <View 
+			style={[
+				styles.MainContainer, 
+				{
+					flex: 1, 
+					justifyContent:justifyContent, 
+					alignItems:alignItems,
+					backgroundColor:mVbgColor, 
+					borderWidth:5, 
+					borderRadius:10, 
+					borderColor:mVbgColor
+				}
+			]}
+		>
 			<Animated.View style={value.getLayout()}>
 				<View
 					style={{ 
@@ -143,7 +162,7 @@ const BorderProps = (props) => {
 				>
 					{text} 
 				</View> 
-		</Animated.View>
+			</Animated.View>
     	</View>
     );
         
@@ -155,7 +174,7 @@ const styles = StyleSheet.create({
 		height: resolution.maincontainer.height,
 	}, 
 	textStyle: {
-		fontSize: fontSize1 - 5,
+		fontSize: textfontSize - 5,
 		color: 'black', 
 		fontWeight: 'bold',
 		margin: 10
