@@ -83,6 +83,17 @@ void RSkComponentImage::OnPaint(
     imageEventEmitter->onError();
   }
 }
-
+void RSkComponentImage::updateComponatProps(const ShadowView &newShadowView,const ShadowView &oldShadowView) {
+        auto const &newimageProps = *std::static_pointer_cast<ImageProps const>(newShadowView.props);
+        auto const &oldimageProps = *std::static_pointer_cast<ImageProps const>(oldShadowView.props);
+        float ratio=255.9999;
+    if (oldimageProps.resizeMode != newimageProps.resizeMode) {
+          imgProps.resizeMode=newimageProps.resizeMode;
+    }
+    if (oldimageProps.tintColor != newimageProps.tintColor ){
+        auto colorValue=colorComponentsFromColor(newimageProps.tintColor);
+          imgProps.tintColor = SkColorSetARGB(colorValue.alpha * ratio,colorValue.red * ratio,colorValue.green * ratio,colorValue.blue * ratio);
+    }
+}
 } // namespace react
 } // namespace facebook

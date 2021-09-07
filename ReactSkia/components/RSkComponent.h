@@ -6,6 +6,7 @@
 #include "include/core/SkCanvas.h"
 #include "react/renderer/mounting/ShadowView.h"
 #include "react/renderer/components/view/ViewProps.h"
+#include "react/renderer/components/image/ImageShadowNode.h"
 
 #include "rns_shell/compositor/layers/Layer.h"
 
@@ -77,6 +78,7 @@ class RSkComponent : public RnsShell::Layer, public std::enable_shared_from_this
  
   void requiresLayer(const ShadowView &shadowView);
   void updateProps(const ShadowView &newShadowView,const ShadowView &oldShadowView);
+  virtual void updateComponatProps(const ShadowView &newShadowView,const ShadowView &oldShadowView) = 0;
  protected:
   virtual void OnPaint(SkCanvas *canvas) = 0;
 

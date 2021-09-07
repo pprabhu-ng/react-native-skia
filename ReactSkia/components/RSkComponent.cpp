@@ -1,4 +1,5 @@
 #include "ReactSkia/components/RSkComponent.h"
+#include "ReactSkia/components/RSkComponentImage.h"
 #include "ReactSkia/Fabric/RSKConversion.h"
 
 #include "include/core/SkPaint.h"
@@ -52,6 +53,7 @@ void RSkComponent::requiresLayer(const ShadowView &shadowView) {
         layer_ = RnsShell::Layer::Create(RnsShell::LAYER_TYPE_PICTURE);
 }
 void RSkComponent::updateProps(const ShadowView &newShadowView,const ShadowView &oldShadowView) {
+      updateComponatProps(newShadowView,oldShadowView);
       auto const &newviewProps = *std::static_pointer_cast<ViewProps const>(newShadowView.props);
       auto const &oldviewProps = *std::static_pointer_cast<ViewProps const>(oldShadowView.props);
       auto const &viewProps = *std::static_pointer_cast<ViewProps const>(component_.props);

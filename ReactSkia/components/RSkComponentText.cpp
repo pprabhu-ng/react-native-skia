@@ -16,12 +16,14 @@ namespace react {
 RSkComponentText::RSkComponentText(const ShadowView &shadowView)
     : RSkComponent(shadowView) {}
 
+void RSkComponentText::updateComponatProps(const ShadowView &newShadowView,const ShadowView &oldShadowView){}
 void RSkComponentText::OnPaint(SkCanvas *canvas) {
 }
 
 RSkComponentRawText::RSkComponentRawText(const ShadowView &shadowView)
     : RSkComponent(shadowView) {}
 
+void RSkComponentRawText::updateComponatProps(const ShadowView &newShadowView,const ShadowView &oldShadowView){}
 void RSkComponentRawText::OnPaint(SkCanvas *canvas) {}
 
 RSkComponentParagraph::RSkComponentParagraph(const ShadowView &shadowView)
@@ -30,6 +32,7 @@ RSkComponentParagraph::RSkComponentParagraph(const ShadowView &shadowView)
     , expectedAttachmentCount(0)
     , currentAttachmentCount(0){}
 
+void RSkComponentParagraph::updateComponatProps(const ShadowView &newShadowView,const ShadowView &oldShadowView){}
 void RSkComponentParagraph::OnPaint(SkCanvas *canvas) {
   auto component = getComponentData();
   auto state =
