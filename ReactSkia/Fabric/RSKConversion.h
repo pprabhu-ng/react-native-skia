@@ -1,12 +1,10 @@
 #include<third_party/skia/include/core/SkSize.h>
 #include<third_party/skia/include/core/SkM44.h>
-inline SkSize RCTSkSizeFromSize(const facebook::react::Size &size)
-{
+inline SkSize RCTSkSizeFromSize(const facebook::react::Size &size){
   return {size.width, size.height};
 }
 
-inline SkM44 RCTCATransform3DFromTransformMatrix(const facebook::react::Transform &transformMatrix)
-{
+inline SkM44 RCTCATransform3DFromTransformMatrix(const facebook::react::Transform &transformMatrix){
   return {(float)transformMatrix.matrix[0],
           (float)transformMatrix.matrix[1],
           (float)transformMatrix.matrix[2],
