@@ -180,16 +180,15 @@ jsi::Value RSkNetworkingModule::abortRequest(
   folly::dynamic requestId) {
 
  CURL* curl = connectionList_[requestId.asInt()];
- connectionList_[requestId.asInt()] = curl;
  if(curl != NULL) {
      curl_easy_cleanup(curl);
      connectionList_.erase(requestId.asInt());
      curl = NULL;
-     sendEventWithName("didCompleteNetworkResponse", folly::dynamic::array(requestId.asInt() ,"abort connection  sucess", false));
+     sendEventWithName("didCompleteNetworkResponse", folly::dynamic::array(requestId.asInt() ,"Abort connection request succeeded.", false));
      return jsi::Value((int)CURL_RETURN_SUCESS);
  }
 
- sendEventWithName("didCompleteNetworkResponse", folly::dynamic::array(requestId.asInt() ,"abort connection is failed", false));
+ sendEventWithName("didCompleteNetworkResponse", folly::dynamic::array(requestId.asInt() ,"Abort connection request failed.", false));
 
  return jsi::Value((int)CURL_RETURN_FAILURE);
 
