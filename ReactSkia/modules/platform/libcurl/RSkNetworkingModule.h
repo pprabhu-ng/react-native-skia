@@ -22,8 +22,8 @@ class RSkNetworkingModule:  public RSkNetworkingModuleBase {
 
         jsi::Value sendRequest(
             folly::dynamic,
-	    const jsi::Object&,
-	    jsi::Runtime&) override;
+            const jsi::Object&,
+            jsi::Runtime&) override;
 
         jsi::Value abortRequest(
             folly::dynamic) override;

@@ -164,8 +164,8 @@ jsi::Value RSkNetworkingModule::sendRequest(
                 sendEventWithName("didCompleteNetworkResponse", folly::dynamic::array(requestId ,curl_easy_strerror(res), true));
             }else {
                 sendEventWithName("didCompleteNetworkResponse", folly::dynamic::array(requestId ,curl_easy_strerror(res), false));
-	    }
-	    RNS_LOG_ERROR (stderr << "curl_easy_perform() failed: %s\n" <<curl_easy_strerror(res));
+            }
+            RNS_LOG_ERROR (stderr << "curl_easy_perform() failed: %s\n" <<curl_easy_strerror(res));
         }else {
             sendEventWithName("didReceiveNetworkData", folly::dynamic::array(requestId ,chunk.memory));
         }

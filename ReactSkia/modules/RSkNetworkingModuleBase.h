@@ -28,8 +28,8 @@ class RSkNetworkingModuleBase: public RSkEventEmitter {
 
         virtual jsi::Value sendRequest(
             folly::dynamic,
-	    const jsi::Object&,
-	    jsi::Runtime&) = 0;
+            const jsi::Object&,
+            jsi::Runtime&) = 0;
 
         static jsi::Value abortRequestWrapper(
             jsi::Runtime &rt,
