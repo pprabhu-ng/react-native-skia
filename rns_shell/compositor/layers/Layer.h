@@ -19,9 +19,9 @@
 
 #include "include/core/SkCanvas.h"
 #include "include/core/SkSurface.h"
-
 #include "ReactSkia/utils/RnsLog.h"
 #include "ReactSkia/utils/RnsUtils.h"
+#include "react/renderer/mounting/ShadowView.h"
 
 namespace RnsShell {
 
@@ -45,8 +45,7 @@ struct PaintContext {
 
 class Layer {
 public:
-	
-    float opacity{1.0};
+//    float opacity{1.0};
     float shadowOpacity{1.0};
     float shadowRadius{0};
     int  backfaceVisibility;
@@ -85,8 +84,9 @@ public:
 
     const bool masksToBounds() const { return masksToBounds_; }
     void setMasksTotBounds(bool masksToBounds) { masksToBounds_ = masksToBounds; }
-
+//    friend void layerProps(const facebook::react::ShadowView &newShadowView,const facebook::react::ShadowView &oldShadowView);
 private:
+    float opacity{1.0};
     static uint64_t nextUniqueId();
 
     void setParent(Layer* layer);
@@ -105,6 +105,7 @@ private:
     bool isHidden_ = { false }; // Wheather layer is hidden
     bool masksToBounds_ = { false }; // Clip childrens
     //Borders & Shadows ?
+    friend void layerProps(const facebook::react::ShadowView &newShadowView,const facebook::react::ShadowView &oldShadowView);
 };
 
 }   // namespace RnsShell

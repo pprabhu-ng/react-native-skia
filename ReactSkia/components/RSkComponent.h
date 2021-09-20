@@ -30,7 +30,7 @@ struct props{
     int pointerEvents;
     EdgeInsets hitSlop;
     bool masksToBounds_;
-
+    int zIndex{};
 };
 struct Component {
   Component( const ShadowView &shadowView)
@@ -48,8 +48,7 @@ struct Component {
   EventEmitter::Shared eventEmitter{};
   LayoutMetrics layoutMetrics{EmptyLayoutMetrics};
   State::Shared state{};
-  int zIndex{};
-  struct props _props_;
+  struct props props_;
 };
 
 class RSkComponent;
@@ -79,6 +78,7 @@ class RSkComponent : public RnsShell::Layer, public std::enable_shared_from_this
   void requiresLayer(const ShadowView &shadowView);
   void updateProps(const ShadowView &newShadowView,const ShadowView &oldShadowView);
   virtual void updateComponatProps(const ShadowView &newShadowView,const ShadowView &oldShadowView) = 0;
+friend void layerProps(const ShadowView &newShadowView,const ShadowView &oldShadowView);
  protected:
   virtual void OnPaint(SkCanvas *canvas) = 0;
 

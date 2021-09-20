@@ -12,6 +12,7 @@
 
 #include "ReactSkia/utils/RnsLog.h"
 #include "ReactSkia/utils/RnsUtils.h"
+#include "ReactSkia/Fabric/RSKConversion.h"
 
 namespace facebook {
 namespace react {
@@ -83,6 +84,7 @@ void RSkComponentImage::OnPaint(
     imageEventEmitter->onError();
   }
 }
+
 void RSkComponentImage::updateComponatProps(const ShadowView &newShadowView,const ShadowView &oldShadowView) {
         auto const &newimageProps = *std::static_pointer_cast<ImageProps const>(newShadowView.props);
         auto const &oldimageProps = *std::static_pointer_cast<ImageProps const>(oldShadowView.props);
@@ -90,10 +92,9 @@ void RSkComponentImage::updateComponatProps(const ShadowView &newShadowView,cons
     if (oldimageProps.resizeMode != newimageProps.resizeMode) {
           imgProps.resizeMode=newimageProps.resizeMode;
     }
-    if (oldimageProps.tintColor != newimageProps.tintColor ){
-        auto colorValue=colorComponentsFromColor(newimageProps.tintColor);
-          imgProps.tintColor = SkColorSetARGB(colorValue.alpha * ratio,colorValue.red * ratio,colorValue.green * ratio,colorValue.blue * ratio);
+    if (oldimageProps.tintColor != newimageProps.tintColor ) {
+    	  imgProps.tintColor=RSkColorConversion(newimageProps.tintColor);
     }
-}
+ }
 } // namespace react
 } // namespace facebook

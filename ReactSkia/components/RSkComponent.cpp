@@ -52,6 +52,16 @@ void RSkComponent::requiresLayer(const ShadowView &shadowView) {
     else
         layer_ = RnsShell::Layer::Create(RnsShell::LAYER_TYPE_PICTURE);
 }
+/*
+void layerProps(const facebook::react::ShadowView &newShadowView,const facebook::react::ShadowView &oldShadowView){
+      auto const &newviewProps = *std::static_pointer_cast<ViewProps const>(newShadowView.props);
+      auto const &oldviewProps = *std::static_pointer_cast<ViewProps const>(oldShadowView.props);
+
+ if(oldviewProps.opacity!=newviewProps.opacity){
+	layer_.opacity=newviewProps.opacity;
+   }
+}
+*/
 void RSkComponent::updateProps(const ShadowView &newShadowView,const ShadowView &oldShadowView) {
       updateComponatProps(newShadowView,oldShadowView);
       auto const &newviewProps = *std::static_pointer_cast<ViewProps const>(newShadowView.props);
@@ -59,64 +69,62 @@ void RSkComponent::updateProps(const ShadowView &newShadowView,const ShadowView 
       auto const &viewProps = *std::static_pointer_cast<ViewProps const>(component_.props);
       float ratio=255.9999;
   //opacity
-   if(oldviewProps.opacity!=newviewProps.opacity){
+/*   if(oldviewProps.opacity!=newviewProps.opacity){
     layer_->opacity=newviewProps.opacity;
-   }
+   }*/
+     layerProps(newShadowView,oldShadowView);
   //ShadowOpacity
-   if(oldviewProps.shadowOpacity!=newviewProps.shadowOpacity){
-    layer_->shadowOpacity=newviewProps.shadowOpacity;
+   if (oldviewProps.shadowOpacity!=newviewProps.shadowOpacity) {
+      layer_->shadowOpacity=newviewProps.shadowOpacity;
    }
   //shadowRadius
-   if(oldviewProps.shadowRadius!=newviewProps.shadowRadius){
-    layer_->shadowRadius=newviewProps.shadowRadius;
+   if (oldviewProps.shadowRadius!=newviewProps.shadowRadius) {
+      layer_->shadowRadius=newviewProps.shadowRadius;
    }
   //shadowoffset
-   if(oldviewProps.shadowOffset!=newviewProps.shadowOffset){
-    layer_->shadowOffset=RCTSkSizeFromSize(newviewProps.shadowOffset);
+   if (oldviewProps.shadowOffset!=newviewProps.shadowOffset) {
+      layer_->shadowOffset=RSkSkSizeFromSize(newviewProps.shadowOffset);
    }
   //shadowcolor
-   if(oldviewProps.shadowColor!=newviewProps.shadowColor){
-   auto colorValue=colorComponentsFromColor(newviewProps.shadowColor);
-   layer_->shadowColor = SkColorSetARGB(colorValue.alpha * ratio,colorValue.red * ratio,colorValue.green * ratio,colorValue.blue * ratio);
+   if (oldviewProps.shadowColor!=newviewProps.shadowColor) {
+      layer_->shadowColor =RSkColorConversion(newviewProps.shadowColor);
    }
   //backfaceVisibility
-   if(oldviewProps.backfaceVisibility!=newviewProps.backfaceVisibility){
-   layer_->backfaceVisibility=(int)newviewProps.backfaceVisibility;
+   if (oldviewProps.backfaceVisibility!=newviewProps.backfaceVisibility) {
+      layer_->backfaceVisibility=(int)newviewProps.backfaceVisibility;
    }
   //backgroundColor
-   if(oldviewProps.backgroundColor!=newviewProps.backgroundColor){
-   auto colorValue=colorComponentsFromColor(newviewProps.backgroundColor);
-   component_._props_.backgroundColor = SkColorSetARGB(colorValue.alpha * ratio,colorValue.red * ratio,colorValue.green * ratio,colorValue.blue * ratio);
+   if (oldviewProps.backgroundColor!=newviewProps.backgroundColor) {
+      component_.props_.backgroundColor=RSkColorConversion(newviewProps.backgroundColor);
  }
   //foregroundColor
-   if(oldviewProps.foregroundColor!=newviewProps.foregroundColor){
-   RNS_LOG_NOT_IMPL;
-   auto colorValue=colorComponentsFromColor(newviewProps.foregroundColor);
-   component_._props_.foregroundColor = SkColorSetARGB(colorValue.alpha * ratio,colorValue.red * ratio,colorValue.green * ratio,colorValue.blue * ratio);
+   if (oldviewProps.foregroundColor!=newviewProps.foregroundColor) {
+      RNS_LOG_NOT_IMPL;
+      component_.props_.foregroundColor=RSkColorConversion(newviewProps.foregroundColor);
   }
   /* TODO To be verified when implemented*/
   //pointerEvents
-   if(oldviewProps.pointerEvents!=newviewProps.pointerEvents){
-         RNS_LOG_NOT_IMPL;
-    component_._props_.pointerEvents=(int)newviewProps.pointerEvents;
+   if (oldviewProps.pointerEvents!=newviewProps.pointerEvents) {
+      RNS_LOG_NOT_IMPL;
+      component_.props_.pointerEvents=(int)newviewProps.pointerEvents;
    }
   //hitslop
-   if(oldviewProps.hitSlop!=newviewProps.hitSlop){
-         RNS_LOG_NOT_IMPL;
-     component_._props_.hitSlop=newviewProps.hitSlop;
+   if (oldviewProps.hitSlop!=newviewProps.hitSlop) {
+      RNS_LOG_NOT_IMPL;
+      component_.props_.hitSlop=newviewProps.hitSlop;
    }
   //overflow
-   if(oldviewProps.getClipsContentToBounds()!=newviewProps.getClipsContentToBounds()){
-         RNS_LOG_NOT_IMPL;//ViewProps.yogastyle.overflow
-     component_._props_.masksToBounds_=newviewProps.getClipsContentToBounds();
+   if (oldviewProps.getClipsContentToBounds()!=newviewProps.getClipsContentToBounds()) {
+      RNS_LOG_NOT_IMPL;//ViewProps.yogastyle.overflow
+      component_.props_.masksToBounds_=newviewProps.getClipsContentToBounds();
    }
   //zIndex
-   if(oldviewProps.zIndex!=newviewProps.zIndex){
-      component_.zIndex = viewProps.zIndex.value_or(0);
+   if (oldviewProps.zIndex!=newviewProps.zIndex) {
+      component_.props_.zIndex = viewProps.zIndex.value_or(0);
    }
   //transform
-   if(oldviewProps.transform != newviewProps.transform ){
-     layer_->transform = RCTCATransform3DFromTransformMatrix(newviewProps.transform);
+   if (oldviewProps.transform != newviewProps.transform ) {
+      layer_->transform = RSkTransform3DFromTransformMatrix(newviewProps.transform);
    }
 }
 
@@ -124,7 +132,7 @@ void RSkComponent::updateComponentData(const ShadowView &newShadowView , const u
    if(updateMask & ComponentUpdateMaskProps) {
       component_.props = newShadowView.props;
       auto const &viewProps = *std::static_pointer_cast<ViewProps const>(component_.props);
-      component_.zIndex = viewProps.zIndex.value_or(0);
+      component_.props_.zIndex = viewProps.zIndex.value_or(0);
    }
    if(updateMask & ComponentUpdateMaskState)
       component_.state = newShadowView.state;

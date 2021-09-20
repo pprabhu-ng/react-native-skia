@@ -1,10 +1,10 @@
 #pragma once
 
-#include "ReactSkia/components/RSkComponent.h"
+#include "include/core/SkRect.h"
+
 #include "react/renderer/mounting/ShadowView.h"
 
-#include "include/core/SkImage.h"
-#include "include/core/SkRect.h"
+#include "ReactSkia/components/RSkComponent.h"
 
 #define DEFAULT_IMAGE_FILTER_QUALITY kLow_SkFilterQuality /*Skia's Defualt is kNone_SkFilterQuality*/
 
@@ -13,7 +13,6 @@ namespace react {
 struct ImageProps_t{
     ImageResizeMode resizeMode;
     SkColor tintColor;
- 
 };
 class RSkComponentImage final : public RSkComponent {
  public:
