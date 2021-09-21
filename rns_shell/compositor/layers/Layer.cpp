@@ -136,13 +136,6 @@ bool Layer::needsPainting(PaintContext& context) {
     RNS_LOG_TRACE("Skip Layer (" << layerId_ << ")");
     return false;
 }
-/*void layerProps(const ShadowView &newShadowView,const ShadowView &oldShadowView){
-
- if(oldviewProps.opacity!=newviewProps.opacity){
-    layer_->opacity=newviewProps.opacity;
-   }
-}*/
-
 
 }   // namespace RnsShell
 

@@ -127,11 +127,12 @@ void MountingManager::DeleteMountInstruction(
 void MountingManager::InsertMountInstruction(
     ShadowViewMutation const &mutation,
     SurfaceId surfaceId) {
-
+    struct ShadowView shadowviewobject;
   std::shared_ptr<RSkComponent> newChildComponent = GetComponent(mutation.newChildShadowView);
   std::shared_ptr<RSkComponent> parentComponent = GetComponent(mutation.parentShadowView);
   if (newChildComponent) {
       newChildComponent->updateComponentData(mutation.newChildShadowView,ComponentUpdateMaskAll);
+      newChildComponent->updateProps(mutation.newChildShadowView,shadowviewobject);
   }
 
   if (parentComponent) {
