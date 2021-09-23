@@ -6,6 +6,7 @@
 #include "react/renderer/components/image/ImageEventEmitter.h"
 
 #include "ReactSkia/components/RSkComponentImage.h"
+#include "ReactSkia/components/RSkComponent.h"
 #include "ReactSkia/views/common/RSkDrawUtils.h"
 #include "ReactSkia/views/common/RSkImageUtils.h"
 #include "ReactSkia/views/common/RSkImageCacheManager.h"
@@ -85,16 +86,18 @@ void RSkComponentImage::OnPaint(
   }
 }
 
-void RSkComponentImage::updateComponatProps(const ShadowView &newShadowView,const ShadowView &oldShadowView) {
-        auto const &newimageProps = *std::static_pointer_cast<ImageProps const>(newShadowView.props);
-        auto const &oldimageProps = *std::static_pointer_cast<ImageProps const>(oldShadowView.props);
-        float ratio=255.9999;
-    if (oldimageProps.resizeMode != newimageProps.resizeMode) {
-          imgProps.resizeMode=newimageProps.resizeMode;
+void RSkComponentImage::updateComponetProps(const ShadowView &newShadowView,bool forceUpdate) {
+
+    auto const &newimageProps = *std::static_pointer_cast<ImageProps const>(newShadowView.props);
+    auto component = getComponentData();
+    auto const &oldimageProps = *std::static_pointer_cast<ImageProps const>(component.props);
+
+    if ((forceUpdate) || (oldimageProps.resizeMode != newimageProps.resizeMode)) {
+         imageProps.resizeMode = newimageProps.resizeMode;
     }
-    if (oldimageProps.tintColor != newimageProps.tintColor ) {
-    	  imgProps.tintColor=RSkColorConversion(newimageProps.tintColor);
+    if ((forceUpdate) || (oldimageProps.tintColor != newimageProps.tintColor )) {
+	 imageProps.tintColor = RSkColorConversion(newimageProps.tintColor);
     }
- }
+}
 } // namespace react
 } // namespace facebook

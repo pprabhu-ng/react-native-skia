@@ -10,16 +10,16 @@
 
 namespace facebook {
 namespace react {
-struct ImageProps_t{
+struct ImgProps{
     ImageResizeMode resizeMode;
     SkColor tintColor;
 };
 class RSkComponentImage final : public RSkComponent {
  public:
   RSkComponentImage(const ShadowView &shadowView);
-  void updateComponatProps(const ShadowView &newShadowView,const ShadowView &oldShadowView) override;
+  void updateComponetProps(const ShadowView &newShadowView,bool forceUpdate) override;
  private :
-  ImageProps_t imgProps;
+  ImgProps imageProps;
  protected:
   void OnPaint(SkCanvas *canvas) override;
 };

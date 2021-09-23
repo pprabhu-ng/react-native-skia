@@ -16,14 +16,14 @@ namespace react {
 RSkComponentText::RSkComponentText(const ShadowView &shadowView)
     : RSkComponent(shadowView) {}
 
-void RSkComponentText::updateComponatProps(const ShadowView &newShadowView,const ShadowView &oldShadowView){}
+void RSkComponentText::updateComponetProps(const ShadowView &newShadowView,bool forceUpadte) {}
 void RSkComponentText::OnPaint(SkCanvas *canvas) {
 }
 
 RSkComponentRawText::RSkComponentRawText(const ShadowView &shadowView)
     : RSkComponent(shadowView) {}
 
-void RSkComponentRawText::updateComponatProps(const ShadowView &newShadowView,const ShadowView &oldShadowView){}
+void RSkComponentRawText::updateComponetProps(const ShadowView &newShadowView,bool forceUpadte) {}
 void RSkComponentRawText::OnPaint(SkCanvas *canvas) {}
 
 RSkComponentParagraph::RSkComponentParagraph(const ShadowView &shadowView)
@@ -32,7 +32,11 @@ RSkComponentParagraph::RSkComponentParagraph(const ShadowView &shadowView)
     , expectedAttachmentCount(0)
     , currentAttachmentCount(0){}
 
-void RSkComponentParagraph::updateComponatProps(const ShadowView &newShadowView,const ShadowView &oldShadowView){}
+void RSkComponentParagraph::updateComponetProps(const ShadowView &newShadowView,bool forceUpadte) {
+
+  auto const &paragraphProps = *std::static_pointer_cast<ParagraphProps const>(newShadowView.props);
+  paragraphAttributes_ = paragraphProps.paragraphAttributes;
+}
 void RSkComponentParagraph::OnPaint(SkCanvas *canvas) {
   auto component = getComponentData();
   auto state =

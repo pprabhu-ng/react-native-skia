@@ -21,7 +21,6 @@
 #include "include/core/SkSurface.h"
 #include "ReactSkia/utils/RnsLog.h"
 #include "ReactSkia/utils/RnsUtils.h"
-#include "layerprops.h"
 
 namespace RnsShell {
 
@@ -45,13 +44,14 @@ struct PaintContext {
 
 class Layer {
 public:
-//    float opacity{1.0};
-  /*  float shadowOpacity{1.0};
-    float shadowRadius{0};
+    float opacity{1.0};
+    float shadowOpacity{};
+    float shadowRadius{3};
     int  backfaceVisibility;
-    SkSize shadowOffset;
+    SkSize shadowOffset{0,-3};
     SkColor shadowColor;
-    SkMatrix transform;*/
+    SkMatrix transformMatrix;
+
     static SharedLayer Create(LayerType type = LAYER_TYPE_DEFAULT);
     Layer(LayerType);
     virtual ~Layer() {};
@@ -84,12 +84,7 @@ public:
 
     const bool masksToBounds() const { return masksToBounds_; }
     void setMasksTotBounds(bool masksToBounds) { masksToBounds_ = masksToBounds; }
-//    friend void layerProps(const facebook::react::ShadowView &newShadowView,const facebook::react::ShadowView &oldShadowView);
-    const Components_Props getProps() const { return componentsProps_; }
-    void setProps(Components_Props props) { componentsProps_ =props; printf("@@@@%f\n\t",componentsProps_.viewProps.opacity); } 
 private:
-   // float opacity{1.0};
-    Components_Props componentsProps_;
     static uint64_t nextUniqueId();
 
     void setParent(Layer* layer);
@@ -108,7 +103,6 @@ private:
     bool isHidden_ = { false }; // Wheather layer is hidden
     bool masksToBounds_ = { false }; // Clip childrens
     //Borders & Shadows ?
-   // friend void layerProps(const facebook::react::ShadowView &newShadowView,const facebook::react::ShadowView &oldShadowView);
 };
 
 }   // namespace RnsShell

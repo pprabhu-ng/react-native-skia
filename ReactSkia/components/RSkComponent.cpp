@@ -7,7 +7,6 @@
 #include "include/core/SkSurface.h"
 
 #include "rns_shell/compositor/layers/PictureLayer.h"
-////#include "rns_shell/compositor/layers/layerprops.h"
 
 namespace facebook {
 namespace react {
@@ -53,79 +52,76 @@ void RSkComponent::requiresLayer(const ShadowView &shadowView) {
     else
         layer_ = RnsShell::Layer::Create(RnsShell::LAYER_TYPE_PICTURE);
 }
-void RSkComponent::updateProps(const ShadowView &newShadowView,const ShadowView &oldShadowView) {
-      auto const &newviewProps = *std::static_pointer_cast<ViewProps const>(newShadowView.props);
-      auto const &oldviewProps = *std::static_pointer_cast<ViewProps const>(oldShadowView.props);
-      auto const &viewProps = *std::static_pointer_cast<ViewProps const>(component_.props);
-      float ratio=255.9999;
-      Components_Props componentsProps_;
-     // getProps();
-      updateComponatProps(newShadowView,oldShadowView);
+void RSkComponent::updateProps(const ShadowView &newShadowView,bool forceUpdate) {
+
+   auto const &newviewProps = *std::static_pointer_cast<ViewProps const>(newShadowView.props);
+   auto const &oldviewProps = *std::static_pointer_cast<ViewProps const>(component_.props);
+
+   updateComponetProps(newShadowView,forceUpdate);
   //opacity
-   if(oldviewProps.opacity != newviewProps.opacity) {
-    componentsProps_.viewProps.opacity=newviewProps.opacity;
+   if((forceUpdate) || (oldviewProps.opacity != newviewProps.opacity)) {
+      layer_->opacity = newviewProps.opacity;
    }
   //ShadowOpacity
-   if (oldviewProps.shadowOpacity!=newviewProps.shadowOpacity) {
-      componentsProps_.viewProps.shadowOpacity=newviewProps.shadowOpacity;
+   if ((forceUpdate) || (oldviewProps.shadowOpacity != newviewProps.shadowOpacity)) {
+      layer_->shadowOpacity = newviewProps.shadowOpacity;
    }
   //shadowRadius
-   if (oldviewProps.shadowRadius!=newviewProps.shadowRadius) {
-      componentsProps_.viewProps.shadowRadius=newviewProps.shadowRadius;
+   if ((forceUpdate) || (oldviewProps.shadowRadius != newviewProps.shadowRadius)) {
+      layer_->shadowRadius = newviewProps.shadowRadius;
    }
   //shadowoffset
-   if (oldviewProps.shadowOffset!=newviewProps.shadowOffset) {
-      componentsProps_.viewProps.shadowOffset=RSkSkSizeFromSize(newviewProps.shadowOffset);
+   if ((forceUpdate) || (oldviewProps.shadowOffset != newviewProps.shadowOffset)) {
+      layer_->shadowOffset = RSkSkSizeFromSize(newviewProps.shadowOffset);
    }
   //shadowcolor
-   if (oldviewProps.shadowColor!=newviewProps.shadowColor) {
-      componentsProps_.viewProps.shadowColor =RSkColorConversion(newviewProps.shadowColor);
+   if ((forceUpdate) || (oldviewProps.shadowColor != newviewProps.shadowColor)) {
+      layer_->shadowColor = RSkColorConversion(newviewProps.shadowColor);
    }
   //backfaceVisibility
-   if (oldviewProps.backfaceVisibility!=newviewProps.backfaceVisibility) {
-      componentsProps_.viewProps.backfaceVisibility=(int)newviewProps.backfaceVisibility;
+   if ((forceUpdate) || (oldviewProps.backfaceVisibility != newviewProps.backfaceVisibility)) {
+      layer_->backfaceVisibility = (int)newviewProps.backfaceVisibility;
    }
   //backgroundColor
-   if (oldviewProps.backgroundColor!=newviewProps.backgroundColor) {
-      component_.props_.backgroundColor=RSkColorConversion(newviewProps.backgroundColor);
- }
+   if ((forceUpdate) || (oldviewProps.backgroundColor != newviewProps.backgroundColor)) {
+      component_.props_.backgroundColor = RSkColorConversion(newviewProps.backgroundColor);
+   }
   //foregroundColor
-   if (oldviewProps.foregroundColor!=newviewProps.foregroundColor) {
+   if ((forceUpdate) || (oldviewProps.foregroundColor != newviewProps.foregroundColor)) {
       RNS_LOG_NOT_IMPL;
-      component_.props_.foregroundColor=RSkColorConversion(newviewProps.foregroundColor);
-  }
+      component_.props_.foregroundColor = RSkColorConversion(newviewProps.foregroundColor);
+   }
   /* TODO To be verified when implemented*/
   //pointerEvents
-   if (oldviewProps.pointerEvents!=newviewProps.pointerEvents) {
+   if ((forceUpdate) || (oldviewProps.pointerEvents != newviewProps.pointerEvents)) {
       RNS_LOG_NOT_IMPL;
-      component_.props_.pointerEvents=(int)newviewProps.pointerEvents;
+      component_.props_.pointerEvents = (int)newviewProps.pointerEvents;
    }
   //hitslop
-   if (oldviewProps.hitSlop!=newviewProps.hitSlop) {
+   if ((forceUpdate) || (oldviewProps.hitSlop != newviewProps.hitSlop)) {
       RNS_LOG_NOT_IMPL;
-      component_.props_.hitSlop=newviewProps.hitSlop;
+      component_.props_.hitSlop = newviewProps.hitSlop;
    }
   //overflow
-   if (oldviewProps.getClipsContentToBounds()!=newviewProps.getClipsContentToBounds()) {
+   if ((forceUpdate) || (oldviewProps.getClipsContentToBounds() != newviewProps.getClipsContentToBounds())) {
       RNS_LOG_NOT_IMPL;//ViewProps.yogastyle.overflow
-      component_.props_.masksToBounds_=newviewProps.getClipsContentToBounds();
+      component_.props_.masksToBounds_ = newviewProps.getClipsContentToBounds();
    }
   //zIndex
-   if (oldviewProps.zIndex!=newviewProps.zIndex) {
-      component_.props_.zIndex = viewProps.zIndex.value_or(0);
+   if ((forceUpdate) || (oldviewProps.zIndex != newviewProps.zIndex)) {
+      component_.props_.zIndex = newviewProps.zIndex.value_or(0);
    }
   //transform
-   if (oldviewProps.transform != newviewProps.transform ) {
-      componentsProps_.viewProps.transform = RSkTransformTO2DMatrix(newviewProps.transform);
+   if ((forceUpdate) || (oldviewProps.transform != newviewProps.transform)) {
+      layer_->transformMatrix = RSkTransformTO2DMatrix(newviewProps.transform);
    }
-  // setProps(componentsProps_);
 }
 
-void RSkComponent::updateComponentData(const ShadowView &newShadowView , const uint32_t updateMask) {
+void RSkComponent::updateComponentData(const ShadowView &newShadowView,const uint32_t updateMask,bool forceUpdate) {
+
    if(updateMask & ComponentUpdateMaskProps) {
+      updateProps(newShadowView,forceUpdate);
       component_.props = newShadowView.props;
-      auto const &viewProps = *std::static_pointer_cast<ViewProps const>(component_.props);
-      component_.props_.zIndex = viewProps.zIndex.value_or(0);
    }
    if(updateMask & ComponentUpdateMaskState)
       component_.state = newShadowView.state;

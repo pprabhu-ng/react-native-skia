@@ -8,7 +8,7 @@ namespace react {
 
 RSkComponentRootView::RSkComponentRootView(const ShadowView &shadowView)
     : RSkComponent(shadowView) {}
-void RSkComponentRootView::updateComponatProps(const ShadowView &newShadowView,const ShadowView &oldShadowView){}
+void RSkComponentRootView::updateComponetProps(const ShadowView &newShadowView,bool forceUpdate) {}
 void RSkComponentRootView::OnPaint(
     SkCanvas *canvas) {
   canvas->clear(SK_ColorWHITE);
