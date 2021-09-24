@@ -1,5 +1,4 @@
 #include "ReactSkia/components/RSkComponent.h"
-#include "ReactSkia/components/RSkComponentImage.h"
 #include "ReactSkia/Fabric/RSKConversion.h"
 
 #include "include/core/SkPaint.h"
@@ -57,7 +56,7 @@ void RSkComponent::updateProps(const ShadowView &newShadowView,bool forceUpdate)
    auto const &newviewProps = *std::static_pointer_cast<ViewProps const>(newShadowView.props);
    auto const &oldviewProps = *std::static_pointer_cast<ViewProps const>(component_.props);
 
-   updateComponetProps(newShadowView,forceUpdate);
+   updateComponentProps(newShadowView,forceUpdate);
   //opacity
    if((forceUpdate) || (oldviewProps.opacity != newviewProps.opacity)) {
       layer_->opacity = newviewProps.opacity;
@@ -76,7 +75,7 @@ void RSkComponent::updateProps(const ShadowView &newShadowView,bool forceUpdate)
    }
   //shadowcolor
    if ((forceUpdate) || (oldviewProps.shadowColor != newviewProps.shadowColor)) {
-      layer_->shadowColor = RSkColorConversion(newviewProps.shadowColor);
+      layer_->shadowColor = RSkColorFromSharedColor(newviewProps.shadowColor,SK_ColorBLACK);
    }
   //backfaceVisibility
    if ((forceUpdate) || (oldviewProps.backfaceVisibility != newviewProps.backfaceVisibility)) {
@@ -84,12 +83,12 @@ void RSkComponent::updateProps(const ShadowView &newShadowView,bool forceUpdate)
    }
   //backgroundColor
    if ((forceUpdate) || (oldviewProps.backgroundColor != newviewProps.backgroundColor)) {
-      component_.props_.backgroundColor = RSkColorConversion(newviewProps.backgroundColor);
+      component_.props_.backgroundColor = RSkColorFromSharedColor(newviewProps.backgroundColor,SK_ColorTRANSPARENT);
    }
   //foregroundColor
    if ((forceUpdate) || (oldviewProps.foregroundColor != newviewProps.foregroundColor)) {
       RNS_LOG_NOT_IMPL;
-      component_.props_.foregroundColor = RSkColorConversion(newviewProps.foregroundColor);
+      component_.props_.foregroundColor = RSkColorFromSharedColor(newviewProps.foregroundColor,SK_ColorTRANSPARENT);
    }
   /* TODO To be verified when implemented*/
   //pointerEvents
@@ -105,7 +104,7 @@ void RSkComponent::updateProps(const ShadowView &newShadowView,bool forceUpdate)
   //overflow
    if ((forceUpdate) || (oldviewProps.getClipsContentToBounds() != newviewProps.getClipsContentToBounds())) {
       RNS_LOG_NOT_IMPL;//ViewProps.yogastyle.overflow
-      component_.props_.masksToBounds_ = newviewProps.getClipsContentToBounds();
+      component_.props_.masksToBounds = newviewProps.getClipsContentToBounds();
    }
   //zIndex
    if ((forceUpdate) || (oldviewProps.zIndex != newviewProps.zIndex)) {

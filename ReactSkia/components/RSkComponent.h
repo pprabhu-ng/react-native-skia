@@ -29,7 +29,7 @@ struct props{
     SkColor foregroundColor;
     int pointerEvents;
     EdgeInsets hitSlop;
-    bool masksToBounds_;
+    bool masksToBounds;
     int zIndex{};
 };
 struct Component {
@@ -77,7 +77,7 @@ class RSkComponent : public RnsShell::Layer, public std::enable_shared_from_this
  
   void requiresLayer(const ShadowView &shadowView);
   void updateProps(const ShadowView &newShadowView , bool forceUpdate);
-  virtual void updateComponetProps(const ShadowView &newShadowView,bool forceUpadate) = 0;
+  virtual void updateComponentProps(const ShadowView &newShadowView,bool forceUpadate) = 0;
  protected:
   virtual void OnPaint(SkCanvas *canvas) = 0;
 

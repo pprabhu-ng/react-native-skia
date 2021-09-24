@@ -2,8 +2,6 @@
 
 #include "include/core/SkRect.h"
 
-#include "react/renderer/mounting/ShadowView.h"
-
 #include "ReactSkia/components/RSkComponent.h"
 
 #define DEFAULT_IMAGE_FILTER_QUALITY kLow_SkFilterQuality /*Skia's Defualt is kNone_SkFilterQuality*/
@@ -17,7 +15,7 @@ struct ImgProps{
 class RSkComponentImage final : public RSkComponent {
  public:
   RSkComponentImage(const ShadowView &shadowView);
-  void updateComponetProps(const ShadowView &newShadowView,bool forceUpdate) override;
+  void updateComponentProps(const ShadowView &newShadowView,bool forceUpdate) override;
  private :
   ImgProps imageProps;
  protected:

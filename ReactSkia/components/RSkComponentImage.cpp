@@ -6,7 +6,6 @@
 #include "react/renderer/components/image/ImageEventEmitter.h"
 
 #include "ReactSkia/components/RSkComponentImage.h"
-#include "ReactSkia/components/RSkComponent.h"
 #include "ReactSkia/views/common/RSkDrawUtils.h"
 #include "ReactSkia/views/common/RSkImageUtils.h"
 #include "ReactSkia/views/common/RSkImageCacheManager.h"
@@ -86,7 +85,7 @@ void RSkComponentImage::OnPaint(
   }
 }
 
-void RSkComponentImage::updateComponetProps(const ShadowView &newShadowView,bool forceUpdate) {
+void RSkComponentImage::updateComponentProps(const ShadowView &newShadowView,bool forceUpdate) {
 
     auto const &newimageProps = *std::static_pointer_cast<ImageProps const>(newShadowView.props);
     auto component = getComponentData();
@@ -96,7 +95,7 @@ void RSkComponentImage::updateComponetProps(const ShadowView &newShadowView,bool
          imageProps.resizeMode = newimageProps.resizeMode;
     }
     if ((forceUpdate) || (oldimageProps.tintColor != newimageProps.tintColor )) {
-	 imageProps.tintColor = RSkColorConversion(newimageProps.tintColor);
+	 imageProps.tintColor = RSkColorFromSharedColor(newimageProps.tintColor,SK_ColorTRANSPARENT);
     }
 }
 } // namespace react
