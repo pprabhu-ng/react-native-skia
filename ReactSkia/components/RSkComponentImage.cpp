@@ -12,7 +12,7 @@
 
 #include "ReactSkia/utils/RnsLog.h"
 #include "ReactSkia/utils/RnsUtils.h"
-#include "ReactSkia/Fabric/RSKConversion.h"
+#include "ReactSkia/views/common/RSkConversion.h"
 
 namespace facebook {
 namespace react {

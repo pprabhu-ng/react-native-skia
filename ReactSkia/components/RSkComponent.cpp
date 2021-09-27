@@ -1,5 +1,5 @@
 #include "ReactSkia/components/RSkComponent.h"
-#include "ReactSkia/Fabric/RSKConversion.h"
+#include "ReactSkia/views/common/RSkConversion.h"
 
 #include "include/core/SkPaint.h"
 #include "include/core/SkPictureRecorder.h"
