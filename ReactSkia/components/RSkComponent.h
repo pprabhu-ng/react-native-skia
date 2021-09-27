@@ -6,7 +6,6 @@
 #include "include/core/SkCanvas.h"
 #include "react/renderer/mounting/ShadowView.h"
 #include "react/renderer/components/view/ViewProps.h"
-#include "react/renderer/components/image/ImageShadowNode.h"
 
 #include "rns_shell/compositor/layers/Layer.h"
 
