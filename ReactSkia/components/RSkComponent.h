@@ -23,7 +23,7 @@ enum ComponentUpdateMask {
       ComponentUpdateMaskState | ComponentUpdateMaskLayoutMetrics
 };
 
-struct props{
+struct CommonProps{
     SkColor backgroundColor;
     SkColor foregroundColor;
     int pointerEvents;
@@ -47,7 +47,7 @@ struct Component {
   EventEmitter::Shared eventEmitter{};
   LayoutMetrics layoutMetrics{EmptyLayoutMetrics};
   State::Shared state{};
-  struct props props_;
+  struct CommonProps commonProps;
 };
 
 class RSkComponent;

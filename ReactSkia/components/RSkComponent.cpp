@@ -83,32 +83,32 @@ void RSkComponent::updateProps(const ShadowView &newShadowView,bool forceUpdate)
    }
   //backgroundColor
    if ((forceUpdate) || (oldviewProps.backgroundColor != newviewProps.backgroundColor)) {
-      component_.props_.backgroundColor = RSkColorFromSharedColor(newviewProps.backgroundColor,SK_ColorTRANSPARENT);
+      component_.commonProps.backgroundColor = RSkColorFromSharedColor(newviewProps.backgroundColor,SK_ColorTRANSPARENT);
    }
   //foregroundColor
    if ((forceUpdate) || (oldviewProps.foregroundColor != newviewProps.foregroundColor)) {
       RNS_LOG_NOT_IMPL;
-      component_.props_.foregroundColor = RSkColorFromSharedColor(newviewProps.foregroundColor,SK_ColorTRANSPARENT);
+      component_.commonProps.foregroundColor = RSkColorFromSharedColor(newviewProps.foregroundColor,SK_ColorTRANSPARENT);
    }
   /* TODO To be verified when implemented*/
   //pointerEvents
    if ((forceUpdate) || (oldviewProps.pointerEvents != newviewProps.pointerEvents)) {
       RNS_LOG_NOT_IMPL;
-      component_.props_.pointerEvents = (int)newviewProps.pointerEvents;
+      component_.commonProps.pointerEvents = (int)newviewProps.pointerEvents;
    }
   //hitslop
    if ((forceUpdate) || (oldviewProps.hitSlop != newviewProps.hitSlop)) {
       RNS_LOG_NOT_IMPL;
-      component_.props_.hitSlop = newviewProps.hitSlop;
+      component_.commonProps.hitSlop = newviewProps.hitSlop;
    }
   //overflow
    if ((forceUpdate) || (oldviewProps.getClipsContentToBounds() != newviewProps.getClipsContentToBounds())) {
       RNS_LOG_NOT_IMPL;//ViewProps.yogastyle.overflow
-      component_.props_.masksToBounds = newviewProps.getClipsContentToBounds();
+      component_.commonProps.masksToBounds = newviewProps.getClipsContentToBounds();
    }
   //zIndex
    if ((forceUpdate) || (oldviewProps.zIndex != newviewProps.zIndex)) {
-      component_.props_.zIndex = newviewProps.zIndex.value_or(0);
+      component_.commonProps.zIndex = newviewProps.zIndex.value_or(0);
    }
   //transform
    if ((forceUpdate) || (oldviewProps.transform != newviewProps.transform)) {
