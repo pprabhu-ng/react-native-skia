@@ -8,6 +8,7 @@
 
 #include "compositor/layers/Layer.h"
 #include "compositor/layers/PictureLayer.h"
+
 namespace RnsShell {
 
 SharedLayer Layer::Create(LayerType type) {

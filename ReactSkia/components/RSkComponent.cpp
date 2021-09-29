@@ -104,7 +104,7 @@ void RSkComponent::updateProps(const ShadowView &newShadowView,bool forceUpdate)
   //overflow
    if ((forceUpdate) || (oldviewProps.getClipsContentToBounds() != newviewProps.getClipsContentToBounds())) {
       RNS_LOG_NOT_IMPL;//ViewProps.yogastyle.overflow
-      component_.commonProps.masksToBounds = newviewProps.getClipsContentToBounds();
+      layer_->setMasksTotBounds(newviewProps.getClipsContentToBounds());
    }
   //zIndex
    if ((forceUpdate) || (oldviewProps.zIndex != newviewProps.zIndex)) {
@@ -112,7 +112,7 @@ void RSkComponent::updateProps(const ShadowView &newShadowView,bool forceUpdate)
    }
   //transform
    if ((forceUpdate) || (oldviewProps.transform != newviewProps.transform)) {
-      layer_->transformMatrix = RSkTransformTO2DMatrix(newviewProps.transform);
+      layer_->transformMatrix = RSkTransformTo2DMatrix(newviewProps.transform);
    }
 }
 

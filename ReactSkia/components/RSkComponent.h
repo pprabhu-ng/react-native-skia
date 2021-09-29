@@ -28,7 +28,6 @@ struct CommonProps{
     SkColor foregroundColor;
     int pointerEvents;
     EdgeInsets hitSlop;
-    bool masksToBounds;
     int zIndex{};
 };
 struct Component {

@@ -44,12 +44,14 @@ struct PaintContext {
 
 class Layer {
 public:
+    int  backfaceVisibility;
     float opacity{1.0};
+
     float shadowOpacity{};
     float shadowRadius{3};
-    int  backfaceVisibility;
-    SkSize shadowOffset{0,-3};
     SkColor shadowColor;
+    SkSize shadowOffset{0,-3};
+
     SkMatrix transformMatrix;
 
     static SharedLayer Create(LayerType type = LAYER_TYPE_DEFAULT);
