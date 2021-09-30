@@ -29,6 +29,7 @@ struct CommonProps{
     int pointerEvents;
     EdgeInsets hitSlop;
     int zIndex{};
+    /* TODO Add TVOS properties */
 };
 struct Component {
   Component( const ShadowView &shadowView)

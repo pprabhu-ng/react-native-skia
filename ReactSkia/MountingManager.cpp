@@ -175,8 +175,8 @@ void MountingManager::UpdateMountInstruction(
 
        if(updateMask != ComponentUpdateMaskNone) {
 	   newChildComponent->updateComponentData(mutation.newChildShadowView,updateMask,false);
-       if(updateMask & ComponentUpdateMaskProps)
-           surface_->navigator()->updateInNavList(newChildComponent); //TODO only if TV related proe    prties have changed ?
+           if(updateMask & ComponentUpdateMaskProps)
+               surface_->navigator()->updateInNavList(newChildComponent); //TODO only if TV related proeprties have changed ?
        }
 #if USE(RNS_SHELL_PARTIAL_UPDATES)
        surface_->compositor()->addDamageRect(newChildComponent->layer().get()->getFrame());

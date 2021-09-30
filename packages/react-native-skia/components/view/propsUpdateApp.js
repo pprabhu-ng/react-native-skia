@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useState } from 'react';
-import { View, AppRegistry, Text,Image,TouchableOpacity,overflow,TouchableHighlight } from 'react-native';
+import { View, AppRegistry, Text,Image,TouchableOpacity,TouchableHighlight } from 'react-native';
 
 const SimpleViewApp = React.Node = () => {
    var useCases =5;

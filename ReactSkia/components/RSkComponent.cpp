@@ -114,6 +114,7 @@ void RSkComponent::updateProps(const ShadowView &newShadowView,bool forceUpdate)
    if ((forceUpdate) || (oldviewProps.transform != newviewProps.transform)) {
       layer_->transformMatrix = RSkTransformTo2DMatrix(newviewProps.transform);
    }
+    /* TODO Add TVOS properties */
 }
 
 void RSkComponent::updateComponentData(const ShadowView &newShadowView,const uint32_t updateMask,bool forceUpdate) {
