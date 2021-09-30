@@ -115,9 +115,9 @@ void Layer::preRoll(PaintContext& context, bool forceLayout) {
             frameAbsY += parent_->absFrame_.y();
         }
 
-        if((invalidateMask_ & LayerLayoutInvalidate)) {
-            SkIRect newAbsFrame = SkIRect::MakeXYWH(frameAbsX, frameAbsY, frame_.width(), frame_.height());
+        SkIRect newAbsFrame = SkIRect::MakeXYWH(frameAbsX, frameAbsY, frame_.width(), frame_.height());
 #if USE(RNS_SHELL_PARTIAL_UPDATES)
+        if((invalidateMask_ & LayerLayoutInvalidate)) {
             // Add previous frame to damage rect only if layer layout was invalidated and new layout is different from old layout
             if(context.supportPartialUpdate && (invalidateMask_ & LayerLayoutInvalidate)) {
                 if(absFrame_.isEmpty() != true && newAbsFrame.contains(absFrame_) != true ) {
@@ -125,13 +125,13 @@ void Layer::preRoll(PaintContext& context, bool forceLayout) {
                     RNS_LOG_DEBUG("New frame layout is different from previous frame. Add to damage rect..");
                 }
             }
-#endif
             RNS_LOG_DEBUG("PreRoll Layer(ID:" << layerId_ << ", ParentID:" << (parent_ ? parent_->layerId() : -1) <<
                 ") Frame [" << frame_.x() << "," << frame_.y() << "," << frame_.width() << "," << frame_.height() <<
                 "], AbsFrame(Prev,New) ([" << absFrame_.x() << "," << absFrame_.y() << "," << absFrame_.width() << "," << absFrame_.height() << "]" <<
                 " - [" << newAbsFrame.x() << "," << newAbsFrame.y() << "," << newAbsFrame.width() << "," << newAbsFrame.height() << "])");
-            absFrame_ = newAbsFrame; // Save new absFrame
         }
+#endif
+        absFrame_ = newAbsFrame; // Save new absFrame
     }
 
 #if USE(RNS_SHELL_PARTIAL_UPDATES)
