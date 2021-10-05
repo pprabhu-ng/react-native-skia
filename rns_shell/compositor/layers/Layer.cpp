@@ -145,12 +145,13 @@ void Layer::preRoll(PaintContext& context, bool forceLayout) {
 
 void Layer::prePaint(PaintContext& context, bool forceLayout) {
     //Adjust absolute Layout frame and dirty rects
+    bool forceChildrenLayout = (forceLayout || (invalidateMask_ & LayerLayoutInvalidate));
     preRoll(context, forceLayout);
     invalidateMask_ = LayerInvalidateNone;
 
     // prePaint children recursively
     for (auto& layer : children()) {
-        layer->prePaint(context, (forceLayout || (invalidateMask_ & LayerLayoutInvalidate)));
+        layer->prePaint(context, forceChildrenLayout);
     }
 }
 
