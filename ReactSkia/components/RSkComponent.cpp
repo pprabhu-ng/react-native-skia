@@ -51,6 +51,7 @@ void RSkComponent::requiresLayer(const ShadowView &shadowView) {
     else
         layer_ = RnsShell::Layer::Create(RnsShell::LAYER_TYPE_PICTURE);
 }
+
 void RSkComponent::updateProps(const ShadowView &newShadowView,bool forceUpdate) {
 
    auto const &newviewProps = *std::static_pointer_cast<ViewProps const>(newShadowView.props);
