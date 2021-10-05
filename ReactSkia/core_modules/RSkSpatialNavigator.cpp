@@ -267,13 +267,13 @@ static inline bool isValidCandidate(rnsKey direction, Component& curData, Compon
     // Rule 2. Candidate must be in the direction of navigation.
     switch(direction) {
         case RNS_KEY_Right:
-            return (candidate.origin.x >= current.origin.x); // Must be on right side
+            return (candidate.origin.x > current.origin.x); // Must be on right side
         case RNS_KEY_Left:
-            return(candidate.getMaxX() <= current.getMaxX()); // Must be on left side
+            return(candidate.getMaxX() < current.getMaxX()); // Must be on left side
         case RNS_KEY_Up:
-            return (candidate.getMaxY() <= current.getMaxY()); // Must be on up side
+            return (candidate.getMaxY() < current.getMaxY()); // Must be on up side
         case RNS_KEY_Down:
-            return(candidate.origin.y >= current.origin.y); // Must be on down side
+            return(candidate.origin.y > current.origin.y); // Must be on down side
         default:
             RNS_LOG_WARN("Inavlid diretion Navigation : " << RNSKeyMap[direction]);
             break;
@@ -345,7 +345,7 @@ void RSkSpatialNavigator::navigateInDirection(rnsKey keyEvent) {
             case RNS_KEY_Right:
             case RNS_KEY_Left: {
                 // Rule 3. Must have Projected overlap in Eastern/Western region
-                if(!( canData.layoutMetrics.frame.getMaxY() <= curData.layoutMetrics.frame.origin.y
+                if(!( canData.layoutMetrics.frame.getMaxY() < curData.layoutMetrics.frame.origin.y
                     || canData.layoutMetrics.frame.origin.y > curData.layoutMetrics.frame.getMaxY())) {
                         RNS_LOG_DEBUG("Add Tag[ " << canData.tag << " ] to overlaping list for " << RNSKeyMap[keyEvent] << " direction");
                         overLapping.insert(*candidate); // Sorted using sortDirectionComparator
@@ -355,17 +355,17 @@ void RSkSpatialNavigator::navigateInDirection(rnsKey keyEvent) {
             case RNS_KEY_Up:
             case RNS_KEY_Down: {
                 // Rule 3. Has either Projected overlap or nonOverlap in Northern/Southern region
-                if(!( canData.layoutMetrics.frame.getMaxX() <= curData.layoutMetrics.frame.origin.x
+                if(!( canData.layoutMetrics.frame.getMaxX() < curData.layoutMetrics.frame.origin.x
                     || canData.layoutMetrics.frame.origin.x > curData.layoutMetrics.frame.getMaxX())) {
                         RNS_LOG_DEBUG("Add Tag[ " << canData.tag << " ] to overlaping list for " << RNSKeyMap[keyEvent] << " direction");
                         overLapping.insert(*candidate); // Sorted using sortDirectionComparator
                 } else {
                     // Rule 3.a For non-overlap, for up direction, only consider the candidates which is completely above current focussed item and
                     // for down direction, only consider the candidates which is completely below current focussed item
-                    if(keyEvent == RNS_KEY_Up && canData.layoutMetrics.frame.getMaxY() < curData.layoutMetrics.frame.origin.y) {
+                    if(keyEvent == RNS_KEY_Up && canData.layoutMetrics.frame.getMaxY() <= curData.layoutMetrics.frame.origin.y) {
                         RNS_LOG_DEBUG("Add Tag[ " << canData.tag << " ] to nonOverlaping list for " << RNSKeyMap[keyEvent] << " direction");
                         nonOverLapping.insert(*candidate); // Sorted using sortDirectionComparator
-                    } else if(keyEvent == RNS_KEY_Down && canData.layoutMetrics.frame.origin.y > curData.layoutMetrics.frame.getMaxY()) {
+                    } else if(keyEvent == RNS_KEY_Down && canData.layoutMetrics.frame.origin.y >= curData.layoutMetrics.frame.getMaxY()) {
                         RNS_LOG_DEBUG("Add Tag[ " << canData.tag << " ] to nonOverlaping list for " << RNSKeyMap[keyEvent] << " direction");
                         nonOverLapping.insert(*candidate); // Sorted using sortDirectionComparator
                     }
