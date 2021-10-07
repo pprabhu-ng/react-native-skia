@@ -39,7 +39,7 @@ class TextInputComponentDescriptor final
   }
 
  private:
-  TextLayoutManager::Shared textLayoutManager_;
+  SharedTextLayoutManager textLayoutManager_;
 };
 
 } // namespace react

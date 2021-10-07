@@ -4,7 +4,7 @@
 
 #include "ReactSkia/core_modules/RSkSpatialNavigator.h"
 #include "rns_shell/compositor/Compositor.h"
-
+#include "ReactSkia/core_modules/RSkInputEventManager.h"
 #include <list>
 
 namespace facebook {
@@ -25,7 +25,7 @@ class RSkSurfaceWindow {
 
   Compositor* compositor() { return compositor_.get(); }
   RSkSpatialNavigator* navigator() { return navigator_; }
-
+  
   LayoutConstraints GetLayoutConstraints();
 
 #ifdef RNS_SHELL_HAS_GPU_SUPPORT
@@ -41,6 +41,7 @@ class RSkSurfaceWindow {
  private:
   std::unique_ptr<Compositor> compositor_;
   RSkSpatialNavigator* navigator_;
+  RSkInputEventManager* inputEventManager_;
 };
 
 } // namespace react

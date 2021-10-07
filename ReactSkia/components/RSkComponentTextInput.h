@@ -15,9 +15,12 @@ namespace react {
 class RSkComponentTextInput final : public RSkComponentView {
  public:
   RSkComponentTextInput(const ShadowView &shadowView);
-
+  bool onHandleKey(rnsKey  eventKeyType, rnsKeyAction eventKeyAction)override;
  protected:
   void OnPaint(SkCanvas *canvas) override;
+ private:
+  //bool stopPropagation;
+  bool isInEditingMode;
 };
 
 } // namespace react

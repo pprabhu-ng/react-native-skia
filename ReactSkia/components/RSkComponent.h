@@ -8,7 +8,7 @@
 #include "react/renderer/components/view/ViewProps.h"
 
 #include "rns_shell/compositor/layers/Layer.h"
-
+#include "ReactSkia/sdk/RNSKeyCodeMapping.h"
 namespace facebook {
 namespace react {
 
@@ -67,7 +67,7 @@ class RSkComponent : public RnsShell::Layer, public std::enable_shared_from_this
   RSkComponent *getParent() {return parent_; };
  
   void requiresLayer(const ShadowView &shadowView);
-
+  virtual  bool onHandleKey(rnsKey  eventKeyType, rnsKeyAction eventKeyAction);
  protected:
   virtual void OnPaint(SkCanvas *canvas) = 0;
 

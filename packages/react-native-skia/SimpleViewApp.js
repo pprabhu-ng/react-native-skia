@@ -1,5 +1,5 @@
 import React from "react";
-import { View, StyleSheet,TextInput,AppRegistry } from "react-native";
+import { View, StyleSheet,TextInput,AppRegistry,Pressable } from "react-native";
 
 const onKeyPress =(e) =>{
   console.log("event====>"+ e.nativeEvent.key);
@@ -17,6 +17,7 @@ const SimpleViewApp = () => {
        onKeyPress={onKeyPress}
        onChange={onChange1}
         style={styles.input}/>
+
       </View>
     );
 }

@@ -17,10 +17,12 @@ RSkSpatialNavigator* RSkSpatialNavigator::sharedSpatialNavigator_{nullptr};
 std::mutex RSkSpatialNavigator::mutex_;
 
 RSkSpatialNavigator::RSkSpatialNavigator() {
-    std::function<void(rnsKey, rnsKeyAction)> handler = std::bind(&RSkSpatialNavigator::handleKeyEvent, this,
-                                                                std::placeholders::_1, // rnsKey
-                                                                std::placeholders::_2);  // rnsKeyAction
-    eventId_ = NotificationCenter::defaultCenter().addListener("onHWKeyEvent", handler);
+    //handler = std::bind(&RSkSpatialNavigator::handleKeyEvent, this,
+    //                                                            std::placeholders::_1, // rnsKey
+    //                                                            std::placeholders::_2);  // rnsKeyAction // copy registarion part to inputEVentMangaer
+
+   // eventId_= 1;
+    //eventId_ = NotificationCenter::defaultCenter().addListener("onHWKeyEvent", handler); // move this to input Event manager
 }
 
 RSkSpatialNavigator::~RSkSpatialNavigator() {
@@ -388,7 +390,7 @@ void RSkSpatialNavigator::handleKeyEvent(rnsKey  eventKeyType, rnsKeyAction even
         return;
 
     // First send keyevent to TVNavigation Emitter
-    sendNotificationWithEventType(RNSKeyMap[eventKeyType], currentFocus_ ? currentFocus_->getComponentData().tag : -1, eventKeyAction);
+    //sendNotificationWithEventType(RNSKeyMap[eventKeyType], currentFocus_ ? currentFocus_->getComponentData().tag : -1, eventKeyAction);//remove this and it handle as part of inputEventManager
 
     // Then based on spatial navigation alogirthm, send blur/focus
     switch(eventKeyType) {
@@ -402,6 +404,11 @@ void RSkSpatialNavigator::handleKeyEvent(rnsKey  eventKeyType, rnsKeyAction even
         default:
             break; // Ignore
     }
+}
+
+RSkComponent* RSkSpatialNavigator::getCurrentFocusElement()
+{
+    return currentFocus_;
 }
 
 } // namespace SpatialNavigator

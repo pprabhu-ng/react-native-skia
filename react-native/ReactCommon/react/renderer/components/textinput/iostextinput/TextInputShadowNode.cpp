@@ -70,7 +70,7 @@ AttributedString TextInputShadowNode::getAttributedString(
 }
 
 void TextInputShadowNode::setTextLayoutManager(
-    TextLayoutManager::Shared const &textLayoutManager) {
+    SharedTextLayoutManager const &textLayoutManager) {
   ensureUnsealed();
   textLayoutManager_ = textLayoutManager;
 }

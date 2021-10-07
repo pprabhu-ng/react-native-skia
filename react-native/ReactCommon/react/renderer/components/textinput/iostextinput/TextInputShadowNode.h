@@ -45,7 +45,7 @@ class TextInputShadowNode : public ConcreteViewShadowNode<
    * `TextInputShadowNode` uses the manager to measure text content
    * and construct `TextInputState` objects.
    */
-  void setTextLayoutManager(TextLayoutManager::Shared const &textLayoutManager);
+  void setTextLayoutManager(SharedTextLayoutManager const &textLayoutManager);
 
 #pragma mark - LayoutableShadowNode
 
@@ -74,7 +74,8 @@ class TextInputShadowNode : public ConcreteViewShadowNode<
   AttributedStringBox attributedStringBoxToMeasure(
       LayoutContext const &layoutContext) const;
 
-  TextLayoutManager::Shared textLayoutManager_;
+  SharedTextLayoutManager textLayoutManager_;
+  //TextLayoutManager::Shared textLayoutManager_;
 };
 
 } // namespace react
