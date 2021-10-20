@@ -15,6 +15,7 @@ namespace react {
  private:
      static RSkInputEventManager *sharedInputEventManager_;
      RSkInputEventManager();
+     SpatialNavigator::RSkSpatialNavigator* spatialNavigator_;
  public:
   static RSkInputEventManager* getInputKeyEventManager();
   void keyHandler(rnsKey key, rnsKeyAction eventKeyAction);

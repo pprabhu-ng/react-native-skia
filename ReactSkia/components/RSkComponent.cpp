@@ -24,7 +24,7 @@ void RSkComponent::onPaint(SkCanvas* canvas) {
     RNS_LOG_ERROR("Invalid canvas ??");
   }
 }
-bool RSkComponent::onHandleKey(rnsKey  eventKeyType, rnsKeyAction eventKeyAction){
+bool RSkComponent::onHandleKey(rnsKey  eventKeyType){
     return false;
 }
 sk_sp<SkPicture> RSkComponent::getPicture() {

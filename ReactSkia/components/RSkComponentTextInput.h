@@ -8,19 +8,22 @@
 #pragma once
 
 #include "ReactSkia/components/RSkComponentView.h"
-
+#include "react/renderer/components/textinput/TextInputEventEmitter.h"
 namespace facebook {
 namespace react {
 
 class RSkComponentTextInput final : public RSkComponentView {
  public:
   RSkComponentTextInput(const ShadowView &shadowView);
-  bool onHandleKey(rnsKey  eventKeyType, rnsKeyAction eventKeyAction)override;
+  bool onHandleKey(rnsKey  eventKeyType)override;
+  /*
+    TODO  Need to Add command function to Handle Command.
+  */
  protected:
   void OnPaint(SkCanvas *canvas) override;
  private:
-  //bool stopPropagation;
-  bool isInEditingMode;
+  bool isInEditingMode_;
+  KeyPressMetrics keyPressMetrics_;
 };
 
 } // namespace react

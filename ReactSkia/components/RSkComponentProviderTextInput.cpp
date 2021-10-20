@@ -8,7 +8,7 @@
 #include "ReactSkia/components/RSkComponentProviderTextInput.h"
 #include "ReactSkia/components/RSkComponentTextInput.h"
 
-#include "react/renderer/components/textinput/iostextinput/TextInputComponentDescriptor.h"
+#include "react/renderer/components/textinput/TextInputComponentDescriptor.h"
 
 namespace facebook {
 namespace react {

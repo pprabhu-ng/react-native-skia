@@ -67,7 +67,7 @@ class RSkComponent : public RnsShell::Layer, public std::enable_shared_from_this
   RSkComponent *getParent() {return parent_; };
  
   void requiresLayer(const ShadowView &shadowView);
-  virtual  bool onHandleKey(rnsKey  eventKeyType, rnsKeyAction eventKeyAction);
+  virtual  bool onHandleKey(rnsKey  eventKeyType);
  protected:
   virtual void OnPaint(SkCanvas *canvas) = 0;
 
