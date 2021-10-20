@@ -58,8 +58,8 @@ class RSkTimer {
 
   friend class RSkTimingModule;
  private:
-  void reschedule() { // Update repeating timer target
-    target_ = system_clock::now() + milliseconds(static_cast<unsigned long long>(duration_));
+  void reschedule(SysTimePoint baseNow) { // Update repeating timer target
+    target_ = baseNow + milliseconds(static_cast<unsigned long long>(duration_));
   }
   SysTimePoint target_;
   double callbackId_;

@@ -96,14 +96,6 @@ void RSkTimingModule::createTimerForNextFrame(
   );
 }
 
-static inline void shortestTargetDuration(SysTimePoint& target, double& nextScheduledTarget) {
-  SysTimePoint now = system_clock::now();
-  duration<double, std::milli> remaining = target - now;
-  double target_dur = std::max(remaining.count(), 0.0);
-  if(target_dur < nextScheduledTarget)
-    nextScheduledTarget = target_dur;
-}
-
 // Private hack to support setTimeout(fn, 0) similar to IOS
 void RSkTimingModule::immediatelyCallTimer(double callbackId) {
   if(bridgeInstance_) {
@@ -114,9 +106,9 @@ void RSkTimingModule::immediatelyCallTimer(double callbackId) {
 
 void RSkTimingModule::timerDidFire() {
   std::vector<RSkTimer *> timersToCall;
-  double nextScheduledTarget = 1000000.00; // XXX MAX DOUBLE value ??
+  SysTimePoint now = system_clock::now(); //Take this as base clock for all calculations here
+  SysTimePoint nextScheduledTarget = now + milliseconds(static_cast<unsigned long long>(31536000000)); // Set 1 year ahead time from now
 
-  SysTimePoint now = system_clock::now();
   // Loop timer list and list down all expired timer into a vector
   for (auto& timer : timers_) {
     if( timer.second->target_ <= now ) { // Expired timer
@@ -128,7 +120,8 @@ void RSkTimingModule::timerDidFire() {
       RNS_LOG_TRACE("Expired TimerID=" << timer.second->callbackId_ << ", repeat=" << timer.second->repeats_ << ", duration=" << timer.second->duration_);
     } else {
       RNS_LOG_TRACE("Pending TimerID=" << timer.second->callbackId_ << ", repeat=" << timer.second->repeats_ << ", duration=" << timer.second->duration_);
-      shortestTargetDuration(timer.second->target_, nextScheduledTarget);
+      if(timer.second->target_ < nextScheduledTarget)
+        nextScheduledTarget = timer.second->target_;
     }
   }
 
@@ -145,8 +138,9 @@ void RSkTimingModule::timerDidFire() {
   // Go through the expired timers and reschedule repeating callbacks
   for (auto& timer : timersToCall) {
     if (timer->repeats_) {
-      timer->reschedule(); // First update target_ of this timer
-      shortestTargetDuration(timer->target_, nextScheduledTarget);
+      timer->reschedule(now); // First update target_ of this timer
+      if(timer->target_ < nextScheduledTarget)
+        nextScheduledTarget = timer->target_;
     } else {
       timers_.erase(timer->callbackId_); // Remove expired callbacks which is already fired and doesnt repeat
     }
@@ -156,14 +150,16 @@ void RSkTimingModule::timerDidFire() {
   if(sendIdleEvents_ && bridgeInstance_) {
     RNS_LOG_TODO("!!!!!!!!!! Send callIdleCallbacks with proper data");
     double absoluteFrameStartMS = 0; // TODO Refer RCTTiming.mm : The amount of time left in the frame, in ms.
-      bridgeInstance_->callJSFunction("JSTimers", "callIdleCallbacks", folly::dynamic::array(absoluteFrameStartMS));
+    bridgeInstance_->callJSFunction("JSTimers", "callIdleCallbacks", folly::dynamic::array(absoluteFrameStartMS));
   }
 
   // Reschedule timer with nextScheduledTarget
   if(timers_.size() > 0) {
     HHWheelTimer& wheelTimer = timerThread_.getEventBase()->timer();
-    wheelTimer.scheduleTimeout(&timerCallback_, std::chrono::milliseconds(static_cast<unsigned long long>(nextScheduledTarget)));
-    RNS_LOG_DEBUG("Rescheduled timer with shortest duration : " << nextScheduledTarget );
+    duration<double, std::milli> remaining = nextScheduledTarget - system_clock::now(); // Remining duration to target from this point in time.
+    double targetDuration = std::max(remaining.count(), 0.0);
+    wheelTimer.scheduleTimeout(&timerCallback_, std::chrono::milliseconds(static_cast<unsigned long long>(targetDuration)));
+    RNS_LOG_DEBUG("Rescheduled timer with shortest duration : " << targetDuration);
   }
 }
 
