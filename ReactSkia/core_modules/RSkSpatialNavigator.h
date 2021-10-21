@@ -80,6 +80,7 @@ public:
     void updateInNavList(std::shared_ptr<RSkComponent> candidate);
 
     void handleKeyEvent(rnsKey  eventType, rnsKeyAction eventKeyAction);
+    //getCurrentFocusElement will returns the current Focused component
     RSkComponent* getCurrentFocusElement();
     std::function<void(rnsKey, rnsKeyAction)> getHandler();
     std::function<void(rnsKey, rnsKeyAction)> handler;

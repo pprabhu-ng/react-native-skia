@@ -53,22 +53,22 @@ rn_cxx_component("textlayoutmanager") {
 
 rn_cxx_component("textinput") {
   sources = [
-  "textinput/react/renderer/components/textinput/conversions.h",
-  "textinput/react/renderer/components/textinput/primitives.h",
-  "textinput/react/renderer/components/textinput/propsConversions.h",
-  "textinput/react/renderer/components/textinput/TextInputComponentDescriptor.h",
-  "textinput/react/renderer/components/textinput/TextInputEventEmitter.cpp",
-  "textinput/react/renderer/components/textinput/TextInputEventEmitter.h",
-  "textinput/react/renderer/components/textinput/TextInputProps.cpp",
-  "textinput/react/renderer/components/textinput/TextInputProps.h",
-  "textinput/react/renderer/components/textinput/TextInputShadowNode.cpp",
-  "textinput/react/renderer/components/textinput/TextInputShadowNode.h",
-  "textinput/react/renderer/components/textinput/TextInputState.cpp",
-  "textinput/react/renderer/components/textinput/TextInputState.h",
+    "textinput/react/renderer/components/textinput/conversions.h",
+    "textinput/react/renderer/components/textinput/primitives.h",
+    "textinput/react/renderer/components/textinput/propsConversions.h",
+    "textinput/react/renderer/components/textinput/TextInputComponentDescriptor.h",
+    "textinput/react/renderer/components/textinput/TextInputEventEmitter.cpp",
+    "textinput/react/renderer/components/textinput/TextInputEventEmitter.h",
+    "textinput/react/renderer/components/textinput/TextInputProps.cpp",
+    "textinput/react/renderer/components/textinput/TextInputProps.h",
+    "textinput/react/renderer/components/textinput/TextInputShadowNode.cpp",
+    "textinput/react/renderer/components/textinput/TextInputShadowNode.h",
+    "textinput/react/renderer/components/textinput/TextInputState.cpp",
+    "textinput/react/renderer/components/textinput/TextInputState.h",
   ]
 
   deps = [
-     "//folly",
+    "//folly",
     "//react-native/ReactCommon/react/renderer/attributedstring:attributedstring",
     "//react-native/ReactCommon/react/renderer/componentregistry:componentregistry",
     "//react-native/ReactCommon/react/renderer/components/image:image",

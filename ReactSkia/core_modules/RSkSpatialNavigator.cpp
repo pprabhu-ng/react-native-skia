@@ -17,12 +17,6 @@ RSkSpatialNavigator* RSkSpatialNavigator::sharedSpatialNavigator_{nullptr};
 std::mutex RSkSpatialNavigator::mutex_;
 
 RSkSpatialNavigator::RSkSpatialNavigator() {
-    //handler = std::bind(&RSkSpatialNavigator::handleKeyEvent, this,
-    //                                                            std::placeholders::_1, // rnsKey
-    //                                                            std::placeholders::_2);  // rnsKeyAction // copy registarion part to inputEVentMangaer
-
-   // eventId_= 1;
-    //eventId_ = NotificationCenter::defaultCenter().addListener("onHWKeyEvent", handler); // move this to input Event manager
 }
 
 RSkSpatialNavigator::~RSkSpatialNavigator() {

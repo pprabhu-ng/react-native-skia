@@ -25,7 +25,7 @@ void RSkComponent::onPaint(SkCanvas* canvas) {
   }
 }
 bool RSkComponent::onHandleKey(rnsKey  eventKeyType){
-    return false;
+  return false;
 }
 sk_sp<SkPicture> RSkComponent::getPicture() {
 

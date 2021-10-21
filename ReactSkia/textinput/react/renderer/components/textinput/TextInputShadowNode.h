@@ -75,7 +75,6 @@ class TextInputShadowNode : public ConcreteViewShadowNode<
       LayoutContext const &layoutContext) const;
 
   SharedTextLayoutManager textLayoutManager_;
-  //TextLayoutManager::Shared textLayoutManager_;
 };
 
 } // namespace react

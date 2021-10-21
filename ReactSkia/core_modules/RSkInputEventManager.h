@@ -11,14 +11,14 @@
 
 namespace facebook {
 namespace react {
- class RSkInputEventManager{
- private:
-     static RSkInputEventManager *sharedInputEventManager_;
-     RSkInputEventManager();
-     SpatialNavigator::RSkSpatialNavigator* spatialNavigator_;
- public:
-  static RSkInputEventManager* getInputKeyEventManager();
-  void keyHandler(rnsKey key, rnsKeyAction eventKeyAction);
+class RSkInputEventManager{
+private:
+    static RSkInputEventManager *sharedInputEventManager_;
+    RSkInputEventManager();
+    SpatialNavigator::RSkSpatialNavigator* spatialNavigator_;
+public:
+    static RSkInputEventManager* getInputKeyEventManager();
+    void keyHandler(rnsKey key, rnsKeyAction eventKeyAction);
 };
 
 } // namespace react

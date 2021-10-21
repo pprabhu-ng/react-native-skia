@@ -46,45 +46,42 @@ void RSkComponentTextInput::OnPaint(SkCanvas *canvas) {
   
 }
 bool RSkComponentTextInput::onHandleKey(rnsKey  eventKeyType){
-    bool stopPropagation=true;
-    
-    //TODO  update Keymatrics Event Count.
-    TextInputMetrics textInputMetrics;
-    auto component = getComponentData();
-    auto textInputEventEmitter = std::static_pointer_cast<TextInputEventEmitter const>(component.eventEmitter);
-    //textInputEventEmitter->onKeyPress(keyPressMetrics_);
-    if (eventKeyType == RNS_KEY_Select){
-        if(isInEditingMode_ == false){
-          /*TODO Check onfocus need to here.
-           *textInputEventEmitter->onfocus();
-           */
-          isInEditingMode_=true;
-          stopPropagation = false;
-        }
-        else{
-          /* TODO Update textinputmatrix data and sent the event.
-          textInputEventEmitter->onSubmitEditing(textInputMetrics_);
-          textInputEventEmitter->onBlur(textInputMetrics_);
-          textInputEventEmitter->onEndEditing(textInputMetrics_);
-          */
-          isInEditingMode_=false;
-        }
+  bool stopPropagation=true;
+  
+  //TODO  update Keymatrics Event Count.
+  TextInputMetrics textInputMetrics;
+  auto component = getComponentData();
+  auto textInputEventEmitter = std::static_pointer_cast<TextInputEventEmitter const>(component.eventEmitter);
+  //textInputEventEmitter->onKeyPress(keyPressMetrics_);
+  if (eventKeyType == RNS_KEY_Select){
+    if(isInEditingMode_ == false){
+      /*TODO Check onfocus need to here.
+       *textInputEventEmitter->onfocus();
+       */
+      isInEditingMode_=true;
+      stopPropagation = false;
+    }else{
+      /* TODO Update textinputmatrix data and sent the event.
+      textInputEventEmitter->onSubmitEditing(textInputMetrics_);
+      textInputEventEmitter->onBlur(textInputMetrics_);
+      textInputEventEmitter->onEndEditing(textInputMetrics_);
+      */
+      isInEditingMode_=false;
     }
-    else{
-      if(isInEditingMode_){
-        if ((eventKeyType >= RNS_KEY_1 && eventKeyType <= RNS_KEY_z)){
+  }else{
+    if(isInEditingMode_){
+      if ((eventKeyType >= RNS_KEY_1 && eventKeyType <= RNS_KEY_z)){
         keyPressMetrics_.text=RNSKeyMap[eventKeyType]; // creat local variable for keypress matrics.
         textInputEventEmitter->onKeyPress(keyPressMetrics_);
         /*TODO
          *send onchange and onchangetext here.
          */
-        }
       }
-      else
-        stopPropagation = false;
+    }else{
+      stopPropagation = false;
     }
-
-    return stopPropagation; 
+  }
+  return stopPropagation; 
 }
 
 } // namespace react
