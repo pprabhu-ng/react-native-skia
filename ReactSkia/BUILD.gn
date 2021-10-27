@@ -25,7 +25,6 @@ config("textlayoutmanager_config") {
 }
 config("textinput_config") {
   include_dirs = [
-    ".",
     "//ReactSkia/textinput",
   ]
 }

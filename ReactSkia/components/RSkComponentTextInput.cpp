@@ -29,12 +29,14 @@ void RSkComponentTextInput::OnPaint(SkCanvas *canvas) {
   auto const &textInputProps = *std::static_pointer_cast<TextInputProps const>(component.props);
 
   /*Retrieve Shadow Props*/
+  /* TODO shadow color,offset,opacity,Radius should be taken from layer and convet into the 
+   * Skia formate and update here. 
   ShadowMetrics shadowMetrics{};
   shadowMetrics.shadowColor=textInputProps.shadowColor;
   shadowMetrics.shadowOffset=textInputProps.shadowOffset;
   shadowMetrics.shadowOpacity=textInputProps.shadowOpacity;
   shadowMetrics.shadowRadius=textInputProps.shadowRadius;
-
+ */
   /* apply view style props */
   auto borderMetrics= textInputProps.resolveBorderMetrics(component.layoutMetrics);
   Rect frame =  component.layoutMetrics.frame;
@@ -49,10 +51,10 @@ bool RSkComponentTextInput::onHandleKey(rnsKey  eventKeyType){
   bool stopPropagation=true;
 
   //TODO  update Keymatrics Event Count.
+  KeyPressMetrics keyPressMetrics;
   TextInputMetrics textInputMetrics;
   auto component = getComponentData();
   auto textInputEventEmitter = std::static_pointer_cast<TextInputEventEmitter const>(component.eventEmitter);
-  //textInputEventEmitter->onKeyPress(keyPressMetrics_);
   if (eventKeyType == RNS_KEY_Select){
     if(isInEditingMode_ == false){
       /*TODO Check onfocus need to here.
@@ -71,8 +73,8 @@ bool RSkComponentTextInput::onHandleKey(rnsKey  eventKeyType){
   }else{
     if(isInEditingMode_){
       if ((eventKeyType >= RNS_KEY_1 && eventKeyType <= RNS_KEY_z)){
-        keyPressMetrics_.text=RNSKeyMap[eventKeyType]; // creat local variable for keypress matrics.
-        textInputEventEmitter->onKeyPress(keyPressMetrics_);
+        keyPressMetrics.text=RNSKeyMap[eventKeyType]; // creat local variable for keypress matrics.
+        textInputEventEmitter->onKeyPress(keyPressMetrics);
         /*TODO
          *send onchange and onchangetext here.
          */

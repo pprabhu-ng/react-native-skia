@@ -24,7 +24,6 @@ class RSkComponentTextInput final : public RSkComponent {
   void OnPaint(SkCanvas *canvas) override;
  private:
   bool isInEditingMode_;
-  KeyPressMetrics keyPressMetrics_;
 };
 
 } // namespace react

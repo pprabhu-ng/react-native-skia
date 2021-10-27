@@ -6,7 +6,6 @@
 */
 #include "RSkInputEventManager.h"
 #include "ReactSkia/components/RSkComponent.h"
-#include "ReactSkia/sdk/RNSKeyCodeMapping.h"
 
 namespace facebook{
 namespace react {
@@ -37,7 +36,7 @@ void RSkInputEventManager::keyHandler(rnsKey eventKeyType, rnsKeyAction eventKey
       return;
      }
   }
-  spatialNavigator_->sendNotificationWithEventType(
+ sendNotificationWithEventType(
       RNSKeyMap[eventKeyType],
       currentFocused ? currentFocused->getComponentData().tag : -1,
       eventKeyAction);
@@ -49,6 +48,17 @@ RSkInputEventManager* RSkInputEventManager::getInputKeyEventManager(){
         sharedInputEventManager_ = new RSkInputEventManager();
     }
     return sharedInputEventManager_;
+}
+void RSkInputEventManager::sendNotificationWithEventType(std::string eventType, int tag, rnsKeyAction keyAction) {
+    if(eventType.c_str() == nullptr)
+        return;
+    RNS_LOG_DEBUG("Send : " << eventType  << " To ComponentTag : " << tag );
+    NotificationCenter::defaultCenter().emit("RCTTVNavigationEventNotification",
+                                                folly::dynamic(folly::dynamic::object("eventType", eventType.c_str())
+                                                                              ("eventKeyAction", (int)keyAction)
+                                                                              ("tag", tag)
+                                                                              ("target", tag)
+                                                                              ));
 }
 
 }//react

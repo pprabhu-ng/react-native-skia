@@ -66,6 +66,7 @@ private:
     RSkSpatialNavigator();
 
     void navigateInDirection(rnsKey keyEvent);
+    void sendNotificationWithEventType(std::string eventType, int tag);
     void moveTheFocusInDirection(rnsKey keyEvent, SortedCandidateList<RSkComponent>& overLapping, SortedCandidateList<RSkComponent>& nonOverLapping);
     void setDefaultFocus();
 
@@ -73,7 +74,6 @@ public:
     static RSkSpatialNavigator* sharedSpatialNavigator();
     ~RSkSpatialNavigator();
 
-    void sendNotificationWithEventType(std::string eventType, int tag, rnsKeyAction keyAction = RNS_KEY_UnknownAction);
     void addToNavList(std::shared_ptr<RSkComponent> candidate);
     void removeFromNavList(std::shared_ptr<RSkComponent> candidate);
     void updateInNavList(std::shared_ptr<RSkComponent> candidate);

@@ -9,7 +9,6 @@
 
 #include "RSkSpatialNavigator.h"
 #include "ReactSkia/components/RSkComponent.h"
-#include "ReactSkia/sdk/RNSKeyCodeMapping.h"
 
 namespace SpatialNavigator {
 
@@ -33,13 +32,13 @@ RSkSpatialNavigator* RSkSpatialNavigator::sharedSpatialNavigator() {
     return sharedSpatialNavigator_;
 }
 
-void RSkSpatialNavigator::sendNotificationWithEventType(std::string eventType, int tag, rnsKeyAction keyAction) {
+void RSkSpatialNavigator::sendNotificationWithEventType(std::string eventType, int tag) {
     if(eventType.c_str() == nullptr)
         return;
     RNS_LOG_DEBUG("Send : " << eventType  << " To ComponentTag : " << tag );
     NotificationCenter::defaultCenter().emit("RCTTVNavigationEventNotification",
                                                 folly::dynamic(folly::dynamic::object("eventType", eventType.c_str())
-                                                                              ("eventKeyAction", (int)keyAction)
+                                                                              ("eventKeyAction", (int)RNS_KEY_UnknownAction)
                                                                               ("tag", tag)
                                                                               ("target", tag)
                                                                               ));
@@ -403,8 +402,7 @@ void RSkSpatialNavigator::handleKeyEvent(rnsKey  eventKeyType, rnsKeyAction even
     }
 }
 
-RSkComponent* RSkSpatialNavigator::getCurrentFocusElement()
-{
+RSkComponent* RSkSpatialNavigator::getCurrentFocusElement(){
     return currentFocus_;
 }
 

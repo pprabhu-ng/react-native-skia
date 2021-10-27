@@ -19,6 +19,7 @@ class RSkInputEventManager{
  public:
   static RSkInputEventManager* getInputKeyEventManager();
   void keyHandler(rnsKey key, rnsKeyAction eventKeyAction);
+  void sendNotificationWithEventType(std::string eventType, int tag, rnsKeyAction keyAction = RNS_KEY_UnknownAction);
 };
 
 } // namespace react
