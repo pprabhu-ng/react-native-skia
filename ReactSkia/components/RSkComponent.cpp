@@ -25,6 +25,7 @@ void RSkComponent::onPaint(SkCanvas* canvas) {
     RNS_LOG_ERROR("Invalid canvas ??");
   }
 }
+
 sk_sp<SkPicture> RSkComponent::getPicture() {
 
   SkPictureRecorder recorder;
