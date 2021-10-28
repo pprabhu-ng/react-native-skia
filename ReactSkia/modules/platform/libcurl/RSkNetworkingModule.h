@@ -12,28 +12,65 @@
 
 namespace facebook {
 namespace react {
-class RSkNetworkingModule:  public RSkNetworkingModuleBase {
-  public:
-        RSkNetworkingModule(
-            const std::string &name,
-            std::shared_ptr<CallInvoker> jsInvoker,
-            Instance *bridgeInstance);
-        ~ RSkNetworkingModule();
+class RSkNetworkingModule;
+struct NetworkRequest {
+       NetworkRequest(bool useIncrementalUpdates,  std::string responseType, RSkNetworkingModule *self)
+       :self_(self)
+       ,useIncrementalUpdates_(useIncrementalUpdates)
+       ,responseType_(responseType)
+       ,uploadComplete_(false)
+       ,downloadComplete_(false)
+       ,responseBuffer_(nullptr)
+       ,contentSize_(0)
+       ,responseBufferOffset_(0)
+       {
+       }
+  CURL* curl_;
+  int requestId_;
+  RSkNetworkingModule *self_;
+  bool useIncrementalUpdates_;
+  std::string responseType_;
+  bool uploadComplete_;
+  bool downloadComplete_;
+  char *responseBuffer_;
+  size_t contentSize_;
+  int responseBufferOffset_;
 
-        jsi::Value sendRequest(
-            folly::dynamic,
-            const jsi::Object&,
-            jsi::Runtime&) override;
-
-        jsi::Value abortRequest(
-            folly::dynamic) override;
-
-
-        better::map <int , CURL*> connectionList_;
-
-  private:
-        static uint64_t nextUniqueId();
 
 };
+
+class RSkNetworkingModule:  public RSkNetworkingModuleBase {
+ public:
+  RSkNetworkingModule(
+      const std::string &name,
+      std::shared_ptr<CallInvoker> jsInvoker,
+      Instance *bridgeInstance);
+      ~ RSkNetworkingModule();
+
+   jsi::Value sendRequest(
+       folly::dynamic,
+       const jsi::Object&,
+       jsi::Runtime&) override;
+
+   jsi::Value abortRequest(
+       folly::dynamic) override;
+
+  void sendData(NetworkRequest*);
+  bool preparePostRequest(CURL*, folly::dynamic, folly::dynamic );
+  void sendProgressEventwrapper(void*,double,double,double,double);
+  void headerCallbackWrapper(void*, char*);
+  void writeMemoryCallbackWrapper(void* ,char*, size_t);
+  better::map <int , NetworkRequest*> connectionList_;
+  static size_t writeMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp);
+  static size_t progressCallback(void *clientp, double dltotal, double dlnow, double ultotal, double ulnow);
+  static size_t headerCallback(void *contents, size_t size, size_t nitems, void *userdata);
+
+ private:
+  std::mutex isMutating;
+  bool curlInit_ = false;
+  uint64_t nextUniqueId();
+
+};
+
 }// namespace react
 }// namespace facebook
