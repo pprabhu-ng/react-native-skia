@@ -12,11 +12,11 @@ namespace react {
 static unsigned int eventId_;
 RSkInputEventManager* RSkInputEventManager::sharedInputEventManager_{nullptr};
 RSkInputEventManager::RSkInputEventManager(){
-    std::function<void(rnsKey, rnsKeyAction)> handler = std::bind(&RSkInputEventManager::keyHandler, this,
-                                                                std::placeholders::_1, // rnsKey
-                                                                std::placeholders::_2);
-    eventId_ = NotificationCenter::defaultCenter().addListener("onHWKeyEvent", handler);
-    spatialNavigator_ =  SpatialNavigator::RSkSpatialNavigator::sharedSpatialNavigator();
+  std::function<void(rnsKey, rnsKeyAction)> handler = std::bind(&RSkInputEventManager::keyHandler, this,
+                                                              std::placeholders::_1, // rnsKey
+                                                              std::placeholders::_2);
+  eventId_ = NotificationCenter::defaultCenter().addListener("onHWKeyEvent", handler);
+  spatialNavigator_ =  SpatialNavigator::RSkSpatialNavigator::sharedSpatialNavigator();
 }
 
 void RSkInputEventManager::keyHandler(rnsKey eventKeyType, rnsKeyAction eventKeyAction){
@@ -36,7 +36,7 @@ void RSkInputEventManager::keyHandler(rnsKey eventKeyType, rnsKeyAction eventKey
       return;
      }
   }
- sendNotificationWithEventType(
+  sendNotificationWithEventType(
       RNSKeyMap[eventKeyType],
       currentFocused ? currentFocused->getComponentData().tag : -1,
       eventKeyAction);

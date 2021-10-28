@@ -29,6 +29,7 @@ void RSkComponentTextInput::OnPaint(SkCanvas *canvas) {
   auto const &textInputProps = *std::static_pointer_cast<TextInputProps const>(component.props);
 
   /*Retrieve Shadow Props*/
+  RNS_LOG_TODO("shadow color,offset,opacity,Radius should be taken from layer and convet into the Skia formate and update here");
   /* TODO shadow color,offset,opacity,Radius should be taken from layer and convet into the 
    * Skia formate and update here. 
   ShadowMetrics shadowMetrics{};
@@ -49,7 +50,7 @@ void RSkComponentTextInput::OnPaint(SkCanvas *canvas) {
 }
 bool RSkComponentTextInput::onHandleKey(rnsKey  eventKeyType){
   bool stopPropagation=true;
-
+   RNS_LOG_TODO("update Keymatrics Event Count.");
   //TODO  update Keymatrics Event Count.
   KeyPressMetrics keyPressMetrics;
   TextInputMetrics textInputMetrics;
@@ -57,6 +58,7 @@ bool RSkComponentTextInput::onHandleKey(rnsKey  eventKeyType){
   auto textInputEventEmitter = std::static_pointer_cast<TextInputEventEmitter const>(component.eventEmitter);
   if (eventKeyType == RNS_KEY_Select){
     if(isInEditingMode_ == false){
+      RNS_LOG_TODO("onfocus need to here");
       /*TODO Check onfocus need to here.
        *textInputEventEmitter->onfocus();
        */
@@ -75,6 +77,7 @@ bool RSkComponentTextInput::onHandleKey(rnsKey  eventKeyType){
       if ((eventKeyType >= RNS_KEY_1 && eventKeyType <= RNS_KEY_z)){
         keyPressMetrics.text=RNSKeyMap[eventKeyType]; 
         textInputEventEmitter->onKeyPress(keyPressMetrics);
+	RNS_LOG_TODO("send onchange and onchangetext here");
         /*TODO
          *send onchange and onchangetext here.
          */
@@ -87,6 +90,7 @@ bool RSkComponentTextInput::onHandleKey(rnsKey  eventKeyType){
 }
 void RSkComponentTextInput::updateComponentProps(const ShadowView &newShadowView,bool forceUpadate){
  // TODO
+ RNS_LOG_TODO("TODO");
 }
 } // namespace react
 } // namespace facebook
