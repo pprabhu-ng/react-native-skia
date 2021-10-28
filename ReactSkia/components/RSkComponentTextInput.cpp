@@ -7,9 +7,9 @@
 
 #include "include/core/SkPaint.h"
 #include "ReactSkia/components/RSkComponentTextInput.h"
-#include "react/renderer/components/textinput/TextInputShadowNode.h"
 #include "ReactSkia/views/common/RSkDrawUtils.h"
 #include "ReactSkia/sdk/RNSKeyCodeMapping.h"
+#include "react/renderer/components/textinput/TextInputShadowNode.h"
 
 #include <string.h>
 
@@ -32,10 +32,10 @@ void RSkComponentTextInput::OnPaint(SkCanvas *canvas) {
   /* TODO shadow color,offset,opacity,Radius should be taken from layer and convet into the 
    * Skia formate and update here. 
   ShadowMetrics shadowMetrics{};
-  shadowMetrics.shadowColor=textInputProps.shadowColor;
-  shadowMetrics.shadowOffset=textInputProps.shadowOffset;
-  shadowMetrics.shadowOpacity=textInputProps.shadowOpacity;
-  shadowMetrics.shadowRadius=textInputProps.shadowRadius;
+  shadowMetrics.shadowColor=layer()->shadowColor;
+  shadowMetrics.shadowOffset=layer()->shadowOffset;
+  shadowMetrics.shadowOpacity=layer()->shadowOpacity;
+  shadowMetrics.shadowRadius=layer()->shadowRadius;
  */
   /* apply view style props */
   auto borderMetrics= textInputProps.resolveBorderMetrics(component.layoutMetrics);
@@ -73,7 +73,7 @@ bool RSkComponentTextInput::onHandleKey(rnsKey  eventKeyType){
   }else{
     if(isInEditingMode_){
       if ((eventKeyType >= RNS_KEY_1 && eventKeyType <= RNS_KEY_z)){
-        keyPressMetrics.text=RNSKeyMap[eventKeyType]; // creat local variable for keypress matrics.
+        keyPressMetrics.text=RNSKeyMap[eventKeyType]; 
         textInputEventEmitter->onKeyPress(keyPressMetrics);
         /*TODO
          *send onchange and onchangetext here.

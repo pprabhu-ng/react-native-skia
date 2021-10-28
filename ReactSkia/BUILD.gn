@@ -52,18 +52,9 @@ rn_cxx_component("textlayoutmanager") {
 
 rn_cxx_component("textinput") {
   sources = [
-    "textinput/react/renderer/components/textinput/conversions.h",
-    "textinput/react/renderer/components/textinput/primitives.h",
-    "textinput/react/renderer/components/textinput/propsConversions.h",
-    "textinput/react/renderer/components/textinput/TextInputComponentDescriptor.h",
     "textinput/react/renderer/components/textinput/TextInputEventEmitter.cpp",
-    "textinput/react/renderer/components/textinput/TextInputEventEmitter.h",
     "textinput/react/renderer/components/textinput/TextInputProps.cpp",
-    "textinput/react/renderer/components/textinput/TextInputProps.h",
     "textinput/react/renderer/components/textinput/TextInputShadowNode.cpp",
-    "textinput/react/renderer/components/textinput/TextInputShadowNode.h",
-    "textinput/react/renderer/components/textinput/TextInputState.cpp",
-    "textinput/react/renderer/components/textinput/TextInputState.h",
   ]
 
   deps = [
@@ -76,7 +67,6 @@ rn_cxx_component("textinput") {
     "//react-native/ReactCommon/react/renderer/core:core",
     "//react-native/ReactCommon/react/renderer/debug:debug",
     "//react-native/ReactCommon/react/renderer/graphics:graphics",
-    "//react-native/ReactCommon/react/renderer/imagemanager:imagemanager",
     "//react-native/ReactCommon/react/renderer/textlayoutmanager:textlayoutmanager",
     "//react-native/ReactCommon/react/renderer/uimanager:uimanager",
     "//react-native/ReactCommon/react/utils:utils",

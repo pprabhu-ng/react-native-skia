@@ -26,7 +26,7 @@ void RSkInputEventManager::keyHandler(rnsKey eventKeyType, rnsKeyAction eventKey
   if(eventKeyAction != RNS_KEY_Press)
     return;
   auto currentFocused = spatialNavigator_->getCurrentFocusElement();
-  if(currentFocused){// if currentFocused is null, there no component to be focused. 
+  if(currentFocused){// if currentFocused is null, Key will is not handled.
     if(currentFocused->onHandleKey(eventKeyType)){ 
       /*onHandlekey return stopPropagating flag.
        *stopProgation is true, key is handled 
