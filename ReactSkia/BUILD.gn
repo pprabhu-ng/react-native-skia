@@ -61,7 +61,6 @@ rn_cxx_component("textinput") {
     "//folly",
     "//react-native/ReactCommon/react/renderer/attributedstring:attributedstring",
     "//react-native/ReactCommon/react/renderer/componentregistry:componentregistry",
-    "//react-native/ReactCommon/react/renderer/components/image:image",
     "//react-native/ReactCommon/react/renderer/components/text:text",
     "//react-native/ReactCommon/react/renderer/components/view:view",
     "//react-native/ReactCommon/react/renderer/core:core",
