@@ -97,7 +97,7 @@ class TextInputTraits final {
 
   /*
    * Can be empty (`null` in JavaScript) which means `default`.
-   * iOS & Android
+   * iOS, Android and RNS
    * Default value: `empty` (`null`).
    */
   better::optional<bool> autoCorrect{};

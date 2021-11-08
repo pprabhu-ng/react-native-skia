@@ -385,9 +385,6 @@ void RSkSpatialNavigator::handleKeyEvent(rnsKey  eventKeyType, rnsKeyAction even
 
     if(eventKeyAction != RNS_KEY_Press) // Need to act on keyPress only
         return;
-
-    // First send keyevent to TVNavigation Emitter
-
     // Then based on spatial navigation alogirthm, send blur/focus
     switch(eventKeyType) {
         case RNS_KEY_Up:

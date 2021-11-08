@@ -7,7 +7,6 @@
 
 #pragma once
 #include "ReactSkia/core_modules/RSkSpatialNavigator.h"
-#include "react/renderer/components/textinput/iostextinput/TextInputEventEmitter.h"
 
 namespace facebook {
 namespace react {

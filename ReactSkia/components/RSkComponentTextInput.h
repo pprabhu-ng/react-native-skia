@@ -15,7 +15,7 @@ namespace react {
 class RSkComponentTextInput final : public RSkComponent {
  public:
   RSkComponentTextInput(const ShadowView &shadowView);
-  bool onHandleKey(rnsKey  eventKeyType)override;
+  bool onHandleKey(rnsKey  eventKeyType,bool *stopPropagate)override;
   void updateComponentProps(const ShadowView &newShadowView,bool forceUpadate)override;
   /*
     TODO  Need to Add command function to Handle Command.
