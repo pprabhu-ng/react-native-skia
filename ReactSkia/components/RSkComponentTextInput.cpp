@@ -86,7 +86,7 @@ void RSkComponentTextInput::onHandleKey(rnsKey  eventKeyType, bool* stopPropagat
         /*TODO
         *send onchange and onchangetext here.
         */
-        *stopPropagation = false;
+        *stopPropagation = true;
       }
     }
   }
