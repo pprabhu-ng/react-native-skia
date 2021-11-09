@@ -53,8 +53,7 @@ void RSkComponentTextInput::OnPaint(SkCanvas *canvas) {
 * @return      True if key is handled else false
 */
 
-bool RSkComponentTextInput::onHandleKey(rnsKey  eventKeyType, bool* stopPropagation){
-  bool handled=true;
+void RSkComponentTextInput::onHandleKey(rnsKey  eventKeyType, bool* stopPropagation){
   *stopPropagation=false;
   RNS_LOG_TODO("update Keymatrics Event Count.");
   //TODO  update Keymatrics Event Count.
@@ -88,13 +87,9 @@ bool RSkComponentTextInput::onHandleKey(rnsKey  eventKeyType, bool* stopPropagat
         *send onchange and onchangetext here.
         */
         *stopPropagation = false;
-      }else
-        handled=false;
-    }else{
-      handled = false;
+      }
     }
   }
-  return *stopPropagation; 
 }
 void RSkComponentTextInput::updateComponentProps(const ShadowView &newShadowView,bool forceUpadate){
   // TODO
