@@ -24,10 +24,10 @@ void RSkInputEventManager::keyHandler(rnsKey eventKeyType, rnsKeyAction eventKey
   if(eventKeyAction != RNS_KEY_Press)
     return;
   auto currentFocused = spatialNavigator_->getCurrentFocusElement();
-  if(currentFocused){
+  if(currentFocused){ // send key to Focused component.
     currentFocused->onHandleKey(eventKeyType,&stopPropagate);
     if(stopPropagate){
-      return;
+      return;//don't propagate key further
     }
   }
   sendNotificationWithEventType(

@@ -20,7 +20,7 @@ using namespace RSkDrawUtils;
 
 RSkComponentTextInput::RSkComponentTextInput(const ShadowView &shadowView)
     : RSkComponent(shadowView)
-    ,isInEditingMode_(false){}
+    ,isInEditingMode_(false){RNS_LOG_INFO("called constructor");}
 
 void RSkComponentTextInput::OnPaint(SkCanvas *canvas) {
   auto component = getComponentData();
@@ -45,8 +45,17 @@ void RSkComponentTextInput::OnPaint(SkCanvas *canvas) {
   drawBorder(canvas,frame,borderMetrics,textInputProps.backgroundColor,textInputProps.opacity);
 }
 
+/*
+* @brief       Handling the key Event in TextInput.
+* @param       eventKeyType, is Key type
+* @param[out]  StopPropogation set false if evnt should be progated furtuer (bubbling)
+*              else true if you want to stop propogation of event
+* @return      True if key is handled else false
+*/
+
 bool RSkComponentTextInput::onHandleKey(rnsKey  eventKeyType, bool* stopPropagation){
-  *stopPropagation=true;
+  bool handled=true;
+  *stopPropagation=false;
   RNS_LOG_TODO("update Keymatrics Event Count.");
   //TODO  update Keymatrics Event Count.
   KeyPressMetrics keyPressMetrics;
@@ -60,7 +69,6 @@ bool RSkComponentTextInput::onHandleKey(rnsKey  eventKeyType, bool* stopPropagat
       *textInputEventEmitter->onfocus();
       */
       isInEditingMode_=true;
-      *stopPropagation = false;
     }else{
       /* TODO Update textinputmatrix data and sent the event.
       textInputEventEmitter->onSubmitEditing(textInputMetrics_);
@@ -68,6 +76,7 @@ bool RSkComponentTextInput::onHandleKey(rnsKey  eventKeyType, bool* stopPropagat
       textInputEventEmitter->onEndEditing(textInputMetrics_);
       */
       isInEditingMode_=false;
+      *stopPropagation = true;
     }
   }else{
     if(isInEditingMode_){
@@ -78,9 +87,11 @@ bool RSkComponentTextInput::onHandleKey(rnsKey  eventKeyType, bool* stopPropagat
         /*TODO
         *send onchange and onchangetext here.
         */
-      }
+        *stopPropagation = false;
+      }else
+        handled=false;
     }else{
-      *stopPropagation = false;
+      handled = false;
     }
   }
   return *stopPropagation; 
