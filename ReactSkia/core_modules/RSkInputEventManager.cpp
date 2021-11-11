@@ -20,7 +20,7 @@ RSkInputEventManager::RSkInputEventManager(){
 }
 
 void RSkInputEventManager::keyHandler(rnsKey eventKeyType, rnsKeyAction eventKeyAction){
-  bool stopPropagate;
+  bool stopPropagate = false;
   if(eventKeyAction != RNS_KEY_Press)
     return;
   auto currentFocused = spatialNavigator_->getCurrentFocusElement();
