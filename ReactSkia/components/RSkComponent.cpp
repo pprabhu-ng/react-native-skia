@@ -4,7 +4,8 @@
 #include "include/core/SkPaint.h"
 #include "include/core/SkPictureRecorder.h"
 #include "include/core/SkSurface.h"
-
+#include "include/core/SkImageFilter.h"
+#include "include/effects/SkImageFilters.h"
 #include "rns_shell/compositor/layers/PictureLayer.h"
 
 namespace facebook {
@@ -61,17 +62,18 @@ RnsShell::LayerInvalidateMask RSkComponent::updateProps(const ShadowView &newSha
    auto const &newviewProps = *std::static_pointer_cast<ViewProps const>(newShadowView.props);
    auto const &oldviewProps = *std::static_pointer_cast<ViewProps const>(component_.props);
    RnsShell::LayerInvalidateMask updateMask=RnsShell::LayerInvalidateNone;
+   float ratio = 255.9999;
 
    updateMask= updateComponentProps(newShadowView,forceUpdate);
   //opacity
    if((forceUpdate) || (oldviewProps.opacity != newviewProps.opacity)) {
-      layer_->opacity = newviewProps.opacity;
+      layer_->opacity = (newviewProps.opacity > 1.0)? 1.0*ratio:newviewProps.opacity*ratio;
       /*TODO : To be tested and confirm updateMask need for this Prop*/
       updateMask =static_cast<RnsShell::LayerInvalidateMask>(updateMask | RnsShell::LayerInvalidateAll);
    }
   //ShadowOpacity
    if ((forceUpdate) || (oldviewProps.shadowOpacity != newviewProps.shadowOpacity)) {
-      layer_->shadowOpacity = newviewProps.shadowOpacity;
+      layer_->shadowOpacity = (newviewProps.shadowOpacity > 1.0) ? 1.0*ratio:newviewProps.shadowOpacity*ratio;
       /*TODO : To be tested and confirm updateMask need for this Prop*/
       updateMask =static_cast<RnsShell::LayerInvalidateMask>(updateMask | RnsShell::LayerInvalidateAll);
    }
@@ -93,6 +95,16 @@ RnsShell::LayerInvalidateMask RSkComponent::updateProps(const ShadowView &newSha
       /*TODO : To be tested and confirm updateMask need for this Prop*/
       updateMask =static_cast<RnsShell::LayerInvalidateMask>(updateMask | RnsShell::LayerInvalidateAll);
    }
+   if(layer_->opacity && layer_->shadowOpacity && \
+      ( layer_->shadowColor != SK_ColorTRANSPARENT ) && \
+      (SkColorGetA(layer_->shadowColor) != SK_AlphaTRANSPARENT)) {
+        printf("\n Image Filter Created\n");
+        layer_->shadowFilter= SkImageFilters::DropShadowOnly( \
+                              layer_->shadowOffset.width(), layer_->shadowOffset.height(),\
+                              layer_->shadowRadius, layer_->shadowRadius,\
+                              layer_->shadowColor, nullptr);
+   }
+
   //backfaceVisibility
    if ((forceUpdate) || (oldviewProps.backfaceVisibility != newviewProps.backfaceVisibility)) {
       RNS_LOG_NOT_IMPL;

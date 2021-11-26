@@ -62,19 +62,32 @@ void RSkComponentImage::OnPaint(
     SkRect frameRect = SkRect::MakeXYWH(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
     auto const &imageBorderMetrics=imageProps.resolveBorderMetrics(component.layoutMetrics);
     SkRect targetRect = computeTargetRect({imageData->width(),imageData->height()},frameRect,imageProps.resizeMode);
-    SkPaint paint;
-/* TO DO: Handle filter quality based of configuration. Setting Low Filter Quality as default for now*/
-    paint.setFilterQuality(DEFAULT_IMAGE_FILTER_QUALITY);
-    if(imageProps.resizeMode == ImageResizeMode::Repeat) {
-      sk_sp<SkImageFilter> imageFilter(SkImageFilters::Tile(targetRect,frameRect ,nullptr));
-      paint.setImageFilter(std::move(imageFilter));
+
+/* Draw order 1.Shadow 2. Background 3.Image Shadow
+              3. Image 4.Border*/
+    bool contentShadow = false;
+    if(layer()->shadowFilter){
+      contentShadow=drawShadow(canvas,frame,imageBorderMetrics,imageProps.backgroundColor,layer()->shadowOpacity,layer()->shadowFilter);
     }
-/* Draw order 1. Background 2. Image 3. Border*/
     drawBackground(canvas,frame,imageBorderMetrics,imageProps.backgroundColor,imageProps.opacity);
+
     canvas->save();
 /* clipping logic to be applied if computed Frame is greater than the target.*/
     if(( frameRect.width() < targetRect.width()) || ( frameRect.height() < targetRect.height())) {
       canvas->clipRect(frameRect,SkClipOp::kIntersect);
+    }
+    SkPaint paint,shadowPaint;
+/* TO DO: Handle filter quality based of configuration. Setting Low Filter Quality as default for now*/
+    paint.setFilterQuality(DEFAULT_IMAGE_FILTER_QUALITY);
+    if(imageProps.resizeMode == ImageResizeMode::Repeat) {
+      sk_sp<SkImageFilter> imageFilter(SkImageFilters::Tile(targetRect,frameRect,nullptr));
+      paint.setImageFilter(std::move(imageFilter));
+    }
+    if(contentShadow) {
+      shadowPaint.setImageFilter(layer()->shadowFilter);
+      canvas->saveLayerAlpha(NULL,layer()->shadowOpacity);
+      canvas->drawImageRect(imageData, targetRect, &shadowPaint);
+      canvas->restore();
     }
     canvas->drawImageRect(imageData,targetRect,&paint);
     canvas->restore();
