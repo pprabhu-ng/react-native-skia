@@ -69,18 +69,8 @@ void setStyle(int strokeWidth,SkPaint::Style style,BorderStyle borderStyle,SkPai
 }
 void setColor(SharedColor Color,Float opacity,SkPaint *paint)
 {
-    float ratio = 255.9999;
     paint->setAntiAlias(true);
-    if(Color){
-        auto colorValue=colorComponentsFromColor(Color);
-        paint->setColor(SkColorSetARGB(
-            colorValue.alpha * ratio,
-            colorValue.red * ratio,
-            colorValue.green * ratio,
-            colorValue.blue * ratio));
-    }else{
-        paint->setColor(DEFAULT_COLOUR);
-    }
+    paint->setColor(RSkColorFromSharedColor(Color, DEFAULT_COLOUR));
     paint->setAlphaf((opacity >1.0 ? 1.0:opacity));
 }
 bool isDrawVisible(SharedColor Color,Float opacity=1.0,Float thickness=1.0)
@@ -377,7 +367,8 @@ bool  drawShadow(SkCanvas *canvas,Rect frame,
            shadowOn = Border;
     }
     if(shadowOn != None) {
-        canvas->saveLayerAlpha(NULL,shadowOpacity);
+        if(!(isOpaque(shadowOpacity)))
+            canvas->saveLayerAlpha(NULL,shadowOpacity);
         SkRect clipRect = SkRect::MakeXYWH(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
         SkVector radii[4]={{borderProps.borderRadii.topLeft,borderProps.borderRadii.topLeft},
                        {borderProps.borderRadii.topRight,borderProps.borderRadii.topRight}, \
@@ -395,7 +386,8 @@ bool  drawShadow(SkCanvas *canvas,Rect frame,
         }
     /*TODO opacity moving to layer and defaultly set as a 1.0 */
         drawRect(shadowOn,canvas,frame,borderProps,backgroundColor,1.0,&paint);
-        canvas->restore();
+        if(!(isOpaque(shadowOpacity)))
+            canvas->restore();
     /* Return true only for shadow on Border Case , to update components to handle shadowOnContent.*/
         return (shadowOn == Background) ? false : true;
     }
@@ -403,15 +395,14 @@ bool  drawShadow(SkCanvas *canvas,Rect frame,
 /*Shadow on Path */
     if(!borderProps.borderWidths.isUniform() ) {
         SkPath shadowPath;
-        printf("\n @@@ drawPathShadow @@@");
         bool pathExist=createshadowPath(canvas,frame,borderProps,&shadowPath);;
 
        if(pathExist) {
-            printf("\n @@@ Path Made @@@");
-            canvas->saveLayerAlpha(NULL,shadowOpacity);
-            canvas->clipPath(shadowPath,SkClipOp::kDifference);
-            canvas->drawPath(shadowPath,paint);
-            canvas->restore();
+           if(!(isOpaque(shadowOpacity)))
+               canvas->saveLayerAlpha(NULL,shadowOpacity);
+           canvas->clipPath(shadowPath,SkClipOp::kDifference);
+           canvas->drawPath(shadowPath,paint);
+           canvas->restore();
         }
         return true;
     }

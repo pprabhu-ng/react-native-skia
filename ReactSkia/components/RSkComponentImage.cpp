@@ -66,36 +66,48 @@ void RSkComponentImage::OnPaint(
 /* Draw order 1.Shadow 2. Background 3.Image Shadow
               3. Image 4.Border*/
     bool contentShadow = false;
+    bool needClipAndRestore =false;
     if(layer()->shadowFilter){
       contentShadow=drawShadow(canvas,frame,imageBorderMetrics,imageProps.backgroundColor,layer()->shadowOpacity,layer()->shadowFilter);
     }
     drawBackground(canvas,frame,imageBorderMetrics,imageProps.backgroundColor,imageProps.opacity);
-
-    canvas->save();
-/* clipping logic to be applied if computed Frame is greater than the target.*/
-    if(( frameRect.width() < targetRect.width()) || ( frameRect.height() < targetRect.height())) {
-      canvas->clipRect(frameRect,SkClipOp::kIntersect);
-    }
     SkPaint paint,shadowPaint;
-/* TO DO: Handle filter quality based of configuration. Setting Low Filter Quality as default for now*/
+   /*Draw Image Shadow*/
+    if(contentShadow) {
+        if(imageProps.resizeMode == ImageResizeMode::Repeat) {
+            sk_sp<SkImageFilter> imageFilter(SkImageFilters::Tile(targetRect,frameRect,layer()->shadowFilter));
+            shadowPaint.setImageFilter(std::move(imageFilter));
+        } else {
+              shadowPaint.setImageFilter(layer()->shadowFilter);
+          }
+        if(!(isOpaque(layer()->shadowOpacity)))
+            canvas->saveLayerAlpha(NULL,layer()->shadowOpacity);
+        canvas->drawImageRect(imageData, targetRect, &shadowPaint);
+        if(!(isOpaque(layer()->shadowOpacity)))
+            canvas->restore();
+    }
+    /*Draw Image */
+    if(( frameRect.width() < targetRect.width()) || ( frameRect.height() < targetRect.height()))
+      needClipAndRestore= true;
+    /* clipping logic to be applied if computed Frame is greater than the target.*/
+    if(needClipAndRestore) {
+        canvas->save();
+        canvas->clipRect(frameRect,SkClipOp::kIntersect);
+    }
+    /* TODO: Handle filter quality based of configuration. Setting Low Filter Quality as default for now*/
     paint.setFilterQuality(DEFAULT_IMAGE_FILTER_QUALITY);
     if(imageProps.resizeMode == ImageResizeMode::Repeat) {
-      sk_sp<SkImageFilter> imageFilter(SkImageFilters::Tile(targetRect,frameRect,nullptr));
-      paint.setImageFilter(std::move(imageFilter));
-    }
-    if(contentShadow) {
-      shadowPaint.setImageFilter(layer()->shadowFilter);
-      canvas->saveLayerAlpha(NULL,layer()->shadowOpacity);
-      canvas->drawImageRect(imageData, targetRect, &shadowPaint);
-      canvas->restore();
+       sk_sp<SkImageFilter> imageFilter(SkImageFilters::Tile(targetRect,frameRect,nullptr));
+       paint.setImageFilter(std::move(imageFilter));
     }
     canvas->drawImageRect(imageData,targetRect,&paint);
-    canvas->restore();
+    if(needClipAndRestore)
+        canvas->restore();
     drawBorder(canvas,frame,imageBorderMetrics,imageProps.backgroundColor,imageProps.opacity);
   } else {
 /* Emitting Image Load failed Event*/
-    imageEventEmitter->onError();
-  }
+        imageEventEmitter->onError();
+    }
 }
 
 RnsShell::LayerInvalidateMask RSkComponentImage::updateComponentProps(const ShadowView &newShadowView,bool forceUpdate) {

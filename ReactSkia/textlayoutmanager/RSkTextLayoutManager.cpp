@@ -192,16 +192,16 @@ uint32_t RSkTextLayoutManager::buildParagraph (SharedColor backGroundColor,
         style.setDecoration(fragment.textAttributes.textDecorationLineType.has_value() ?
                                 convertDecoration(fragment.textAttributes.textDecorationLineType.value()) :
                                 TextDecoration::kNoDecoration);
-        style.addShadow(shadow);
+        if(!backGroundColor) {
+            style.addShadow(shadow);
+            shadow.fOffset+=setShadowPoint.Make(fontShadowOffset.width,fontShadowOffset.height);
+            style.addShadow(shadow);
+        }
         style.addShadow(TextShadow(convertTextColor(fragment.textAttributes.textShadowColor ?
                                                     fragment.textAttributes.textShadowColor :
                                                     fragment.textAttributes.foregroundColor).getColor(),
                                                     setShadowPoint.Make(fontShadowOffset.width,fontShadowOffset.height),
                                                     fontShadowRadius));
-        if(!backGroundColor) {
-            shadow.fOffset+=setShadowPoint.Make(fontShadowOffset.width,fontShadowOffset.height);
-            style.addShadow(shadow);
-        }
         style.setLetterSpacing(!std::isnan(fragment.textAttributes.letterSpacing) ?
                                 fragment.textAttributes.letterSpacing :
                                 0); 
