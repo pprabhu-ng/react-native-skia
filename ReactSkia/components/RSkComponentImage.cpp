@@ -63,8 +63,7 @@ void RSkComponentImage::OnPaint(
     auto const &imageBorderMetrics=imageProps.resolveBorderMetrics(component.layoutMetrics);
     SkRect targetRect = computeTargetRect({imageData->width(),imageData->height()},frameRect,imageProps.resizeMode);
 
-/* Draw order 1.Shadow 2. Background 3.Image Shadow
-              3. Image 4.Border*/
+/* Draw order 1.Shadow 2. Background 3.Image Shadow 4. Image 5.Border*/
     bool contentShadow = false;
     bool needClipAndRestore =false;
     if(layer()->shadowFilter){
@@ -75,11 +74,11 @@ void RSkComponentImage::OnPaint(
    /*Draw Image Shadow*/
     if(contentShadow) {
         if(imageProps.resizeMode == ImageResizeMode::Repeat) {
-            sk_sp<SkImageFilter> imageFilter(SkImageFilters::Tile(targetRect,frameRect,layer()->shadowFilter));
+            sk_sp<SkImageFilter> imageFilter(SkImageFilters::Tile(targetRect,frameRect,nullptr));
             shadowPaint.setImageFilter(std::move(imageFilter));
         } else {
               shadowPaint.setImageFilter(layer()->shadowFilter);
-          }
+        }
         if(!(isOpaque(layer()->shadowOpacity)))
             canvas->saveLayerAlpha(NULL,layer()->shadowOpacity);
         canvas->drawImageRect(imageData, targetRect, &shadowPaint);

@@ -367,8 +367,6 @@ bool  drawShadow(SkCanvas *canvas,Rect frame,
            shadowOn = Border;
     }
     if(shadowOn != None) {
-        if(!(isOpaque(shadowOpacity)))
-            canvas->saveLayerAlpha(NULL,shadowOpacity);
         SkRect clipRect = SkRect::MakeXYWH(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
         SkVector radii[4]={{borderProps.borderRadii.topLeft,borderProps.borderRadii.topLeft},
                        {borderProps.borderRadii.topRight,borderProps.borderRadii.topRight}, \
@@ -381,12 +379,15 @@ bool  drawShadow(SkCanvas *canvas,Rect frame,
         SkRRect clipRRect;
         clipRRect.setRectRadii(clipRect,radii);
 
-        if(shadowOn == Background) {
+        bool needsSaveLayer =((!(isOpaque(shadowOpacity))) || (shadowOn == Background));
+
+        if(needsSaveLayer)
+            canvas->saveLayerAlpha(NULL,shadowOpacity);
+        if(shadowOn == Background)
             canvas->clipRRect(clipRRect,SkClipOp::kDifference);
-        }
     /*TODO opacity moving to layer and defaultly set as a 1.0 */
         drawRect(shadowOn,canvas,frame,borderProps,backgroundColor,1.0,&paint);
-        if(!(isOpaque(shadowOpacity)))
+        if(needsSaveLayer)
             canvas->restore();
     /* Return true only for shadow on Border Case , to update components to handle shadowOnContent.*/
         return (shadowOn == Background) ? false : true;
@@ -402,7 +403,8 @@ bool  drawShadow(SkCanvas *canvas,Rect frame,
                canvas->saveLayerAlpha(NULL,shadowOpacity);
            canvas->clipPath(shadowPath,SkClipOp::kDifference);
            canvas->drawPath(shadowPath,paint);
-           canvas->restore();
+           if(!(isOpaque(shadowOpacity)))
+               canvas->restore();
         }
         return true;
     }
