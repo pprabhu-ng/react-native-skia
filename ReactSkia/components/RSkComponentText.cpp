@@ -109,7 +109,7 @@ void RSkComponentParagraph::OnPaint(SkCanvas *canvas) {
         }
         paraBuilder = std::static_pointer_cast<ParagraphBuilder>(std::make_shared<ParagraphBuilderImpl>(paraStyle,data.layoutManager->collection_));
         if(layer()->shadowFilter) {
-        shadow={layer()->shadowColor,SkPoint::Make(layer()->shadowOffset.width(),layer()->shadowOffset.height()),layer()->shadowRadius};
+            shadow={layer()->shadowColor,SkPoint::Make(layer()->shadowOffset.width(),layer()->shadowOffset.height()),layer()->shadowRadius};
         }
         expectedAttachmentCount = data.layoutManager->buildParagraph(props.backgroundColor, data.attributedString, paragraphAttributes_,shadow,true, paraBuilder);
         currentAttachmentCount = 0;
@@ -120,11 +120,11 @@ void RSkComponentParagraph::OnPaint(SkCanvas *canvas) {
 
             if(layer()->shadowFilter) {
                 drawShadow(canvas,
-                borderFrame,
-                borderMetrics,
-                props.backgroundColor,
-                layer()->shadowOpacity,
-                layer()->shadowFilter);
+                          borderFrame,
+                          borderMetrics,
+                          props.backgroundColor,
+                          layer()->shadowOpacity,
+                          layer()->shadowFilter);
             }
 
             setTextLines(para,
