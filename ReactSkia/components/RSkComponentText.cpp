@@ -65,7 +65,7 @@ void RSkComponentParagraph::OnPaint(SkCanvas *canvas) {
         auto const &parentProps = *std::static_pointer_cast<ParagraphProps const>(parentComponent.props);
         auto parentBorderMetrics = parentProps.resolveBorderMetrics(parentComponent.layoutMetrics);
         
-    if (parent->paraBuilder) {
+        if (parent->paraBuilder) {
             isParent = true;
             parent->expectedAttachmentCount += data.layoutManager->buildParagraph(props.backgroundColor,
                                                             data.attributedString,
