@@ -74,13 +74,14 @@ void RSkComponentImage::OnPaint(
    /*Draw Image Shadow*/
     if(contentShadow) {
         if(imageProps.resizeMode == ImageResizeMode::Repeat) {
-            sk_sp<SkImageFilter> imageFilter(SkImageFilters::Tile(targetRect,frameRect,nullptr));
+        /*TODO Not applied any shadow for solid Image when resizeMode is "Repeat"*/
+            sk_sp<SkImageFilter> imageFilter(SkImageFilters::Tile(targetRect,frameRect,layer()->shadowFilter));
             shadowPaint.setImageFilter(std::move(imageFilter));
         } else {
               shadowPaint.setImageFilter(layer()->shadowFilter);
         }
         if(!(isOpaque(layer()->shadowOpacity)))
-            canvas->saveLayerAlpha(NULL,layer()->shadowOpacity);
+            canvas->saveLayerAlpha(&frameRect,layer()->shadowOpacity);
         canvas->drawImageRect(imageData, targetRect, &shadowPaint);
         if(!(isOpaque(layer()->shadowOpacity)))
             canvas->restore();

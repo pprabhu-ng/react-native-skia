@@ -66,7 +66,7 @@ RnsShell::LayerInvalidateMask RSkComponent::updateProps(const ShadowView &newSha
    updateMask= updateComponentProps(newShadowView,forceUpdate);
   //opacity
    if((forceUpdate) || (oldviewProps.opacity != newviewProps.opacity)) {
-      layer_->opacity = (newviewProps.opacity > 1.0)? 1.0*MAX_8BIT:newviewProps.opacity*MAX_8BIT;
+      layer_->opacity = ((newviewProps.opacity > 1.0)? 1.0:newviewProps.opacity)*MAX_8BIT;
       /*TODO : To be tested and confirm updateMask need for this Prop*/
       updateMask =static_cast<RnsShell::LayerInvalidateMask>(updateMask | RnsShell::LayerInvalidateAll);
    }
@@ -101,8 +101,9 @@ RnsShell::LayerInvalidateMask RSkComponent::updateProps(const ShadowView &newSha
                               layer_->shadowOffset.width(), layer_->shadowOffset.height(),\
                               layer_->shadowRadius, layer_->shadowRadius,\
                               layer_->shadowColor, nullptr);
+   } else {
+         layer_->shadowFilter= nullptr;
    }
-
   //backfaceVisibility
    if ((forceUpdate) || (oldviewProps.backfaceVisibility != newviewProps.backfaceVisibility)) {
       RNS_LOG_NOT_IMPL;

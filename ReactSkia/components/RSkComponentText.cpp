@@ -56,7 +56,6 @@ void RSkComponentParagraph::OnPaint(SkCanvas *canvas) {
 
     /* Check if this component has parent Paragraph component */
     RSkComponentParagraph* parent = getParentParagraph();
-
     /* If parent, this text component is part of nested text(aka fragment attachment)*/
     /*    - use parent paragraph builder to add text & push style */
     /*    - draw the paragraph, when we reach the last fragment attachment*/
