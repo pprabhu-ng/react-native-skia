@@ -70,9 +70,9 @@ public:
     int  backfaceVisibility;
     float opacity{1.0};
 
-    float shadowOpacity{};
+    float shadowOpacity{0};
     float shadowRadius{3};
-    SkColor shadowColor;
+    SkColor shadowColor=SK_ColorBLACK;
     SkSize shadowOffset{0,-3};
     sk_sp<SkImageFilter> shadowFilter;
     SkMatrix transformMatrix;

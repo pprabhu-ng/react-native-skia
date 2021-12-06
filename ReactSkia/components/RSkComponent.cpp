@@ -94,16 +94,17 @@ RnsShell::LayerInvalidateMask RSkComponent::updateProps(const ShadowView &newSha
       /*TODO : To be tested and confirm updateMask need for this Prop*/
       updateMask =static_cast<RnsShell::LayerInvalidateMask>(updateMask | RnsShell::LayerInvalidateAll);
    }
-   if(layer_->opacity && layer_->shadowOpacity && \
-      ( layer_->shadowColor != SK_ColorTRANSPARENT ) && \
-      (SkColorGetA(layer_->shadowColor) != SK_AlphaTRANSPARENT)) {
-        layer_->shadowFilter= SkImageFilters::DropShadowOnly( \
-                              layer_->shadowOffset.width(), layer_->shadowOffset.height(),\
-                              layer_->shadowRadius, layer_->shadowRadius,\
+   if((forceUpdate) || (oldviewProps.shadowOffset != newviewProps.shadowOffset)||(oldviewProps.shadowRadius != newviewProps.shadowRadius)||(oldviewProps.shadowColor != newviewProps.shadowColor)) {
+       if(( layer_->shadowColor != SK_ColorTRANSPARENT ) &&
+            (SkColorGetA(layer_->shadowColor) != SK_AlphaTRANSPARENT)) {
+           layer_->shadowFilter= SkImageFilters::DropShadowOnly(
+                              layer_->shadowOffset.width(), layer_->shadowOffset.height(),
+                              layer_->shadowRadius, layer_->shadowRadius,
                               layer_->shadowColor, nullptr);
-   } else {
-         layer_->shadowFilter= nullptr;
-   }
+       } else {
+           layer_->shadowFilter= nullptr;
+       }
+    }
   //backfaceVisibility
    if ((forceUpdate) || (oldviewProps.backfaceVisibility != newviewProps.backfaceVisibility)) {
       RNS_LOG_NOT_IMPL;
