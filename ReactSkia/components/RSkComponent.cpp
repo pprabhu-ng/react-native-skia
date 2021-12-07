@@ -62,6 +62,7 @@ RnsShell::LayerInvalidateMask RSkComponent::updateProps(const ShadowView &newSha
    auto const &newviewProps = *std::static_pointer_cast<ViewProps const>(newShadowView.props);
    auto const &oldviewProps = *std::static_pointer_cast<ViewProps const>(component_.props);
    RnsShell::LayerInvalidateMask updateMask=RnsShell::LayerInvalidateNone;
+   bool creatShadowFilter=false;
 
    updateMask= updateComponentProps(newShadowView,forceUpdate);
   //opacity
@@ -81,30 +82,30 @@ RnsShell::LayerInvalidateMask RSkComponent::updateProps(const ShadowView &newSha
       layer_->shadowRadius = newviewProps.shadowRadius;
       /*TODO : To be tested and confirm updateMask need for this Prop*/
       updateMask =static_cast<RnsShell::LayerInvalidateMask>(updateMask | RnsShell::LayerInvalidateAll);
+      creatShadowFilter=true;
    }
   //shadowoffset
    if ((forceUpdate) || (oldviewProps.shadowOffset != newviewProps.shadowOffset)) {
       layer_->shadowOffset = RSkSkSizeFromSize(newviewProps.shadowOffset);
       /*TODO : To be tested and confirm updateMask need for this Prop*/
       updateMask =static_cast<RnsShell::LayerInvalidateMask>(updateMask | RnsShell::LayerInvalidateAll);
+      creatShadowFilter=true;
    }
   //shadowcolor
    if ((forceUpdate) || (oldviewProps.shadowColor != newviewProps.shadowColor)) {
       layer_->shadowColor = RSkColorFromSharedColor(newviewProps.shadowColor,SK_ColorBLACK);
       /*TODO : To be tested and confirm updateMask need for this Prop*/
       updateMask =static_cast<RnsShell::LayerInvalidateMask>(updateMask | RnsShell::LayerInvalidateAll);
+      creatShadowFilter=true;
    }
-   if((forceUpdate) || (oldviewProps.shadowOffset != newviewProps.shadowOffset)||(oldviewProps.shadowRadius != newviewProps.shadowRadius)||(oldviewProps.shadowColor != newviewProps.shadowColor)) {
-       if(( layer_->shadowColor != SK_ColorTRANSPARENT ) &&
-            (SkColorGetA(layer_->shadowColor) != SK_AlphaTRANSPARENT)) {
-           layer_->shadowFilter= SkImageFilters::DropShadowOnly(
+   if((layer_->shadowFilter==NULL) || creatShadowFilter) {
+       layer_->shadowFilter= SkImageFilters::DropShadowOnly(
                               layer_->shadowOffset.width(), layer_->shadowOffset.height(),
                               layer_->shadowRadius, layer_->shadowRadius,
                               layer_->shadowColor, nullptr);
-       } else {
-           layer_->shadowFilter= nullptr;
-       }
-    }
+   } else {
+       layer_->shadowFilter= nullptr;
+   }
   //backfaceVisibility
    if ((forceUpdate) || (oldviewProps.backfaceVisibility != newviewProps.backfaceVisibility)) {
       RNS_LOG_NOT_IMPL;
