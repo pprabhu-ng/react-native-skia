@@ -118,7 +118,7 @@ void RSkComponentParagraph::OnPaint(SkCanvas *canvas) {
         /* If the count is 0,means we have no fragment attachments.So paint right away*/
         if(!expectedAttachmentCount) {
 
-            if(layer()->shadowFilter) {
+            if(layer()->shadowOpacity) {
                 drawShadow(canvas,
                           borderFrame,
                           borderMetrics,
