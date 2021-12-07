@@ -62,7 +62,7 @@ RnsShell::LayerInvalidateMask RSkComponent::updateProps(const ShadowView &newSha
    auto const &newviewProps = *std::static_pointer_cast<ViewProps const>(newShadowView.props);
    auto const &oldviewProps = *std::static_pointer_cast<ViewProps const>(component_.props);
    RnsShell::LayerInvalidateMask updateMask=RnsShell::LayerInvalidateNone;
-   bool creatShadowFilter=false;
+   bool createShadowFilter=false;
 
    updateMask= updateComponentProps(newShadowView,forceUpdate);
   //opacity
@@ -82,29 +82,27 @@ RnsShell::LayerInvalidateMask RSkComponent::updateProps(const ShadowView &newSha
       layer_->shadowRadius = newviewProps.shadowRadius;
       /*TODO : To be tested and confirm updateMask need for this Prop*/
       updateMask =static_cast<RnsShell::LayerInvalidateMask>(updateMask | RnsShell::LayerInvalidateAll);
-      creatShadowFilter=true;
+      createShadowFilter=true;
    }
   //shadowoffset
    if ((forceUpdate) || (oldviewProps.shadowOffset != newviewProps.shadowOffset)) {
       layer_->shadowOffset = RSkSkSizeFromSize(newviewProps.shadowOffset);
       /*TODO : To be tested and confirm updateMask need for this Prop*/
       updateMask =static_cast<RnsShell::LayerInvalidateMask>(updateMask | RnsShell::LayerInvalidateAll);
-      creatShadowFilter=true;
+      createShadowFilter=true;
    }
   //shadowcolor
    if ((forceUpdate) || (oldviewProps.shadowColor != newviewProps.shadowColor)) {
       layer_->shadowColor = RSkColorFromSharedColor(newviewProps.shadowColor,SK_ColorBLACK);
       /*TODO : To be tested and confirm updateMask need for this Prop*/
       updateMask =static_cast<RnsShell::LayerInvalidateMask>(updateMask | RnsShell::LayerInvalidateAll);
-      creatShadowFilter=true;
+      createShadowFilter=true;
    }
-   if((layer_->shadowFilter==NULL) || creatShadowFilter) {
+   if((layer_->shadowFilter==NULL) || createShadowFilter) {
        layer_->shadowFilter= SkImageFilters::DropShadowOnly(
                               layer_->shadowOffset.width(), layer_->shadowOffset.height(),
                               layer_->shadowRadius, layer_->shadowRadius,
                               layer_->shadowColor, nullptr);
-   } else {
-       layer_->shadowFilter= nullptr;
    }
   //backfaceVisibility
    if ((forceUpdate) || (oldviewProps.backfaceVisibility != newviewProps.backfaceVisibility)) {
