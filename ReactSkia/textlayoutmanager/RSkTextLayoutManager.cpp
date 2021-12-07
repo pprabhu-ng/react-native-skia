@@ -193,6 +193,7 @@ uint32_t RSkTextLayoutManager::buildParagraph (SharedColor backGroundColor,
                                 convertDecoration(fragment.textAttributes.textDecorationLineType.value()) :
                                 TextDecoration::kNoDecoration);
         if(!backGroundColor) {
+        /*TODO For text content shadow shadowOpacity to be handle*/
             style.addShadow(shadow);
             shadow.fOffset+=setShadowPoint.Make(fontShadowOffset.width,fontShadowOffset.height);
             style.addShadow(shadow);

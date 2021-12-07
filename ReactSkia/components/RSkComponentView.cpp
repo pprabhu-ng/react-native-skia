@@ -24,7 +24,7 @@ void RSkComponentView::OnPaint(SkCanvas *canvas) {
   Rect frame = component.layoutMetrics.frame;
 
 /*Draw Order : 1. Shadow 2. BackGround 3 Border*/
-    if(layer()->shadowFilter){
+    if(layer()->shadowOpacity && layer()->shadowFilter){
         drawShadow(canvas,frame,borderMetrics,viewProps.backgroundColor,layer()->shadowOpacity,layer()->shadowFilter);
   }
     drawBackground(canvas,frame,borderMetrics,viewProps.backgroundColor,viewProps.opacity);

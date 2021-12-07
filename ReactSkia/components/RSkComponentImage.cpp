@@ -66,7 +66,7 @@ void RSkComponentImage::OnPaint(
 /* Draw order 1.Shadow 2. Background 3.Image Shadow 4. Image 5.Border*/
     bool contentShadow = false;
     bool needClipAndRestore =false;
-    if(layer()->opacity && layer()->shadowOpacity){
+    if(layer()->shadowOpacity && layer()->shadowFilter){
       contentShadow=drawShadow(canvas,frame,imageBorderMetrics,imageProps.backgroundColor,layer()->shadowOpacity,layer()->shadowFilter);
     }
     drawBackground(canvas,frame,imageBorderMetrics,imageProps.backgroundColor,imageProps.opacity);
