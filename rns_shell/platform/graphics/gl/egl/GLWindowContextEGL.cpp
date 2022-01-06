@@ -247,7 +247,7 @@ std::unique_ptr<GLWindowContextEGL> GLWindowContextEGL::createWindowContext(GLNa
         default:
             break;
     }
-
+        RNS_LOG_INFO(" WINDOW ID : " <<  reinterpret_cast<GLNativeWindowType>(window));
     if (surface == EGL_NO_SURFACE) {
 #if defined(EGL_PLATFORM_BRCM) && EGL_PLATFORM_BRCM
         RNS_LOG_ERROR("Cannot create EGL window surface : " << eglErrorString() << " Retrying with fallback. window : " <<  window);

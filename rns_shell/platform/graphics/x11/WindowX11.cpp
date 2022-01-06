@@ -94,6 +94,17 @@ void Window::createEventLoop(Application* app) {
                                     }
                                 }
                         }
+                WindowX11* win = WindowX11::gWindowMap.find(event.xany.window);
+                switch (event.type) {
+                    case ConfigureNotify:
+                        RNS_LOG_INFO("Resize Request with (Width x Height) : (" << event.xconfigurerequest.width <<
+                                    " x " << event.xconfigurerequest.height << ")" << "for window"<<event.xany.window);
+                        
+                        if((win->WindowType != "OSK") && app) {
+                          app->sizeChanged(event.xconfigurerequest.width, event.xconfigurerequest.height);
+                        }
+                        break;
+                    case UnmapNotify:
                         break;
                     }
                     case UnmapNotify:
@@ -136,8 +147,6 @@ bool WindowX11::initWindow(PlatformDisplay *platformDisplay,SkSize dimension,Win
     if(!dimension.isEmpty()) {
        initialWidth =  dimension.width();
        initialHeight = dimension.height();
-    } else if(ScreenCount(display) > 0 && (screen = ScreenOfDisplay(display, 0))) {
-        initialWidth = screen->width;
         initialHeight = screen->height;
     }
 
@@ -253,7 +262,7 @@ bool WindowX11::initWindow(PlatformDisplay *platformDisplay,SkSize dimension,Win
 }
 
 void WindowX11::closeWindow() {
-    if (display_) {
+     if (display_) {
         gWindowMap.remove(window_);
         XDestroyWindow(display_, window_);
         window_ = 0;
@@ -295,13 +304,14 @@ bool WindowX11::handleEvent(const XEvent& event) {
             return false;
         }
     }
+
     KeySym keysym = XkbKeycodeToKeysym(display_, event.xkey.keycode,0,(shiftLevel^capsLock));
-    switch (event.type) {
+      switch (event.type) {
         case MapNotify:
             break;
 
         case ClientMessage:
-            if ((Atom)event.xclient.data.l[0] == wmDeleteMessage_ &&
+              if ((Atom)event.xclient.data.l[0] == wmDeleteMessage_ &&
                 gWindowMap.count() == 1) {
                 return true;
             }
@@ -336,6 +346,10 @@ void WindowX11::show() {
     XMapWindow(display_, window_);
 }
 
+void WindowX11::hide() {
+    XUnmapWindow(display_, window_);
+}
+
 void WindowX11::setRequestedDisplayParams(const DisplayParams& params, bool allowReattach) {
     RNS_LOG_NOT_IMPL;
     //INHERITED::setRequestedDisplayParams(params, allowReattach);
@@ -346,8 +360,15 @@ void WindowX11::onExpose() {
 }
 
 void WindowX11::onKey(rnsKey eventKeyType, rnsKeyAction eventKeyAction){
-    NotificationCenter::defaultCenter().emit("onHWKeyEvent", eventKeyType, eventKeyAction);
-    return;
+  if(WindowType == "OSK") {
+     RNS_LOG_ERROR("!!!! EMITTING onHWKeyEvent to OSKCenter!!!!!");
+     NotificationCenter::OSKCenter().emit("onHWKeyEvent", eventKeyType, eventKeyAction);
+
+  } else {
+      RNS_LOG_ERROR("!!!! EMITTING ONHW KeyEvent to defaultCenter!!!!!");
+      NotificationCenter::defaultCenter().emit("onHWKeyEvent", eventKeyType, eventKeyAction);
+  }
+  return;
 }
 
 }   // namespace RnsShell

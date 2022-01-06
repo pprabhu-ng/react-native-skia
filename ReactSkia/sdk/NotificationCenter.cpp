@@ -26,6 +26,7 @@
 #include "NotificationCenter.h"
 
 static std::unique_ptr<NotificationCenter> defaultCenter_;
+static std::unique_ptr<NotificationCenter> OSKCenter_;
 
 void NotificationCenter::removeListener(unsigned int listener_id) {
     std::lock_guard<std::mutex> lock(mutex);
@@ -51,4 +52,13 @@ NotificationCenter& NotificationCenter::defaultCenter() {
 void NotificationCenter::initializeDefault() {
     if(defaultCenter_.get() == nullptr)
         defaultCenter_ = std::make_unique<NotificationCenter>();
+}
+
+NotificationCenter& NotificationCenter::OSKCenter() {
+    return *OSKCenter_;
+}
+
+void NotificationCenter::initializeOSKCenter() {
+    if(OSKCenter_.get() == nullptr)
+        OSKCenter_ = std::make_unique<NotificationCenter>();
 }

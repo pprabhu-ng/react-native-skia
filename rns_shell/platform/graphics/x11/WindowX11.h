@@ -57,8 +57,12 @@ public:
 
     bool handleEvent(const XEvent& event);
     void setTitle(const char*) override;
+    void setType(const char* type) override {WindowType=type;};
     void show() override;
+    void hide() override;
 
+    std::string  WindowType="None";
+    
     static const XWindow& GetKey(const WindowX11& w) {
         return w.window_;
     }
@@ -71,12 +75,14 @@ public:
     void setRequestedDisplayParams(const DisplayParams&, bool allowReattach) override;
 
 private:
+    
     void onKey(rnsKey eventKeyType, rnsKeyAction eventKeyAction);
     void onExpose();
     rnsKey  keyIdentifierForX11KeyCode(KeySym keycode);
 
     Display*     display_;
     XWindow      window_;
+ 
 #if USE(GLX)
     GLXFBConfig* fbConfig_;
     XVisualInfo* visualInfo_;

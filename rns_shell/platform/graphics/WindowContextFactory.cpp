@@ -30,9 +30,11 @@ std::unique_ptr<WindowContext> createContextForWindow(GLNativeWindowType windowH
                                              const DisplayParams& params) {
     PlatformDisplay& display = platformDisplay ? *platformDisplay : PlatformDisplay::sharedDisplay();
 #if USE(GLX)
+    RNS_LOG_INFO("calling GLWindowContextEGL::createContext for GLX");
     if(auto glXContext = GLWindowContextGLX::createContext(windowHandle, display, params))
         return glXContext;
 #elif USE(EGL)
+    RNS_LOG_INFO("calling GLWindowContextEGL::createContext");
     if(auto eglContext = GLWindowContextEGL::createContext(windowHandle, display, params))
         return eglContext;
 #endif
