@@ -6,6 +6,7 @@
 */
 
 #include "core_modules/RSkEventEmitter.h"
+#include "sdk/RNSKeyCodeMapping.h"
 #include "utils/RnsLog.h"
 
 namespace facebook {
@@ -16,13 +17,14 @@ class RSkKeyboardObserver final: public RSkEventEmitter {
   RSkKeyboardObserver(
       const std::string &name,
       std::shared_ptr<CallInvoker> jsInvoker,
-      Instance *bridgeInstance)
-      : RSkEventEmitter(name, jsInvoker, bridgeInstance){}
+      Instance *bridgeInstance);
 
  private:
-  void startObserving() { RNS_LOG_NOT_IMPL;};
-
-  void stopObserving() { RNS_LOG_NOT_IMPL;};
+  unsigned int OSKEventId_ = UINT_MAX; // Some undefined ID
+  void startObserving(); 
+  void stopObserving(); 
+  void KeyBoardEventHandler(std::string eventName);
+  std::vector<std::string> events_ = {"keyboardWillShow","keyboardWillHide"};
 
 };
 

@@ -27,7 +27,7 @@ class WindowContext;
 
 class Window {
 public:
-    static Window* createNativeWindow(void* platformData);
+    static Window* createNativeWindow(void* platformData,int w=0,int h=0);
     static void createEventLoop(Application* app);
     static Window* getMainWindow() { return mainWindow_; }
     static SkSize getMainWindowSize() {
@@ -40,6 +40,9 @@ public:
 
     virtual void setTitle(const char*) = 0;
     virtual void show() = 0;
+    virtual void hide() = 0;
+    virtual void closeWindow() = 0;
+    virtual void setType(const char* )=0;
     virtual uint64_t nativeWindowHandle() = 0;
     virtual SkSize getWindowSize() = 0;
 

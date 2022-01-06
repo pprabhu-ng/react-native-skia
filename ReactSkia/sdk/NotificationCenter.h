@@ -70,6 +70,9 @@ class NotificationCenter {
         static NotificationCenter& defaultCenter();
         static void initializeDefault();
 
+        static NotificationCenter& OSKCenter();
+        static void initializeOSKCenter();
+
         template <typename... Args>
         unsigned int addListener(std::string eventName, std::function<void (Args...)> cb);
 

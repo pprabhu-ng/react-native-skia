@@ -10,6 +10,11 @@
 #include "ReactSkia/components/RSkComponent.h"
 #include "ReactSkia/core_modules/RSkSpatialNavigator.h"
 #include "ReactSkia/sdk/RNSKeyCodeMapping.h"
+
+
+#include "ReactSkia/sdk/OnScreenKeyBoard.h"
+#include "ReactSkia/textlayoutmanager/RSkTextLayoutManager.h"
+
 #include "ReactSkia/views/common/RSkDrawUtils.h"
 #include "ReactSkia/views/common/RSkConversion.h"
 #include "rns_shell/compositor/layers/PictureLayer.h"
@@ -178,7 +183,22 @@ void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool keyRepeat, boo
   textInputMetrics.contentOffset.x = frame.origin.x;
   textInputMetrics.contentOffset.y = frame.origin.y;
   if (isInEditingMode_ == false && eventKeyType == RNS_KEY_Select ) {
-      requestForEditingMode();
+    RNS_LOG_DEBUG("[onHandleKey] onfocus need to here"<<textInputMetrics.text);
+    textInputMetrics.contentSize.width = paragraph_->getMaxIntrinsicWidth();
+    textInputMetrics.contentSize.height = paragraph_->getHeight();
+    textInputEventEmitter->onFocus(textInputMetrics);
+    isInEditingMode_ = true;
+    if (!caretHidden_ || textInputProps.clearTextOnFocus ) {
+      privateVarProtectorMutex.lock();
+      if(textInputProps.clearTextOnFocus && !displayString_.empty()){
+        displayString_.clear();
+        cursor_.locationFromEnd = 0;
+        cursor_.end = 0;
+      }
+      privateVarProtectorMutex.unlock();
+      drawAndSubmit();
+    }
+    OnScreenKeyboard::launch();
   } else if (isInEditingMode_) {
     // Logic to update the textinput string.
     // Requirement: Textinput is in Editing mode.
@@ -311,7 +331,10 @@ void RSkComponentTextInput::processEventKey (rnsKey eventKeyType,bool* stopPropa
         case RNS_KEY_Select:
           eventCount_++;
           *stopPropagation = true;
-	  resignFromEditingMode();
+          if (!caretHidden_) {
+            drawAndSubmit();
+          }
+          OnScreenKeyboard::exit();
           return;
         case RNS_KEY_Caps_Lock:
         case RNS_KEY_Shift_L:

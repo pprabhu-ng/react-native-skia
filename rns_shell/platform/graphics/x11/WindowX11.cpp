@@ -31,14 +31,13 @@ const long kEventMask = ExposureMask | StructureNotifyMask |
                         KeyPressMask | KeyReleaseMask |
                         PointerMotionMask | ButtonPressMask | ButtonReleaseMask;
 
-Window* Window::createNativeWindow(void* platformData) {
+Window* Window::createNativeWindow(void* platformData,int w,int h) {
     PlatformDisplay *pDisplay = (PlatformDisplay*) platformData;
 
     RNS_LOG_ASSERT(pDisplay, "Invalid Platform Display");
 
     WindowX11* window = new WindowX11();
-    if (!window->initWindow(pDisplay)) {
-
+    if (!window->initWindow(pDisplay,w,h)) {
         delete window;
         return nullptr;
     }
@@ -94,10 +93,20 @@ void Window::createEventLoop(Application* app) {
                                     }
                                 }
                         }
+                WindowX11* win = WindowX11::gWindowMap.find(event.xany.window);
+                switch (event.type) {
+                    case ConfigureNotify:
+                        RNS_LOG_INFO("Resize Request with (Width x Height) : (" << event.xconfigurerequest.width <<
+                                    " x " << event.xconfigurerequest.height << ")" << "for window"<<event.xany.window);
+                        
+                        if((win->WindowType != "OSK") && app) {
+                          app->sizeChanged(event.xconfigurerequest.width, event.xconfigurerequest.height);
+                        }
+                        break;
+                    case UnmapNotify:
                         break;
                     }
                     default:
-                        WindowX11* win = WindowX11::gWindowMap.find(event.xany.window);
                         if (win && win->handleEvent(event)) {
                             done = true;
                         }
@@ -111,7 +120,7 @@ void Window::createEventLoop(Application* app) {
     TaskLoop::main().stop();
 }
 
-bool WindowX11::initWindow(PlatformDisplay *platformDisplay) {
+bool WindowX11::initWindow(PlatformDisplay *platformDisplay,int w,int h) {
 
     Display* display = (dynamic_cast<PlatformDisplayX11*>(platformDisplay))->native();
 
@@ -130,7 +139,11 @@ bool WindowX11::initWindow(PlatformDisplay *platformDisplay) {
     Screen *screen = nullptr;
 
     /* Read first screens display resolution*/
-    if(ScreenCount(display) > 0 && (screen = ScreenOfDisplay(display, 0))) {
+    if(w||h) {
+       initialWidth =  w;
+       initialHeight = h;
+    }
+    else if(ScreenCount(display) > 0 && (screen = ScreenOfDisplay(display, 0))) {
         initialWidth = screen->width;
         initialHeight = screen->height;
     }
@@ -247,7 +260,7 @@ bool WindowX11::initWindow(PlatformDisplay *platformDisplay) {
 }
 
 void WindowX11::closeWindow() {
-    if (display_) {
+     if (display_) {
         gWindowMap.remove(window_);
         XDestroyWindow(display_, window_);
         window_ = 0;
@@ -278,6 +291,7 @@ bool WindowX11::handleEvent(const XEvent& event) {
      *    a. shift ON  --> UpperCase
      *    b. shift OFF --> LowerCase
      */
+<<<<<<< HEAD
     if (event.type == KeyRelease && XEventsQueued(display_, QueuedAfterReading)) {
         XEvent nev;
         XPeekEvent(display_, &nev);
@@ -289,13 +303,16 @@ bool WindowX11::handleEvent(const XEvent& event) {
             return false;
         }
     }
+=======
+
+>>>>>>> Changes Done for POC includes:
     KeySym keysym = XkbKeycodeToKeysym(display_, event.xkey.keycode,0,(shiftLevel^capsLock));
-    switch (event.type) {
+      switch (event.type) {
         case MapNotify:
             break;
 
         case ClientMessage:
-            if ((Atom)event.xclient.data.l[0] == wmDeleteMessage_ &&
+              if ((Atom)event.xclient.data.l[0] == wmDeleteMessage_ &&
                 gWindowMap.count() == 1) {
                 return true;
             }
@@ -328,14 +345,25 @@ void WindowX11::show() {
     XMapWindow(display_, window_);
 }
 
+void WindowX11::hide() {
+    XUnmapWindow(display_, window_);
+}
+
 void WindowX11::setRequestedDisplayParams(const DisplayParams& params, bool allowReattach) {
     RNS_LOG_NOT_IMPL;
     //INHERITED::setRequestedDisplayParams(params, allowReattach);
 }
 
 void WindowX11::onKey(rnsKey eventKeyType, rnsKeyAction eventKeyAction){
-    NotificationCenter::defaultCenter().emit("onHWKeyEvent", eventKeyType, eventKeyAction);
-    return;
+  if(WindowType == "OSK") {
+     RNS_LOG_ERROR("!!!! EMITTING onHWKeyEvent to OSKCenter!!!!!");
+     NotificationCenter::OSKCenter().emit("onHWKeyEvent", eventKeyType, eventKeyAction);
+
+  } else {
+      RNS_LOG_ERROR("!!!! EMITTING ONHW KeyEvent to defaultCenter!!!!!");
+      NotificationCenter::defaultCenter().emit("onHWKeyEvent", eventKeyType, eventKeyAction);
+  }
+  return;
 }
 
 }   // namespace RnsShell
