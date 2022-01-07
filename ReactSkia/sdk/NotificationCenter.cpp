@@ -26,7 +26,7 @@
 #include "NotificationCenter.h"
 
 static std::unique_ptr<NotificationCenter> defaultCenter_;
-static std::unique_ptr<NotificationCenter> OSKCenter_;
+static std::unique_ptr<NotificationCenter> OSKCenter_;//OnScreenKeyboard Notification center
 
 void NotificationCenter::removeListener(unsigned int listener_id) {
     std::lock_guard<std::mutex> lock(mutex);

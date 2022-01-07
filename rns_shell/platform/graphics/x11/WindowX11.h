@@ -57,11 +57,9 @@ public:
 
     bool handleEvent(const XEvent& event);
     void setTitle(const char*) override;
-    void setType(const char* type) override {WindowType=type;};
     void show() override;
-    void hide() override;
 
-    std::string  WindowType="None";
+    WindowType  winType=Deafult_Window_Type;
     
     static const XWindow& GetKey(const WindowX11& w) {
         return w.window_;

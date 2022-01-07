@@ -16,15 +16,14 @@ static std::unique_ptr<OnScreenKeyboard> OSKHandle_;
 static unsigned int OSKeventId_;
  OnScreenKeyboard::OnScreenKeyboard() :
 /*Step 1: Create Window*/ 
-  OSKwindow_(RnsShell::Window::createNativeWindow(&RnsShell::PlatformDisplay::sharedDisplayForCompositing(),600,400)) {
+  OSKwindow_(RnsShell::Window::createNativeWindow(&RnsShell::PlatformDisplay::sharedDisplayForCompositing(),SkSize::Make(600,400),RnsShell::SubWindow)) {
   if(OSKwindow_) {
-  /*Step 1a: Set Window Title*/ 
+/*Step 1a: Set Window Title*/
     OSKwindow_->setTitle("OSK Window");
-    OSKwindow_->setType("OSK");
-/*Step 2: Create Window Context for the OSKWindow*/ 
+/*Step 2: Create Window Context for the OSKWindow*/
     OSKwindowContext_ = RnsShell::WCF::createContextForWindow(reinterpret_cast<GLNativeWindowType>(OSKwindow_->nativeWindowHandle()),
                    &RnsShell::PlatformDisplay::sharedDisplayForCompositing(), RnsShell::DisplayParams());
-/*Step 3: Get BackBuffer from WindowContext*/ 
+/*Step 3: Get BackBuffer from WindowContext*/
     if(OSKwindowContext_) {
       backBuffer_ = OSKwindowContext_->getBackbufferSurface();
     } else {
@@ -32,7 +31,7 @@ static unsigned int OSKeventId_;
       return;
     }
     RNS_LOG_INFO("Native Window Handle : " << OSKwindow_->nativeWindowHandle() << " Window Context : " << OSKwindowContext_.get() << "Back Buffer : " << backBuffer_.get());
-/*Step 4: Get canvas from BackBuffer*/ 
+/*Step 4: Get canvas from BackBuffer*/
     OSKcanvas = backBuffer_->getCanvas();
 /*Step 5: Listen for "OnHwKeyEvent" from OSK Notification centre*/
     std::function<void(rnsKey, rnsKeyAction)> handler = std::bind(&OnScreenKeyboard::keyHandler, this,
@@ -42,6 +41,7 @@ static unsigned int OSKeventId_;
   }
 }
 void OnScreenKeyboard::drawOSK() {
+/*Temp Handling for POC: Dispalying static image for OSK*/
   if(OSKcanvas) {
     sk_sp<SkImage>   fImage;
     sk_sp<SkData> encoded = SkData::MakeFromFileName("keyboard.png");
@@ -71,64 +71,37 @@ void OnScreenKeyboard::init(){
 }
 
 void OnScreenKeyboard::launch() {
- 
-   if(OSKHandle_.get() == nullptr){
-	  RNS_LOG_INFO("OnScreenKeyboard::init()");
-	  OnScreenKeyboard::init();
-    OSKHandle_->OSKwindow_->show();
-	  //OSKHandle_->OSKwindowContext_->makeContextCurrent();
-	  OSKHandle_->drawOSK();
-  }
-	
-  #if 0 /*hide * show fix*/
-	OSKHandle_->OSKwindow_->show();
-    std::vector<SkIRect> emptyRect;
-    OSKHandle_->OSKwindowContext_->swapBuffers(emptyRect);
-  #endif
+	OnScreenKeyboard::init();
+  OSKHandle_->OSKwindow_->show();
+  OSKHandle_->drawOSK();
+#if 0 /*Keyboard Event handling to be done*/
   folly::dynamic parameters = folly::dynamic::object();
- // NotificationCenter::OSKCenter().emit("keyboardWillShow",parameters);
+  NotificationCenter::OSKCenter().emit("keyboardWillShow",parameters);
+#endif
 }
 
 void OnScreenKeyboard::exit() {
-	//OSKHandle_->OSKwindow_->hide();
+#if 0 /*Keyboard Event handling to be done*/
   folly::dynamic parameters = folly::dynamic::object();
-//  NotificationCenter::OSKCenter().emit("keyboardWillHide",parameters);
-  #if 1
+  NotificationCenter::OSKCenter().emit("keyboardWillHide",parameters);
+#endif
   NotificationCenter::OSKCenter().removeListener(OSKeventId_);
-  
   OSKHandle_->OSKwindow_->closeWindow();
-
   OnScreenKeyboard* fp = OSKHandle_.release();
   delete fp;
-  //OSKHandle_=nullptr;
-  #endif
-
 }
 
 void OnScreenKeyboard::keyHandler(rnsKey eventKeyType, rnsKeyAction eventKeyAction){
   if(eventKeyAction != RNS_KEY_Press)
     return;
   RNS_LOG_INFO("KEY RECEIVED : "<<RNSKeyMap[eventKeyType]);
-/*Step 1: Emit back special keys*/
-/* Step 2: Process Navihation Keys*/
-  switch(eventKeyType ) {
-    case RNS_KEY_Left:
-      RNS_LOG_INFO("RNS_KEY_Left");
-      break;
-    case RNS_KEY_Right:
-      RNS_LOG_INFO("RNS_KEY_Right");
-      break;
-    case RNS_KEY_Up:
-      RNS_LOG_INFO("RNS_KEY_Up");
-      break;
-    case RNS_KEY_Down:
-      RNS_LOG_INFO("RNS_KEY_Down");
-      break;
-    default :
-     break;
+/*Step 1: Emit back special keys & Alpha numberic symbol keys*/
+  if(eventKeyType > RNS_KEY_Down) {
+    RNS_LOG_INFO("!!!! EMITTING received key to OSKCenter!!!!!");
+    NotificationCenter::OSKCenter().emit("onOSKKeyEvent", eventKeyType, eventKeyAction);
   }
-/*Step 3: Emit Alpha numberic symbol keys*/
-  RNS_LOG_INFO("RECEIVED Alpha / numberic / symbol keys");
-  RNS_LOG_ERROR("!!!! EMITTING onOSKKeyEvent to OSKCenter!!!!!");
-  NotificationCenter::OSKCenter().emit("onOSKKeyEvent", eventKeyType, eventKeyAction);
+  else {
+/* Step 2: Process Navigation Keys*/
+   RNS_LOG_TODO(" Need to come up with Navigation algorithm ");
+  }
 }

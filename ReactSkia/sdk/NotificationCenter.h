@@ -70,6 +70,7 @@ class NotificationCenter {
         static NotificationCenter& defaultCenter();
         static void initializeDefault();
 
+        //Notification center to handle OnScreenKeyboard events
         static NotificationCenter& OSKCenter();
         static void initializeOSKCenter();
 
