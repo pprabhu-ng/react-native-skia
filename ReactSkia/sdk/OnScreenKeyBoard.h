@@ -29,6 +29,6 @@ class OnScreenKeyboard {
         std::unique_ptr<RnsShell::WindowContext> OSKwindowContext_;
         sk_sp<SkSurface> backBuffer_;
         SkCanvas *OSKcanvas=nullptr;
-
-
+        rnsKey generateOSKKey(rnsKey navkey){return navkey;}//process navigation key & generate OSk key
 };
+

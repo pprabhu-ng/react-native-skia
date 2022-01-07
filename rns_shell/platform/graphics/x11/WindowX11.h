@@ -46,7 +46,7 @@ public:
         this->closeWindow();
     }
 
-    bool initWindow(PlatformDisplay* display,int w,int h);
+    bool initWindow(PlatformDisplay* display,SkSize dimension,WindowType winType);
     void closeWindow() override;
     uint64_t nativeWindowHandle() override {return (uint64_t) window_; }
     SkSize getWindowSize() override {
@@ -57,11 +57,9 @@ public:
 
     bool handleEvent(const XEvent& event);
     void setTitle(const char*) override;
-    void setType(const char* type) override {WindowType=type;};
     void show() override;
-    void hide() override;
 
-    std::string  WindowType="None";
+    WindowType  winType=Deafult_Window_Type;
     
     static const XWindow& GetKey(const WindowX11& w) {
         return w.window_;
