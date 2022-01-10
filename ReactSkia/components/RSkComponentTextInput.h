@@ -22,19 +22,21 @@ struct cursor{
 };
 class RSkComponentTextInput final : public RSkComponent {
  public:
+  void workerThread();
   RSkComponentTextInput(const ShadowView &shadowView);
   void onHandleKey(rnsKey  eventKeyType,bool *stopPropagate)override;
   RnsShell::LayerInvalidateMask updateComponentProps(const ShadowView &newShadowView,bool forceUpdate) override;
   /*
     TODO  Need to Add command function to Handle Command.
   */
+  void handleCommand(std::string commandName,folly::dynamic args)override;
  protected:
   void OnPaint(SkCanvas *canvas) override;
  private:
   bool isInEditingMode_;
-  bool mutableFlag_ = false;
   bool editable_ = true;
   bool caretHidden_ = false;
+  bool isThreadWantToExit_=true;
   int eventCount_;
   std::string displayString_{}; // Text to be displayed on screen
   std::string placeholderString_{}; // Placeholder Text
