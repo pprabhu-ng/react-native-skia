@@ -12,9 +12,9 @@
 #include "rns_shell/compositor/Compositor.h"
 #include "rns_shell/platform/graphics/WindowContextFactory.h"
 
-#include "ReactSkia/sdk/NotificationCenter.h"
-#include "ReactSkia/sdk/RNSKeyCodeMapping.h"
-
+#include "NotificationCenter.h"
+#include "RNSKeyCodeMapping.h"
+#include "OSKLayout.h"
 
 class OnScreenKeyboard {
     public:
@@ -29,6 +29,12 @@ class OnScreenKeyboard {
         std::unique_ptr<RnsShell::WindowContext> OSKwindowContext_;
         sk_sp<SkSurface> backBuffer_;
         SkCanvas *OSKcanvas=nullptr;
-        rnsKey generateOSKKey(rnsKey navkey){return navkey;}//process navigation key & generate OSk key
+        OSKLayout::KeyLayoutInfo getNextKeyInfo(rnsKey navkey );//process navigation key 
+        OSKLayout::KeyLayoutInfo getFocussedKeyInfo(rnsKey Key);
+        void highlightKey(OSKLayout::KeyLayoutInfo keyInfo);
+        OSKLayout OSKLayout_;
+        OSKLayout::OSKTypes currentOSKType_{OSKLayout::OSK_DEFAULT};
+        SkPoint currentIndex_{0,0};
+        rnsKey focussedKey{RNS_KEY_UnKnown};
 };
 
