@@ -19,7 +19,7 @@
 #include <thread>
 #include <semaphore.h>
 #include <mutex>  
-std::mutex mtx;
+
 
 namespace facebook {
 namespace react {
@@ -31,7 +31,8 @@ using namespace skia::textlayout;
 #define FONTSIZE_MULTIPLIER     10
 #define CURSOR_WIDTH 2
 std::queue<rnsKey> inputQueue;
-sem_t mutex;
+sem_t jsUpdateMutex;
+std::mutex globalVarProtectorMutex;
 
 RSkComponentTextInput::RSkComponentTextInput(const ShadowView &shadowView)
     : RSkComponent(shadowView)
@@ -44,7 +45,7 @@ RSkComponentTextInput::RSkComponentTextInput(const ShadowView &shadowView)
   cursorPaint_.setAntiAlias(true);
   cursorPaint_.setStyle(SkPaint::kStroke_Style);
   cursorPaint_.setStrokeWidth(CURSOR_WIDTH);
-  isThreadWantToExit_ = true;
+  isThreadAlive = false;
 }
 
 void RSkComponentTextInput::flushLayer(){
@@ -143,13 +144,11 @@ void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool *stopPropagati
   if (!editable_) {
     return;
   }
-  mtx.lock();
+  globalVarProtectorMutex.lock();
   std::string textString = displayString_;
+  globalVarProtectorMutex.unlock();
   KeyPressMetrics keyPressMetrics;
   TextInputMetrics textInputMetrics;
-  *stopPropagation = false;
-  cursor_.end = textString.length();
-  mtx.unlock();
   auto component = getComponentData();
   Rect frame = component.layoutMetrics.frame;
   auto textInputEventEmitter = std::static_pointer_cast<TextInputEventEmitter const>(component.eventEmitter);
@@ -178,63 +177,48 @@ void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool *stopPropagati
     // the cursor position.
       
     if(textInputProps.value.has_value()) {
-      if(isThreadWantToExit_){
-        RNS_LOG_INFO("Create Thread based on the Exit Condition");
-        std::thread t(&RSkComponentTextInput::workerThread,this);
+      if(!isThreadAlive){
+        std::thread t(&RSkComponentTextInput::KeyEventProcessingThread,this);
         t.detach();
-        isThreadWantToExit_ = false;
+        isThreadAlive = true;
       }
-      mtx.lock();
-      RNS_LOG_INFO("Key is pushing to Queue");
-      inputQueue.push(eventKeyType);
-      mtx.unlock();
+      
       //We need to Handle the StopPrpagation & select in the onHandle.
-      if ((eventKeyType >= RNS_KEY_1 && eventKeyType <= RNS_KEY_z)) {
+      if ((eventKeyType >= RNS_KEY_Right && eventKeyType <= RNS_KEY_Back)){
         *stopPropagation = true;
-   
-      } else {
-        switch(eventKeyType){
-          case RNS_KEY_Left:
-          case RNS_KEY_Right:
-          case RNS_KEY_Back:
-          case RNS_KEY_Delete:
-            *stopPropagation = true;
-            RNS_LOG_INFO("case Left,RIGHT,BACK,Delete");
-          break;
-          case RNS_KEY_Select:
-            RNS_LOG_INFO(" case Select");
-            *stopPropagation = true;
-            isThreadWantToExit_ = true;
-            isInEditingMode_ = false;
-            //TODO Clear the queue
-            //Don't use the Own Function
-            mtx.lock();
-            while (!inputQueue.empty())
-            {
-              RNS_LOG_INFO(" Poping Queue");
-              inputQueue.pop();
-            }
-            mtx.unlock();
-            //Use the standard API.
-            eventCount_++;
-            RNS_LOG_INFO(" Assigning String");
-            textInputMetrics.text = textString;
-            textInputMetrics.eventCount = eventCount_;
-            RNS_LOG_INFO(" Sending Events");
-            textInputEventEmitter->onSubmitEditing(textInputMetrics);
-            textInputEventEmitter->onEndEditing(textInputMetrics);
-            textInputEventEmitter->onBlur(textInputMetrics);   
-            
-            break;
-          default:
-            RNS_LOG_INFO("case Default");
-            break;
-        }
+        inputQueue.push(eventKeyType);
       }
-      return;
-    }
-
-    keyPressMetrics.text = RNSKeyMap[eventKeyType];
+      else if(eventKeyType ==  RNS_KEY_Select){
+        *stopPropagation = true;
+        isThreadAlive = false;
+        isInEditingMode_ = false;
+        globalVarProtectorMutex.lock();
+        while (!inputQueue.empty())
+        {
+          inputQueue.pop();
+        }
+        globalVarProtectorMutex.unlock();
+        eventCount_++;
+        textInputMetrics.text = textString;
+        textInputMetrics.eventCount = eventCount_;
+        textInputEventEmitter->onSubmitEditing(textInputMetrics);
+        textInputEventEmitter->onEndEditing(textInputMetrics);
+        textInputEventEmitter->onBlur(textInputMetrics);
+      } 
+    return;
+  }
+  eventKeyProcessing(eventKeyType,stopPropagation);
+  }//else if (isInEditingMode_)
+}
+void RSkComponentTextInput::eventKeyProcessing(rnsKey eventKeyType,bool* stopPropagation){
+  KeyPressMetrics keyPressMetrics;
+  TextInputMetrics textInputMetrics;
+  std::string textString = displayString_;
+  auto component = getComponentData();
+  Rect frame = component.layoutMetrics.frame;
+  auto textInputEventEmitter = std::static_pointer_cast<TextInputEventEmitter const>(component.eventEmitter);
+  auto const &textInputProps = *std::static_pointer_cast<TextInputProps const>(component.props);
+  keyPressMetrics.text = RNSKeyMap[eventKeyType];
     if ((eventKeyType >= RNS_KEY_1 && eventKeyType <= RNS_KEY_z)) {
       if (cursor_.locationFromEnd != 0){
         textString.insert(cursor_.end-cursor_.locationFromEnd,keyPressMetrics.text);
@@ -303,9 +287,9 @@ void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool *stopPropagati
     textInputEventEmitter->onChange(textInputMetrics);
     textInputEventEmitter->onContentSizeChange(textInputMetrics);
     textInputEventEmitter->onSelectionChange(textInputMetrics);
-  }//else if (isInEditingMode_)
 }
-void RSkComponentTextInput::workerThread(){
+
+void RSkComponentTextInput::KeyEventProcessingThread(){
   std::string textString = {};
   struct cursor lCursor;
   RNS_LOG_DEBUG("Creating the thread worker thread");
@@ -313,16 +297,15 @@ void RSkComponentTextInput::workerThread(){
   TextInputMetrics textInputMetrics;
   auto component = getComponentData();
   auto textInputEventEmitter = std::static_pointer_cast<TextInputEventEmitter const>(component.eventEmitter);
-  while(!isThreadWantToExit_){
+  while(isThreadAlive){
     if(!inputQueue.empty()){
-      RNS_LOG_DEBUG("[workerThread] I am inside the Queue ");
-      mtx.lock();
+      globalVarProtectorMutex.lock();
       lCursor.locationFromEnd = cursor_.locationFromEnd;
       textString = displayString_;
-      lCursor.end = textString.length();
       auto eventKeyType = inputQueue.front();
-      RNS_LOG_DEBUG("[workerThread]event Key Type  "<<RNSKeyMap[eventKeyType]);
-      mtx.unlock();
+      inputQueue.pop();
+      globalVarProtectorMutex.unlock();
+      lCursor.end = textString.length();
       keyPressMetrics.text = RNSKeyMap[eventKeyType];
       if ((eventKeyType >= RNS_KEY_1 && eventKeyType <= RNS_KEY_z)) {
         if (lCursor.locationFromEnd != 0){
@@ -343,8 +326,6 @@ void RSkComponentTextInput::workerThread(){
             keyPressMetrics.eventCount = eventCount_;
             textInputEventEmitter->onKeyPress(keyPressMetrics);
             flushLayer();
-            if(!inputQueue.empty())
-              inputQueue.pop();
             continue;
           case RNS_KEY_Right:
             if (lCursor.locationFromEnd>0){
@@ -355,30 +336,26 @@ void RSkComponentTextInput::workerThread(){
             keyPressMetrics.eventCount = eventCount_;
             textInputEventEmitter->onKeyPress(keyPressMetrics);
             flushLayer();
-            if(!inputQueue.empty())
-              inputQueue.pop();
             continue;
           case RNS_KEY_Back:
           case RNS_KEY_Delete:
-            mtx.lock();
             RNS_LOG_INFO("I am calling the erase function");
             if (!textString.empty() && (lCursor.end!=lCursor.locationFromEnd) )
               textString.erase(textString.begin()+(lCursor.end-lCursor.locationFromEnd-1)); //acts like a backspace.
-              RNS_LOG_INFO("After removing a charector in string = "<<textString);
-            mtx.unlock(); 
+            if(lCursor.end == lCursor.locationFromEnd)
+              continue;
+              RNS_LOG_INFO("After removing a charector in string = "<<textString); 
             break;
           default:
-            if(!inputQueue.empty())
-              inputQueue.pop();
             continue;//noop
         }
       }
       RNS_LOG_INFO("calling Async display to the text string");
       //currently selection is not supported selectionRange length is 
       //is always 0 & selectionRange.location always end
-      mtx.lock(); 
+      globalVarProtectorMutex.lock(); 
       textInputMetrics.selectionRange.location = cursor_.end ;
-      mtx.unlock();
+      globalVarProtectorMutex.unlock();
       textInputMetrics.selectionRange.length = 0;
       RNS_LOG_INFO("checking the Async Display");
       eventCount_++;
@@ -391,18 +368,14 @@ void RSkComponentTextInput::workerThread(){
       textInputEventEmitter->onChange(textInputMetrics);
       textInputEventEmitter->onContentSizeChange(textInputMetrics);
       textInputEventEmitter->onSelectionChange(textInputMetrics);
-      RNS_LOG_INFO("[worker thread ] waiting the semaphore ");
-      sem_wait(&mutex);
-      mtx.lock();
-      if(!inputQueue.empty())
-        inputQueue.pop();
-      mtx.unlock();
-    }//if(queue not empty)
-    //else{ //unComment only for Debuging. 
-       //RNS_LOG_INFO("[worker thread] Queue is empty ");
-    //  usleep(5000);
-    //}
-  }//while(1)
+      RNS_LOG_INFO("[KeyEventProcessingThread] waiting the semaphore ");
+      sem_wait(&jsUpdateMutex);
+    }
+    else{
+      RNS_LOG_DEBUG("[KeyEventProcessingThread] ThreadAlive ");
+      usleep(5000); 
+    }
+  }
 }
 
 RnsShell::LayerInvalidateMask  RSkComponentTextInput::updateComponentProps(const ShadowView &newShadowView,bool forceUpadate){
@@ -412,12 +385,12 @@ RnsShell::LayerInvalidateMask  RSkComponentTextInput::updateComponentProps(const
   RNS_LOG_DEBUG("event count "<<textInputProps.mostRecentEventCount);
   textString = textInputProps.text;
   if(textString != displayString_) {
-    mtx.lock();
+    globalVarProtectorMutex.lock();
     displayString_ = textString;
     cursor_.end = textString.length();
-    mtx.unlock();
-    if(!forceUpadate ){
-      sem_post(&mutex);
+    globalVarProtectorMutex.unlock();
+    if(isThreadAlive){
+      sem_post(&jsUpdateMutex);
     }
     mask |= LayerPaintInvalidate;
   }
@@ -460,14 +433,14 @@ RnsShell::LayerInvalidateMask  RSkComponentTextInput::updateComponentProps(const
 }
 void RSkComponentTextInput::handleCommand(std::string commandName,folly::dynamic args){
   if(commandName == "setTextAndSelection"){
-    //RNS_LOG_INFO("Calling Dyanic args"<<args[0].asInt());
-    RNS_LOG_INFO("Calling Dyanic args"<<args[1].getString());
-    mtx.lock();
+    RNS_LOG_DEBUG("Calling Dyanic args"<<args[1].getString());
+    globalVarProtectorMutex.lock();
     displayString_ = args[1].getString();
-    mtx.unlock();
+    cursor_.end = displayString_.length();
+    globalVarProtectorMutex.unlock();
     flushLayer();
-    if(!isThreadWantToExit_)
-      sem_post(&mutex);
+    if(isThreadAlive)
+      sem_post(&jsUpdateMutex);
   }
 }
 } // namespace react
