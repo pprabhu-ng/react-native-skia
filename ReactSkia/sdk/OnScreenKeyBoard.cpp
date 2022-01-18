@@ -82,6 +82,7 @@ void OnScreenKeyboard::launch() {
   OSKHandle_->OSKwindow_->show();
   OSKHandle_->drawOSK();
   RNS_LOG_TODO("Need to do Event emit to APP");
+//  highlightKey(OSKLayout_.DefaultOSK[currentIndex_]);
 #if 0 /*Keyboard Event handling to be done*/
   folly::dynamic parameters = folly::dynamic::object();
   NotificationCenter::OSKCenter().emit("keyboardWillShow",parameters);
@@ -100,81 +101,15 @@ void OnScreenKeyboard::exit() {
   delete fp;
 }
 
-OSKLayout::KeyLayoutInfo OnScreenKeyboard::getNextKeyInfo(rnsKey keyValue ) {
-  std::map<OSKLayout::OSKTypes, OSKLayout::KBContainer> :: iterator KBLayout = (OSKLayout_.OSKContainer).find(currentOSKType_);
-  if(KBLayout != OSKLayout_.OSKContainer.end()) {
-    auto &OSKLayout = KBLayout->second;
-    unsigned int rowIndex =currentIndex_.x();
-    unsigned int keyIndex =currentIndex_.y();
-    unsigned int itemsInRow = OSKLayout[currentIndex_.x()].size();
-    unsigned int rowsInKB = OSKLayout.size();
-
-    RNS_LOG_INFO("!!!! current index : Row :" << currentIndex_.x() << " item: " << currentIndex_.y());
-    RNS_LOG_INFO("!!!! No of items : Row :" << rowsInKB << " item: " << itemsInRow);
-    
-    switch( keyValue ) {
-      case RNS_KEY_Right:
-      case RNS_KEY_Left:
-      {
-        unsigned int nextIndex=0;
-        if(keyValue == RNS_KEY_Right)
-          nextIndex=( keyIndex < itemsInRow -1)? keyIndex +1 : 0 ;
-        else
-          nextIndex =(keyIndex) ? keyIndex-1: itemsInRow-1;
-
-        currentIndex_ = {rowIndex,nextIndex};
-        return OSKLayout[rowIndex][nextIndex];
-      }
-      case RNS_KEY_Up:
-      case RNS_KEY_Down:
-      {
-          unsigned int nextIndex,itemIndex=0;
-          if(keyValue == RNS_KEY_Up)
-            nextIndex = (rowIndex) ? rowIndex-1 :rowsInKB-1;
-          else
-            nextIndex = (rowIndex == rowsInKB-1 )? 0 :rowIndex+1;
-
-          OSKLayout::KeyLayoutInfo keyInfo=OSKLayout[nextIndex][0];
-          for ( auto &item : OSKLayout[nextIndex]) {
-              if((item.startPt.x() >= OSKLayout[currentIndex_.x()][currentIndex_.y()].startPt.x() ) || 
-                  ( item.EndPt.x() >= OSKLayout[currentIndex_.x()][currentIndex_.y()].startPt.x())){
-                  currentIndex_ = {nextIndex,itemIndex};
-                  return OSKLayout[nextIndex][itemIndex];
-            }
-            itemIndex++;
-          }
-          for(unsigned int i = OSKLayout[nextIndex].size()-1; i >= 0; i--) {
-            if(OSKLayout[nextIndex][i].EndPt.x() <= OSKLayout[currentIndex_.x()][currentIndex_.y()].startPt.x() ) {
-              currentIndex_ = {nextIndex,itemIndex};
-              return OSKLayout[nextIndex][itemIndex];
-            }
-          }
-      }
-      default:
-      break;
-    }
-  }
-  OSKLayout::KeyLayoutInfo invalideInfo{invalidIndex,invalidIndex};
-  return invalideInfo;
-}
 
 OSKLayout::KeyLayoutInfo OnScreenKeyboard ::getFocussedKeyInfo(rnsKey keyValue) {
   
-  std::map<OSKLayout::OSKTypes, OSKLayout::KBContainer> :: iterator KBLayout = (OSKLayout_.OSKContainer).find(currentOSKType_);
-  if(KBLayout != OSKLayout_.OSKContainer.end()) {
-    auto &OSKLayout = KBLayout->second;
-     for(unsigned int i = 0; i < OSKLayout.size(); i++){
-      for(unsigned int j = 0; j < OSKLayout[i].size(); j++){
-       if(OSKLayout[i][j].keyValue == keyValue) {
-          RNS_LOG_INFO(" TYPE ELEMENT : "<< RNSKeyMap[OSKLayout[i][j].keyValue]);
-          currentIndex_ = {i,j};
-          return OSKLayout[i][j];
-      }
-     }
-    }
+  for (unsigned int i=0; i<DEFAULT_OSK_KEYS;i++) {
+  	if(OSKLayout_.DefaultOSK[i].keyValue == keyValue)
+  		return OSKLayout_.DefaultOSK[i];
   }
-  OSKLayout::KeyLayoutInfo invalideInfo{invalidIndex,invalidIndex};
-  return invalideInfo;
+  OSKLayout::KeyLayoutInfo Temp{invalidIndex,invalidIndex};
+  return Temp;
 }
 void OnScreenKeyboard ::highlightKey(OSKLayout::KeyLayoutInfo keyInfo) {
   if(keyInfo.startPt != invalidIndex) {
@@ -204,13 +139,14 @@ void OnScreenKeyboard::keyHandler(rnsKey keyValue, rnsKeyAction eventKeyAction){
   if(keyValue >= RNS_KEY_Select) {
     RNS_LOG_INFO("!!!! EMITTING received key to OSKCenter!!!!!");
     if(keyValue == RNS_KEY_Select)
-       NotificationCenter::OSKCenter().emit("onOSKKeyEvent", focussedKey, eventKeyAction);
+       NotificationCenter::OSKCenter().emit("onOSKKeyEvent", OSKLayout_.DefaultOSK[currentIndex_].keyValue, eventKeyAction);
     else
        NotificationCenter::OSKCenter().emit("onOSKKeyEvent", keyValue, eventKeyAction);
     if( (keyValue != RNS_KEY_UnKnown) && (keyValue != RNS_KEY_Select)) {
       OSKLayout::KeyLayoutInfo keyInfo= getFocussedKeyInfo(keyValue);
       if(keyInfo.startPt != invalidIndex) {
          highlightKey(keyInfo);
+         currentIndex_ = keyInfo.indexSelf;
       }
     }
   }
@@ -218,11 +154,29 @@ void OnScreenKeyboard::keyHandler(rnsKey keyValue, rnsKeyAction eventKeyAction){
   {
 /* Case  2: Process Navigation Keys*/
 /* Case  2a: if the processed key is select, send current focuused key */
-    OSKLayout::KeyLayoutInfo keyInfo=getNextKeyInfo(keyValue);
-    RNS_LOG_INFO("!!!! Received index for Nav : Row :" << currentIndex_.x() << " item: " << currentIndex_.y());
-    if(currentIndex_ != invalidIndex) {
+    OSKLayout::KeyLayoutInfo keyInfo{invalidIndex,invalidIndex};
+    unsigned int index=OSKLayout_.DefaultOSK[currentIndex_].indexSelf;
+    switch( keyValue ) {
+      case RNS_KEY_Right:
+        keyInfo= OSKLayout_.DefaultOSK[OSKLayout_.DefaultOSK[currentIndex_].indexRight];
+        break;
+      case RNS_KEY_Left:
+        keyInfo= OSKLayout_.DefaultOSK[OSKLayout_.DefaultOSK[currentIndex_].indexLeft];
+        break;
+      case RNS_KEY_Up:
+        keyInfo= OSKLayout_.DefaultOSK[OSKLayout_.DefaultOSK[currentIndex_].indexUp];
+        break;
+      case RNS_KEY_Down:
+        keyInfo= OSKLayout_.DefaultOSK[OSKLayout_.DefaultOSK[currentIndex_].indexDown];
+        break;
+      default:
+      	break;
+    }
+    
+    RNS_LOG_INFO("!!!! Received index for Nav : "<< currentIndex_);
+    if(currentIndex_ != -1) {
+      currentIndex_ = keyInfo.indexSelf;
       highlightKey(keyInfo);
-      focussedKey=keyInfo.keyValue;
       if(keyInfo.keyValue == RNS_KEY_UnKnown)
         RNS_LOG_TODO(" Handling for group key");
     }

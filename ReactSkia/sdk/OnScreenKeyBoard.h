@@ -29,12 +29,10 @@ class OnScreenKeyboard {
         std::unique_ptr<RnsShell::WindowContext> OSKwindowContext_;
         sk_sp<SkSurface> backBuffer_;
         SkCanvas *OSKcanvas=nullptr;
-        OSKLayout::KeyLayoutInfo getNextKeyInfo(rnsKey navkey );//process navigation key 
         OSKLayout::KeyLayoutInfo getFocussedKeyInfo(rnsKey Key);
         void highlightKey(OSKLayout::KeyLayoutInfo keyInfo);
         OSKLayout OSKLayout_;
-        OSKLayout::OSKTypes currentOSKType_{OSKLayout::OSK_DEFAULT};
-        SkPoint currentIndex_{0,0};
-        rnsKey focussedKey{RNS_KEY_UnKnown};
+   //     OSKLayout::OSKTypes currentOSKType_{OSKLayout::OSK_DEFAULT};
+        unsigned int currentIndex_{0};
 };
 
