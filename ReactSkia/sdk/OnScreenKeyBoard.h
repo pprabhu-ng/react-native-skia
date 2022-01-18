@@ -31,8 +31,12 @@ class OnScreenKeyboard {
         SkCanvas *OSKcanvas=nullptr;
         OSKLayout::KeyLayoutInfo getFocussedKeyInfo(rnsKey Key);
         void highlightKey(OSKLayout::KeyLayoutInfo keyInfo);
+        void redrawOSK(char* keyList, unsigned int keyCount,unsigned int startIndex);
         OSKLayout OSKLayout_;
    //     OSKLayout::OSKTypes currentOSKType_{OSKLayout::OSK_DEFAULT};
         unsigned int currentIndex_{0};
+        unsigned int previousIndex_{0};
+        rnsKey FocussedKey{RNS_KEY_Shift_L};
+        bool isCurrentCAPS{false};
 };
 
