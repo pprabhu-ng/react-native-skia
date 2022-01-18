@@ -61,7 +61,7 @@ void MountingManager::schedulerDidDispatchCommand(
   RNS_LOG_TODO("shadowView tag[" << shadowView.tag <<  "] name["<< shadowView.componentName << "] commandName [" << commandName <<"]");
   auto component = GetComponent(shadowView);
   if( component != NULL ){
-    component->handleCommand(commandName,args); // Only textinput partially implementation.
+    component->handleCommand(commandName,args);
   } 
 }
 

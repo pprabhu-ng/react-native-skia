@@ -32,7 +32,7 @@ using namespace skia::textlayout;
 #define CURSOR_WIDTH 2
 std::queue<rnsKey> inputQueue;
 sem_t jsUpdateMutex;
-std::mutex globalVarProtectorMutex;
+std::mutex privateVarProtectorMutex;
 
 RSkComponentTextInput::RSkComponentTextInput(const ShadowView &shadowView)
     : RSkComponent(shadowView)
@@ -144,9 +144,9 @@ void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool *stopPropagati
   if (!editable_) {
     return;
   }
-  globalVarProtectorMutex.lock();
+  privateVarProtectorMutex.lock();
   std::string textString = displayString_;
-  globalVarProtectorMutex.unlock();
+  privateVarProtectorMutex.unlock();
   KeyPressMetrics keyPressMetrics;
   TextInputMetrics textInputMetrics;
   auto component = getComponentData();
@@ -178,7 +178,7 @@ void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool *stopPropagati
       
     if(textInputProps.value.has_value()) {
       if(!isThreadAlive){
-        std::thread t(&RSkComponentTextInput::KeyEventProcessingThread,this);
+        std::thread t(&RSkComponentTextInput::keyEventProcessingThread,this);
         t.detach();
         isThreadAlive = true;
       }
@@ -192,12 +192,12 @@ void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool *stopPropagati
         *stopPropagation = true;
         isThreadAlive = false;
         isInEditingMode_ = false;
-        globalVarProtectorMutex.lock();
+        privateVarProtectorMutex.lock();
         while (!inputQueue.empty())
         {
           inputQueue.pop();
         }
-        globalVarProtectorMutex.unlock();
+        privateVarProtectorMutex.unlock();
         eventCount_++;
         textInputMetrics.text = textString;
         textInputMetrics.eventCount = eventCount_;
@@ -205,9 +205,9 @@ void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool *stopPropagati
         textInputEventEmitter->onEndEditing(textInputMetrics);
         textInputEventEmitter->onBlur(textInputMetrics);
       } 
-    return;
-  }
-  eventKeyProcessing(eventKeyType,stopPropagation);
+      return;
+    }
+    eventKeyProcessing(eventKeyType,stopPropagation);
   }//else if (isInEditingMode_)
 }
 void RSkComponentTextInput::eventKeyProcessing(rnsKey eventKeyType,bool* stopPropagation){
@@ -289,7 +289,7 @@ void RSkComponentTextInput::eventKeyProcessing(rnsKey eventKeyType,bool* stopPro
     textInputEventEmitter->onSelectionChange(textInputMetrics);
 }
 
-void RSkComponentTextInput::KeyEventProcessingThread(){
+void RSkComponentTextInput::keyEventProcessingThread(){
   std::string textString = {};
   struct cursor lCursor;
   RNS_LOG_DEBUG("Creating the thread worker thread");
@@ -299,12 +299,12 @@ void RSkComponentTextInput::KeyEventProcessingThread(){
   auto textInputEventEmitter = std::static_pointer_cast<TextInputEventEmitter const>(component.eventEmitter);
   while(isThreadAlive){
     if(!inputQueue.empty()){
-      globalVarProtectorMutex.lock();
+      privateVarProtectorMutex.lock();
       lCursor.locationFromEnd = cursor_.locationFromEnd;
       textString = displayString_;
       auto eventKeyType = inputQueue.front();
       inputQueue.pop();
-      globalVarProtectorMutex.unlock();
+      privateVarProtectorMutex.unlock();
       lCursor.end = textString.length();
       keyPressMetrics.text = RNSKeyMap[eventKeyType];
       if ((eventKeyType >= RNS_KEY_1 && eventKeyType <= RNS_KEY_z)) {
@@ -353,9 +353,9 @@ void RSkComponentTextInput::KeyEventProcessingThread(){
       RNS_LOG_INFO("calling Async display to the text string");
       //currently selection is not supported selectionRange length is 
       //is always 0 & selectionRange.location always end
-      globalVarProtectorMutex.lock(); 
+      privateVarProtectorMutex.lock(); 
       textInputMetrics.selectionRange.location = cursor_.end ;
-      globalVarProtectorMutex.unlock();
+      privateVarProtectorMutex.unlock();
       textInputMetrics.selectionRange.length = 0;
       RNS_LOG_INFO("checking the Async Display");
       eventCount_++;
@@ -385,10 +385,10 @@ RnsShell::LayerInvalidateMask  RSkComponentTextInput::updateComponentProps(const
   RNS_LOG_DEBUG("event count "<<textInputProps.mostRecentEventCount);
   textString = textInputProps.text;
   if(textString != displayString_) {
-    globalVarProtectorMutex.lock();
+    privateVarProtectorMutex.lock();
     displayString_ = textString;
     cursor_.end = textString.length();
-    globalVarProtectorMutex.unlock();
+    privateVarProtectorMutex.unlock();
     if(isThreadAlive){
       sem_post(&jsUpdateMutex);
     }
@@ -434,10 +434,10 @@ RnsShell::LayerInvalidateMask  RSkComponentTextInput::updateComponentProps(const
 void RSkComponentTextInput::handleCommand(std::string commandName,folly::dynamic args){
   if(commandName == "setTextAndSelection"){
     RNS_LOG_DEBUG("Calling Dyanic args"<<args[1].getString());
-    globalVarProtectorMutex.lock();
+    privateVarProtectorMutex.lock();
     displayString_ = args[1].getString();
     cursor_.end = displayString_.length();
-    globalVarProtectorMutex.unlock();
+    privateVarProtectorMutex.unlock();
     flushLayer();
     if(isThreadAlive)
       sem_post(&jsUpdateMutex);

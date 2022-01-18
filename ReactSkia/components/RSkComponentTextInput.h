@@ -51,7 +51,7 @@ class RSkComponentTextInput final : public RSkComponent {
       std::shared_ptr<skia::textlayout::ParagraphBuilder> &builder,
       const TextInputProps& props);
   void eventKeyProcessing(rnsKey eventKeyType,bool* stopPropagation);
-  void KeyEventProcessingThread();
+  void keyEventProcessingThread();
 };
 
 } // namespace react
