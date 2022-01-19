@@ -144,6 +144,7 @@ void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool *stopPropagati
   if (!editable_) {
     return;
   }
+  bool wait = false; 
   privateVarProtectorMutex.lock();
   std::string textString = displayString_;
   privateVarProtectorMutex.unlock();
@@ -207,10 +208,11 @@ void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool *stopPropagati
       } 
       return;
     }
-    eventKeyProcessing(eventKeyType,stopPropagation);
+    eventKeyProcessing(eventKeyType,stopPropagation,&wait,true);
   }//else if (isInEditingMode_)
 }
-void RSkComponentTextInput::eventKeyProcessing(rnsKey eventKeyType,bool* stopPropagation){
+
+void RSkComponentTextInput::eventKeyProcessing(rnsKey eventKeyType,bool* stopPropagation,bool *wait, bool updateString){
   KeyPressMetrics keyPressMetrics;
   TextInputMetrics textInputMetrics;
   std::string textString = displayString_;
@@ -236,6 +238,7 @@ void RSkComponentTextInput::eventKeyProcessing(rnsKey eventKeyType,bool* stopPro
           keyPressMetrics.eventCount = eventCount_;
           flushLayer();
           textInputEventEmitter->onKeyPress(keyPressMetrics);
+	  *wait = false;
           return;
         case RNS_KEY_Right:
           if (cursor_.locationFromEnd>0){
@@ -246,6 +249,7 @@ void RSkComponentTextInput::eventKeyProcessing(rnsKey eventKeyType,bool* stopPro
           keyPressMetrics.eventCount = eventCount_;
           flushLayer();
           textInputEventEmitter->onKeyPress(keyPressMetrics);
+	  *wait = false;
           return;
         case RNS_KEY_Back:
         case RNS_KEY_Delete:
@@ -264,6 +268,7 @@ void RSkComponentTextInput::eventKeyProcessing(rnsKey eventKeyType,bool* stopPro
           *stopPropagation = true;
           return;
         default:
+	  *wait = false;
           return;//noop
       }
     }
@@ -271,10 +276,12 @@ void RSkComponentTextInput::eventKeyProcessing(rnsKey eventKeyType,bool* stopPro
     //is always 0 & selectionRange.location always end 
     textInputMetrics.selectionRange.location = cursor_.end ;
     textInputMetrics.selectionRange.length = 0;
-    if (displayString_ != textString){
-      displayString_ = textString;
-      cursor_.end = textString.length();
-      flushLayer();
+    if(updateString){
+      if (displayString_ != textString){
+        displayString_ = textString;
+        cursor_.end = textString.length();
+        flushLayer();
+      }
     }
     eventCount_++;
     *stopPropagation = true;
@@ -292,10 +299,12 @@ void RSkComponentTextInput::eventKeyProcessing(rnsKey eventKeyType,bool* stopPro
 void RSkComponentTextInput::keyEventProcessingThread(){
   std::string textString = {};
   struct cursor lCursor;
+  bool stopPropagation = false;
   RNS_LOG_DEBUG("Creating the thread worker thread");
   KeyPressMetrics keyPressMetrics;
   TextInputMetrics textInputMetrics;
   auto component = getComponentData();
+  bool wait = true;
   auto textInputEventEmitter = std::static_pointer_cast<TextInputEventEmitter const>(component.eventEmitter);
   while(isThreadAlive){
     if(!inputQueue.empty()){
@@ -305,71 +314,9 @@ void RSkComponentTextInput::keyEventProcessingThread(){
       auto eventKeyType = inputQueue.front();
       inputQueue.pop();
       privateVarProtectorMutex.unlock();
-      lCursor.end = textString.length();
-      keyPressMetrics.text = RNSKeyMap[eventKeyType];
-      if ((eventKeyType >= RNS_KEY_1 && eventKeyType <= RNS_KEY_z)) {
-        if (lCursor.locationFromEnd != 0){
-          textString.insert(lCursor.end-lCursor.locationFromEnd,keyPressMetrics.text);
-        }
-        else {
-          textString = textString+keyPressMetrics.text;
-        }
-        RNS_LOG_DEBUG("Added to the text string");
-      }else {
-        switch(eventKeyType){
-          case RNS_KEY_Left:
-            if(lCursor.locationFromEnd < lCursor.end ){
-              lCursor.locationFromEnd++; // locationFromEnd
-              RNS_LOG_DEBUG("Right key pressed cursor_.locationFromEnd = "<<lCursor.locationFromEnd);
-              cursor_.locationFromEnd = lCursor.locationFromEnd;
-            }
-            keyPressMetrics.eventCount = eventCount_;
-            textInputEventEmitter->onKeyPress(keyPressMetrics);
-            flushLayer();
-            continue;
-          case RNS_KEY_Right:
-            if (lCursor.locationFromEnd>0){
-              lCursor.locationFromEnd--;
-              cursor_.locationFromEnd = lCursor.locationFromEnd;
-              RNS_LOG_DEBUG("Right key pressed cursor_.locationFromEnd = "<<lCursor.locationFromEnd);
-            }
-            keyPressMetrics.eventCount = eventCount_;
-            textInputEventEmitter->onKeyPress(keyPressMetrics);
-            flushLayer();
-            continue;
-          case RNS_KEY_Back:
-          case RNS_KEY_Delete:
-            RNS_LOG_INFO("I am calling the erase function");
-            if (!textString.empty() && (lCursor.end!=lCursor.locationFromEnd) )
-              textString.erase(textString.begin()+(lCursor.end-lCursor.locationFromEnd-1)); //acts like a backspace.
-            if(lCursor.end == lCursor.locationFromEnd)
-              continue;
-              RNS_LOG_INFO("After removing a charector in string = "<<textString); 
-            break;
-          default:
-            continue;//noop
-        }
-      }
-      RNS_LOG_INFO("calling Async display to the text string");
-      //currently selection is not supported selectionRange length is 
-      //is always 0 & selectionRange.location always end
-      privateVarProtectorMutex.lock(); 
-      textInputMetrics.selectionRange.location = cursor_.end ;
-      privateVarProtectorMutex.unlock();
-      textInputMetrics.selectionRange.length = 0;
-      RNS_LOG_INFO("checking the Async Display");
-      eventCount_++;
-      RNS_LOG_INFO("TextInput text " << textString);
-      textInputMetrics.contentSize.width = paragraph_->getMaxIntrinsicWidth();
-      textInputMetrics.contentSize.height = paragraph_->getHeight();
-      textInputMetrics.text = textString;
-      textInputMetrics.eventCount = eventCount_;
-      textInputEventEmitter->onKeyPress(keyPressMetrics);
-      textInputEventEmitter->onChange(textInputMetrics);
-      textInputEventEmitter->onContentSizeChange(textInputMetrics);
-      textInputEventEmitter->onSelectionChange(textInputMetrics);
-      RNS_LOG_INFO("[KeyEventProcessingThread] waiting the semaphore ");
-      sem_wait(&jsUpdateMutex);
+      eventKeyProcessing(eventKeyType,&stopPropagation,&wait, false);
+      if (wait)
+        sem_wait(&jsUpdateMutex);
     }
     else{
       RNS_LOG_DEBUG("[KeyEventProcessingThread] ThreadAlive ");
@@ -394,7 +341,6 @@ RnsShell::LayerInvalidateMask  RSkComponentTextInput::updateComponentProps(const
     }
     mask |= LayerPaintInvalidate;
   }
-
   if ((textInputProps.placeholder.size()) 
       && ((placeholderString_) != (textInputProps.placeholder)) 
       &&(!textInputProps.value.has_value())) {

@@ -50,7 +50,7 @@ class RSkComponentTextInput final : public RSkComponent {
       LayoutMetrics layout,
       std::shared_ptr<skia::textlayout::ParagraphBuilder> &builder,
       const TextInputProps& props);
-  void eventKeyProcessing(rnsKey eventKeyType,bool* stopPropagation);
+  void eventKeyProcessing(rnsKey eventKeyType,bool* stopPropagation,bool *wait, bool updateString);
   void keyEventProcessingThread();
 };
 
