@@ -35,7 +35,7 @@ class RSkComponentTextInput final : public RSkComponent {
   bool isInEditingMode_;
   bool editable_ = true;
   bool caretHidden_ = false;
-  bool isThreadAlive=false;
+  bool isTextInputInFocus_=false;
   int eventCount_;
   std::string displayString_{}; // Text to be displayed on screen
   std::string placeholderString_{}; // Placeholder Text
@@ -50,7 +50,7 @@ class RSkComponentTextInput final : public RSkComponent {
       LayoutMetrics layout,
       std::shared_ptr<skia::textlayout::ParagraphBuilder> &builder,
       const TextInputProps& props);
-  void eventKeyProcessing(rnsKey eventKeyType,bool* stopPropagation,bool *wait, bool updateString);
+  void processEventKey(rnsKey eventKeyType,bool* stopPropagation,bool *waitForupdateProps, bool updateString);
   void keyEventProcessingThread();
 };
 
