@@ -383,9 +383,8 @@ void RSkComponentTextInput::handleCommand(std::string commandName,folly::dynamic
     flushLayer();
     if(isTextInputInFocus_)
       sem_post(&jsUpdateMutex);
-    else 
+  } else 
       RNS_LOG_NOT_IMPL;
-  }
 }
 } // namespace react
 } // namespace facebook
