@@ -328,16 +328,13 @@ RnsShell::LayerInvalidateMask  RSkComponentTextInput::updateComponentProps(const
   std::string textString{};
   RNS_LOG_DEBUG("event count "<<textInputProps.mostRecentEventCount);
   textString = textInputProps.text;
-  if(textString != displayString_) {
+  if (textString != displayString_) {
     privateVarProtectorMutex.lock();
     displayString_ = textString;
     cursor_.end = textString.length();
     privateVarProtectorMutex.unlock();
-    if(isTextInputInFocus_) {
+    if (isTextInputInFocus_)
       sem_post(&jsUpdateMutex);
-    } else {
-      RNS_LOG_NOT_IMPL;
-    }
     mask |= LayerPaintInvalidate;
   }
   if ((textInputProps.placeholder.size()) 
@@ -386,6 +383,8 @@ void RSkComponentTextInput::handleCommand(std::string commandName,folly::dynamic
     flushLayer();
     if(isTextInputInFocus_)
       sem_post(&jsUpdateMutex);
+    else 
+      RNS_LOG_NOT_IMPL;
   }
 }
 } // namespace react
