@@ -314,8 +314,6 @@ void RSkComponentTextInput::keyEventProcessingThread(){
       processEventKey(eventKeyType,&stopPropagation,&waitForupdateProps, false);
       if (waitForupdateProps)
         sem_wait(&jsUpdateMutex);
-      else
-        RNS_LOG_NOT_IMPL;
     }
     else{
       RNS_LOG_DEBUG("[KeyEventProcessingThread] ThreadAlive ");
@@ -335,8 +333,10 @@ RnsShell::LayerInvalidateMask  RSkComponentTextInput::updateComponentProps(const
     displayString_ = textString;
     cursor_.end = textString.length();
     privateVarProtectorMutex.unlock();
-    if(isTextInputInFocus_){
+    if(isTextInputInFocus_) {
       sem_post(&jsUpdateMutex);
+    } else {
+      RNS_LOG_NOT_IMPL;
     }
     mask |= LayerPaintInvalidate;
   }
