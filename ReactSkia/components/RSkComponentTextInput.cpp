@@ -120,6 +120,10 @@ void RSkComponentTextInput::OnPaint(SkCanvas *canvas) {
                           std::make_shared<skia::textlayout::ParagraphBuilderImpl>(
                           paraStyle, data.layoutManager->collection_));
 
+  if (secureTextEntry_) {
+    displayString_.replace( displayString_.begin(), displayString_.end(), displayString_.size(), '*');
+  }
+
   if (0 == displayString_.size()) {
     textAttributes.foregroundColor = placeholderColor_;
     data.layoutManager->buildText(textInputProps.paragraphAttributes, textAttributes, placeholderString_, shadow, true, paraBuilder);
@@ -215,6 +219,7 @@ void RSkComponentTextInput::processEventKey (rnsKey eventKeyType,bool* stopPropa
   KeyPressMetrics keyPressMetrics;
   TextInputMetrics textInputMetrics;
   std::string textString = displayString_;
+  int prevLength = textString.length();
   auto component = getComponentData();
   Rect frame = component.layoutMetrics.frame;
   auto textInputEventEmitter = std::static_pointer_cast<TextInputEventEmitter const>(component.eventEmitter);
@@ -275,12 +280,17 @@ void RSkComponentTextInput::processEventKey (rnsKey eventKeyType,bool* stopPropa
     //is always 0 & selectionRange.location always end 
     textInputMetrics.selectionRange.location = cursor_.end ;
     textInputMetrics.selectionRange.length = 0;
+    int newLength = textString.length();
     if (updateString) {
       if (displayString_ != textString){
-        displayString_ = textString;
-        cursor_.end = textString.length();
-        flushLayer();
+        if ((newLength > maxLength_) && (newLength > prevLength)) {
+          std::copy_n(textString.begin(), prevLength, displayString_.begin());
+        } else {
+          displayString_ = textString;
+        }
       }
+      cursor_.end = textString.length();
+      flushLayer();
     }
     eventCount_++;
     *stopPropagation = true;
@@ -328,6 +338,8 @@ RnsShell::LayerInvalidateMask  RSkComponentTextInput::updateComponentProps(const
   std::string textString{};
   RNS_LOG_DEBUG("event count "<<textInputProps.mostRecentEventCount);
   textString = textInputProps.text;
+  caretHidden_ = textInputProps.caretHidden;
+  maxLength_ = textInputProps.maxLength;
   if (textString != displayString_) {
     privateVarProtectorMutex.lock();
     displayString_ = textString;
@@ -346,6 +358,16 @@ RnsShell::LayerInvalidateMask  RSkComponentTextInput::updateComponentProps(const
       mask |= LayerPaintInvalidate;
     }
   }
+
+  if (maxLength_ != textInputProps.maxLength) {
+    maxLength_ = textInputProps.maxLength;
+  }
+
+  if (secureTextEntry_ != textInputProps.secureTextEntry) {
+    secureTextEntry_ = textInputProps.secureTextEntry;
+    mask |= LayerPaintInvalidate;
+  }
+
 
   if(textInputProps.placeholderTextColor != placeholderColor_ ) {
     placeholderColor_ = textInputProps.placeholderTextColor;
