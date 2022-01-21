@@ -120,7 +120,7 @@ void RSkComponentTextInput::OnPaint(SkCanvas *canvas) {
                           std::make_shared<skia::textlayout::ParagraphBuilderImpl>(
                           paraStyle, data.layoutManager->collection_));
 
-  std::string secureTextString{};q
+  std::string secureTextString{};
   if (secureTextEntry_) {
     secureTextString = displayString_;
     secureTextString.replace( secureTextString.begin(), secureTextString.end(), secureTextString.size(), '*');
@@ -284,7 +284,7 @@ void RSkComponentTextInput::processEventKey (rnsKey eventKeyType,bool* stopPropa
     textInputMetrics.selectionRange.length = 0;
     int textLengthAfterEdit = textString.length();
     if (updateString) {
-      if (displayString_ != textString){
+      if (displayString_ != textString) {
         if ((textLengthAfterEdit > maxLength_) && (textLengthAfterEdit > textLengthBeforeEdit )) {
           std::copy_n(textString.begin(), textLengthBeforeEdit , displayString_.begin());
         } else {
