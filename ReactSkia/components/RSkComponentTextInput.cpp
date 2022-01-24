@@ -118,19 +118,19 @@ void RSkComponentTextInput::OnPaint(SkCanvas *canvas) {
   TextAttributes textAttributes = textInputProps.getEffectiveTextAttributes(FONTSIZE_MULTIPLIER);
   auto paraBuilder = std::static_pointer_cast<skia::textlayout::ParagraphBuilder>(
                           std::make_shared<skia::textlayout::ParagraphBuilderImpl>(
-                          paraStyle, data.layoutManager->collection_));
-
-  std::string secureTextString{};
-  if (secureTextEntry_) {
-    secureTextString = displayString_;
-    secureTextString.replace( secureTextString.begin(), secureTextString.end(), secureTextString.size(), '*');
-  }
+                          paraStyle, data.layoutManager->collection_));  
 
   if (0 == displayString_.size()) {
     textAttributes.foregroundColor = placeholderColor_;
     data.layoutManager->buildText(textInputProps.paragraphAttributes, textAttributes, placeholderString_, shadow, true, paraBuilder);
   } else {
-    data.layoutManager->buildText(textInputProps.paragraphAttributes, textAttributes, secureTextEntry_?secureTextString:displayString_, shadow, true, paraBuilder);
+    if (secureTextEntry_) {
+      std::string secureTextString{};
+      secureTextString = displayString_;
+      data.layoutManager->buildText(textInputProps.paragraphAttributes, textAttributes, secureTextString.replace( secureTextString.begin(), secureTextString.end(), secureTextString.size(), '*'), shadow, true, paraBuilder);
+    } else {
+      data.layoutManager->buildText(textInputProps.paragraphAttributes, textAttributes, displayString_, shadow, true, paraBuilder);
+    }
   }
 
   drawShadow(canvas, frame, borderMetrics, textInputProps.backgroundColor, layer()->shadowOpacity, layer()->shadowFilter);
