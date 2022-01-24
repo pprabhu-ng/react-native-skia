@@ -302,9 +302,11 @@ void RSkComponentTextInput::processEventKey (rnsKey eventKeyType,bool* stopPropa
     textInputMetrics.text = textString;
     textInputMetrics.eventCount = eventCount_;
     textInputEventEmitter->onKeyPress(keyPressMetrics);
-    textInputEventEmitter->onChange(textInputMetrics);
-    textInputEventEmitter->onContentSizeChange(textInputMetrics);
-    textInputEventEmitter->onSelectionChange(textInputMetrics);
+    if (!(maxLength_ && (textLengthAfterEdit > maxLength_))) {
+      textInputEventEmitter->onChange(textInputMetrics);
+      textInputEventEmitter->onContentSizeChange(textInputMetrics);
+      textInputEventEmitter->onSelectionChange(textInputMetrics);
+    }
 }
 
 void RSkComponentTextInput::keyEventProcessingThread(){
