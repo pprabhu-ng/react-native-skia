@@ -285,7 +285,7 @@ void RSkComponentTextInput::processEventKey (rnsKey eventKeyType,bool* stopPropa
     int textLengthAfterEdit = textString.length();
     if (updateString) {
       if (displayString_ != textString) {
-        if ((textLengthAfterEdit > maxLength_) && (textLengthAfterEdit > textLengthBeforeEdit )) {
+        if ((maxLength_) && (textLengthAfterEdit > maxLength_) && (textLengthAfterEdit > textLengthBeforeEdit )) {
           std::copy_n(textString.begin(), textLengthBeforeEdit , displayString_.begin());
         } else {
           displayString_ = textString;
