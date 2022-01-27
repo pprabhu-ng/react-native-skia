@@ -1,5 +1,5 @@
 import React, { useState,useRef} from "react";
-import { TextInput,View,ImageBackground,TouchableOpacity,Text,Animated} from "react-native";
+import { TextInput,View,ImageBackground,TouchableOpacity,Text,Animated,Image} from "react-native";
 import { Dimensions , StyleSheet} from "react-native";
 
 import SampleVODPage from './SampleVODPage';
@@ -66,12 +66,13 @@ const SampleLoginPage = () => {
     const passwordBlock = () => {
 	return (
 	   <TextInput style={[styles.textinputView,{borderColor:ti2State.borderColor,shadowOpacity:ti2State.shadowOpacity}]} 
-		      placeholder="Password" placeholderTextColor="darkgrey" onFocus={onFocus1} onBlur={onBlur1}
+		      placeholder="Password" placeholderTextColor="darkgrey" secureTextEntry={true} 
+		      onFocus={onFocus1} onBlur={onBlur1}
 		      value={password} onChangeText={onChangePassword}/>	
 	);	
     }
 
-   const [rotateAnimation, setRotateAnimation] = useState(new Animated.Value(0));
+    const [rotateAnimation, setRotateAnimation] = useState(new Animated.Value(0));
 
     const handleAnimation = () => {
        console.log("animation start");	    
@@ -91,6 +92,7 @@ const SampleLoginPage = () => {
     const loginPage = () => {
       return (
 	<ImageBackground style={styles.backgroundimage} source={require('./images/bg.jpg')} resizeMode='cover'>
+	  <Image style={{ margin:50,width: 200, height: 200 }} source={require('react-native/Libraries/NewAppScreen/components/logo.png')}/>
           {userNameBlock()}	      
           {passwordBlock()}
 	  <TouchableOpacity style={[styles.submitView,{backgroundColor:requestStatus.viewColor}]} onPress={onPress}>
@@ -121,7 +123,7 @@ const styles = StyleSheet.create({
     },
     textinputView: {
        margin : 20,	    
-       width : '50%',
+       width : '40%',
        height : windowSize.height/20,	    
        borderWidth : 5,
        color :'white',
