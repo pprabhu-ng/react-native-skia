@@ -15,6 +15,7 @@ const SampleLoginPage = () => {
     let [password,onChangePassword] = useState(null);
     let [requestStatus,setRequestStatus] = useState({text:"Load",viewColor:"darkblue"});
     let [content,setContent] = useState([]);	
+    let [spinValue] = useState(new Animated.Value(0));
 
     const onFocus = () => {
        setTi1State({borderColor:'lightblue',shadowOpacity:1});
@@ -39,10 +40,10 @@ const SampleLoginPage = () => {
               setRequestStatus({text:"WE ARE READY TO GO !! ",viewColor:"green"})
 	      setTimeout(()=> {
 		 setLoginStatus(true);
-	      },2000);	    
+	      },5000);	    
 	    } else {
 	      console.error("request error:",request.status);
-              setRequestStatus({text:"Loading Data Failed",viewColor:"red"})
+              setRequestStatus({text:"Error",viewColor:"red"})
 	    }
 	 }
 	 request.send();   
@@ -50,44 +51,71 @@ const SampleLoginPage = () => {
 
     const onPress = () => {
        setRequestStatus({text:"Loading",viewColor:"royalblue"})
-       handleAnimation()
+       startRotation();	    
        setTimeout(()=> {
           startFetchVODData()	    
-       },3000);	    
+       },4000);	    
     }
 
     const userNameBlock = () => {
 	return (
-	   <TextInput style={[styles.textinputView,{borderColor:ti1State.borderColor,shadowOpacity:ti1State.shadowOpacity}]} 
-		      placeholder="Username" placeholderTextColor="darkgrey" onFocus={onFocus} onBlur={onBlur}
-		      value={username} onChangeText={onChangeUserName}/>	
+	   <View style={[styles.textinputView,{borderColor:ti1State.borderColor,shadowOpacity:ti1State.shadowOpacity}]}>	
+	     <TextInput style={styles.textinput} 
+		      placeholder="Username" placeholderTextColor="darkgrey" onFocus={onFocus} onBlur={onBlur}/>
+	   </View>	
 	);	
     }
+
     const passwordBlock = () => {
 	return (
-	   <TextInput style={[styles.textinputView,{borderColor:ti2State.borderColor,shadowOpacity:ti2State.shadowOpacity}]} 
+	   <View style={[styles.textinputView,{borderColor:ti2State.borderColor,shadowOpacity:ti2State.shadowOpacity}]}>	
+	     <TextInput style={styles.textinput} 
 		      placeholder="Password" placeholderTextColor="darkgrey" secureTextEntry={true} 
-		      onFocus={onFocus1} onBlur={onBlur1}
-		      value={password} onChangeText={onChangePassword}/>	
+		      onFocus={onFocus1} onBlur={onBlur1}/>	
+	   </View>	
 	);	
     }
 
-    const [rotateAnimation, setRotateAnimation] = useState(new Animated.Value(0));
-
-    const handleAnimation = () => {
-       console.log("animation start");	    
-       Animated.timing(rotateAnimation, {
-        toValue: 1,
-        duration: 800,
-       }).start(() => {
-          rotateAnimation.setValue(0);
-      });
-    };
-
-    const interpolateRotating = rotateAnimation.interpolate({
-      inputRange: [0, 1],
-      outputRange: ['0deg', '720deg'],
-    });
+    startRotation=()=>{
+      console.log("start rotation animation")
+      Animated.loop(
+         Animated.timing(
+         spinValue,
+         {
+            toValue: 1,
+            duration: 6000,
+         })
+         ,{iterations:1}).start();
+    }
+    
+    const spin = spinValue.interpolate({
+       inputRange: [0, 1],
+       outputRange: ['0deg', '2000deg']
+    })
+   
+    const animatedStyle = {
+       transform : [
+        {
+          rotate: spin
+        }
+      ] 
+    }
+    
+    const loadingButton = () => {
+	if(requestStatus.text == "Loading") {   
+           return (
+              <Animated.View style={[animatedStyle]}>
+                 <Image source={require('./images/loadingIcon.png')} style={{width:100,height:100}} resizeMode='cover'/>
+              </Animated.View>
+	   );
+	} else {    
+           return (
+	      <TouchableOpacity style={[styles.submitView,{backgroundColor:requestStatus.viewColor}]} onPress={onPress} activeOpacity={0.85}>
+                 <Text style={{margin:5,color:'black' , fontSize:windowSize.height/45 , fontWeight:'bold',textAlign:'center'}}>{requestStatus.text}</Text> 
+              </TouchableOpacity>
+	   );
+	}
+    }
 
     const loginPage = () => {
       return (
@@ -95,11 +123,7 @@ const SampleLoginPage = () => {
 	  <Image style={{ margin:50,width: 200, height: 200 }} source={require('react-native/Libraries/NewAppScreen/components/logo.png')}/>
           {userNameBlock()}	      
           {passwordBlock()}
-	  <TouchableOpacity style={[styles.submitView,{backgroundColor:requestStatus.viewColor}]} onPress={onPress}>
-	     <Animated.View style={{transform:[{rotate:interpolateRotating}]}}> 
-	         <Text style={{margin:5,color:'black' , fontSize:windowSize.height/45 , fontWeight:'bold',textAlign:'center'}}>{requestStatus.text}</Text> 
-	     </Animated.View> 
-	  </TouchableOpacity>
+	  {loadingButton()}    
 	</ImageBackground>
       )
     };
@@ -126,18 +150,18 @@ const styles = StyleSheet.create({
        width : '40%',
        height : windowSize.height/20,	    
        borderWidth : 5,
-       color :'white',
-       fontSize:windowSize.height/35,
        backgroundColor:'dimgrey',
        shadowColor : 'black',
        shadowRadius : 10,
        shadowOffset : {width:5, height:30},	    
     },
+    textinput: {
+       color :'white',
+       fontSize:windowSize.height/35,
+    },
     submitView: {
        alignItems : 'center',
-       margin : 20,
        padding : 20,	    
-       width : '15%',
        borderWidth : 5,
        color :'white',
     }
