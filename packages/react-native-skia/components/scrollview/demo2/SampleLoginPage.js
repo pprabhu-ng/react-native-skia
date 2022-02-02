@@ -40,10 +40,10 @@ const SampleLoginPage = () => {
               setRequestStatus({text:"WE ARE READY TO GO !! ",viewColor:"green"})
 	      setTimeout(()=> {
 		 setLoginStatus(true);
-	      },5000);	    
+	      },3000);	    
 	    } else {
 	      console.error("request error:",request.status);
-              setRequestStatus({text:"Error",viewColor:"red"})
+              setRequestStatus({text:"Error !!",viewColor:"red"})
 	    }
 	 }
 	 request.send();   
@@ -104,9 +104,11 @@ const SampleLoginPage = () => {
     const loadingButton = () => {
 	if(requestStatus.text == "Loading") {   
            return (
+	      <View style={{width:300,height:300}}>	   
               <Animated.View style={[animatedStyle]}>
                  <Image source={require('./images/loadingIcon.png')} style={{width:100,height:100}} resizeMode='cover'/>
               </Animated.View>
+	      </View>	   
 	   );
 	} else {    
            return (
