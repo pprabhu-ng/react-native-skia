@@ -76,12 +76,10 @@ std::string * RSkWebSocketModule::parseUrl(std::string& url) {
   std::string* webSocketUrl = new std::string[2];
   std::string delimiter = ":";
   std::string webSocketEndPoint = url.substr(url.find(delimiter)+3,url.size());
-  webSocketUrl[WEBSOCKET_URL]  = webSocketEndPoint.substr(0,
-		 		   webSocketEndPoint.find(delimiter));
+  RNS_LOG_INFO("webSocketEndPoint:" << webSocketEndPoint.c_str() << "[" << webSocketEndPoint.find(delimiter) << "]");
+  webSocketUrl[WEBSOCKET_URL]  = webSocketEndPoint.substr(0,webSocketEndPoint.find(delimiter));
 
-  webSocketUrl[WEBSOCKET_PORTNO] = webSocketEndPoint.substr(
-		                     webSocketEndPoint.find(delimiter)+1,
-				     webSocketEndPoint.size());
+  webSocketUrl[WEBSOCKET_PORTNO] = webSocketEndPoint.substr(webSocketEndPoint.find(delimiter)+1,4);
 
   return webSocketUrl;
 }
@@ -105,7 +103,8 @@ jsi::Value RSkWebSocketModule::getConnect(
 
   /* creating a connection 
    * TO DO: NULL/optional arguments has to be verified */
-  noPollConn* conn = nopoll_conn_new(ctx_,  parsedUrl[0].c_str() , parsedUrl[1].c_str() ,  NULL , "/", NULL , NULL);
+  RNS_LOG_INFO("WebSocket getConnect " << parsedUrl[0].c_str() << "-"  << parsedUrl[1].c_str() << "[" << url.c_str() <<"]");
+  noPollConn* conn = nopoll_conn_new(ctx_,  parsedUrl[0].c_str() , parsedUrl[1].c_str() ,  NULL , url.c_str(), NULL , NULL);
   delete []parsedUrl;
   parameters["id"] = socketID;
   if(conn == NULL) {
@@ -136,6 +135,7 @@ jsi::Value RSkWebSocketModule::getClose(
   int code,
   std::string reason,
   int socketID)  {
+  RNS_LOG_INFO("WebSocket close");
   noPollConn* conn =  connectionList_[socketID];
 	folly::dynamic parameters = folly::dynamic::object();
   connectionList_[socketID] = conn;

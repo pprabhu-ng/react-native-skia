@@ -170,6 +170,11 @@ void RNInstance::InitializeJSCore() {
     std::string exc = ex.what();
     RNS_LOG_ERROR("SYSTEM ERROR : " << exc);
   }
+
+
+  instance_->callJSFunction(
+            "HMRClient","setup",
+            folly::dynamic::array("ios","SimpleViewApp.bundle","192.168.0.106","8081",true));
 }
 
 void RNInstance::InitializeFabric(RendererDelegate &rendererDelegate) {

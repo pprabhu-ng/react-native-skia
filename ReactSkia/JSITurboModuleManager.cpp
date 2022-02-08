@@ -109,12 +109,193 @@ class AppStateModule : public TurboModule {
   }
 };
 
+class AppearanceModule: public TurboModule {
+ public:
+  AppearanceModule(
+      const std::string &name,
+      std::shared_ptr<CallInvoker> jsInvoker)
+      : TurboModule(name, jsInvoker) {
+    methodMap_["getColorScheme"] = MethodMetadata{0, getColorScheme};
+    methodMap_["addListener"] = MethodMetadata{1, addListener};
+    methodMap_["removeListeners"] = MethodMetadata{1, removeListeners};
+  }
+
+ private:
+  static jsi::Value getColorScheme(
+      jsi::Runtime &rt,
+      TurboModule &turboModule,
+      const jsi::Value *args,
+      size_t count) {
+    RNS_LOG_INFO("AppearanceModule getColorScheme");
+    return jsi::Value::undefined();
+  }
+
+  static jsi::Value addListener(
+      jsi::Runtime &rt,
+      TurboModule &turboModule,
+      const jsi::Value *args,
+      size_t count) {
+    RNS_LOG_INFO("AppearanceModule addListener");
+    return jsi::Value::undefined();
+  }
+  static jsi::Value removeListeners(
+      jsi::Runtime &rt,
+      TurboModule &turboModule,
+      const jsi::Value *args,
+      size_t count) {
+    RNS_LOG_INFO("AppearanceModule removeListeners");
+    return jsi::Value::undefined();
+  }
+};
+
+class DevLoadingViewModule: public TurboModule {
+ public:
+  DevLoadingViewModule(
+      const std::string &name,
+      std::shared_ptr<CallInvoker> jsInvoker)
+      : TurboModule(name, jsInvoker) {
+    methodMap_["showMessage"] = MethodMetadata{3, showMessage};
+    methodMap_["hide"] = MethodMetadata{0, hide};
+  }
+
+ private:
+  static jsi::Value showMessage(
+      jsi::Runtime &rt,
+      TurboModule &turboModule,
+      const jsi::Value *args,
+      size_t count) {
+    RNS_LOG_INFO("DevLoadingView showMessage");
+    return jsi::Value::undefined();
+  }
+
+  static jsi::Value hide(
+      jsi::Runtime &rt,
+      TurboModule &turboModule,
+      const jsi::Value *args,
+      size_t count) {
+    RNS_LOG_INFO("DevLoadingView hide");
+    return jsi::Value::undefined();
+  }
+};
+
+class DevSettingsModule : public TurboModule {
+ public:
+  DevSettingsModule(
+      const std::string &name,
+      std::shared_ptr<CallInvoker> jsInvoker)
+      : TurboModule(name, jsInvoker) {
+    methodMap_["reload"] = MethodMetadata{0, reload};
+    methodMap_["reloadWithReason"] = MethodMetadata{1, reloadWithReason};
+    methodMap_["onFastRefresh"] = MethodMetadata{0, onFastRefresh};
+    methodMap_["setHotLoadingEnabled"] = MethodMetadata{1, setHotLoadingEnabled};
+    methodMap_["setIsDebuggingRemotely"] = MethodMetadata{1, setIsDebuggingRemotely};
+    methodMap_["setProfilingEnabled"] = MethodMetadata{1, setProfilingEnabled};
+    methodMap_["toggleElementInspector"] = MethodMetadata{0, toggleElementInspector};
+    methodMap_["addMenuItem"] = MethodMetadata{1, addMenuItem};
+    methodMap_["addListener"] = MethodMetadata{1, addListener};
+    methodMap_["removeListeners"] = MethodMetadata{1, removeListeners};
+    methodMap_["setIsShakeToShowDevMenuEnabled"] = MethodMetadata{1, setIsShakeToShowDevMenuEnabled};
+  }
+
+ private:
+  static jsi::Value reloadWithReason(
+      jsi::Runtime &rt,
+      TurboModule &turboModule,
+      const jsi::Value *args,
+      size_t count) {
+    RNS_LOG_INFO("DevSettings reloadWithReason");
+    return jsi::Value::undefined();
+  }
+
+  static jsi::Value reload(
+      jsi::Runtime &rt,
+      TurboModule &turboModule,
+      const jsi::Value *args,
+      size_t count) {
+    RNS_LOG_INFO("DevSettings reload");
+    return jsi::Value::undefined();
+  }
+  static jsi::Value onFastRefresh(
+      jsi::Runtime &rt,
+      TurboModule &turboModule,
+      const jsi::Value *args,
+      size_t count) {
+    RNS_LOG_INFO("DevSettings onFastRefresh");
+    return jsi::Value::undefined();
+  }
+  static jsi::Value setHotLoadingEnabled(
+      jsi::Runtime &rt,
+      TurboModule &turboModule,
+      const jsi::Value *args,
+      size_t count) {
+    RNS_LOG_INFO("DevSettings setHotLoadingEnabled");
+    return jsi::Value::undefined();
+  }
+  static jsi::Value setIsDebuggingRemotely(
+      jsi::Runtime &rt,
+      TurboModule &turboModule,
+      const jsi::Value *args,
+      size_t count) {
+    RNS_LOG_INFO("DevSettings setIsDebuggingRemotely");
+    return jsi::Value::undefined();
+  }
+  static jsi::Value setProfilingEnabled(
+      jsi::Runtime &rt,
+      TurboModule &turboModule,
+      const jsi::Value *args,
+      size_t count) {
+    RNS_LOG_INFO("DevSettings setProfilingEnabled");
+    return jsi::Value::undefined();
+  }
+  static jsi::Value toggleElementInspector(
+      jsi::Runtime &rt,
+      TurboModule &turboModule,
+      const jsi::Value *args,
+      size_t count) {
+    RNS_LOG_INFO("DevSettings toggleElementInspector");
+    return jsi::Value::undefined();
+  }
+  static jsi::Value addMenuItem(
+      jsi::Runtime &rt,
+      TurboModule &turboModule,
+      const jsi::Value *args,
+      size_t count) {
+    RNS_LOG_INFO("DevSettings addMenuItem");
+    return jsi::Value::undefined();
+  }
+
+  static jsi::Value addListener(
+      jsi::Runtime &rt,
+      TurboModule &turboModule,
+      const jsi::Value *args,
+      size_t count) {
+    RNS_LOG_INFO("DevSettings addListener");
+    return jsi::Value::undefined();
+  }
+  static jsi::Value removeListeners(
+      jsi::Runtime &rt,
+      TurboModule &turboModule,
+      const jsi::Value *args,
+      size_t count) {
+    RNS_LOG_INFO("DevSettings removeListeners");
+    return jsi::Value::undefined();
+  }
+  static jsi::Value setIsShakeToShowDevMenuEnabled(
+      jsi::Runtime &rt,
+      TurboModule &turboModule,
+      const jsi::Value *args,
+      size_t count) {
+    RNS_LOG_INFO("DevSettings setIsShakeToShowDevMenuEnabled");
+    return jsi::Value::undefined();
+  }
+};
+
 class UnimplementedTurboModule : public TurboModule {
  public:
   UnimplementedTurboModule(
       const std::string &name,
       std::shared_ptr<CallInvoker> jsInvoker)
-      : TurboModule(name, jsInvoker) {}
+       : TurboModule(name, jsInvoker) {}
 
   facebook::jsi::Value get(
       facebook::jsi::Runtime &runtime,
@@ -165,13 +346,17 @@ JSITurboModuleManager::JSITurboModuleManager(Instance *bridgeInstance)
       std::make_shared<RSkDeviceInfoModule>("DeviceInfo", jsInvoker, bridgeInstance);
 
   modules_["DevSettings"] =
-      std::make_shared<UnimplementedTurboModule>("DevSettings", jsInvoker);
+      std::make_shared<DevSettingsModule>("DevSettings", jsInvoker);
+  modules_["DevLoadingView"] =
+      std::make_shared<DevLoadingViewModule>("DevLoadingView", jsInvoker);
+  modules_["Appearance"] =
+      std::make_shared<AppearanceModule>("Appearance", jsInvoker);
+
   modules_["ImageLoader"] =
       std::make_shared<UnimplementedTurboModule>("ImageLoader", jsInvoker);
   modules_["StatusBarManager"] =
       std::make_shared<UnimplementedTurboModule>("StatusBarManager", jsInvoker);
-  modules_["Appearance"] =
-      std::make_shared<UnimplementedTurboModule>("Appearance", jsInvoker);
+
   modules_["NativeAnimatedModule"] = std::make_shared<UnimplementedTurboModule>(
       "NativeAnimatedModule", jsInvoker);
 }
