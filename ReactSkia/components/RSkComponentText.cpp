@@ -67,7 +67,8 @@ void RSkComponentParagraph::OnPaint(SkCanvas *canvas) {
         
         if (parent->paraBuilder) {
             isParent = true;
-            parent->expectedAttachmentCount += data.layoutManager->buildParagraph(props.backgroundColor,
+            parent->expectedAttachmentCount += data.layoutManager->buildParagraph(paraStyle,
+                                                            props.backgroundColor,
                                                             data.attributedString,
                                                             paragraphAttributes_,
                                                             shadow,
@@ -80,7 +81,8 @@ void RSkComponentParagraph::OnPaint(SkCanvas *canvas) {
             borderFrame.origin.y=0;
 
             if(!parent->expectedAttachmentCount || (parent->expectedAttachmentCount == parent->currentAttachmentCount)) {
-                setTextLines(para,
+                setTextLines(paraStyle,
+                            para,
                             parent->paraBuilder,
                             parentComponent.layoutMetrics,
                             paragraphAttributes_,
@@ -110,7 +112,7 @@ void RSkComponentParagraph::OnPaint(SkCanvas *canvas) {
         if(layer()->shadowOpacity && layer()->shadowFilter) {
             shadow={layer()->shadowColor,SkPoint::Make(layer()->shadowOffset.width(),layer()->shadowOffset.height()),layer()->shadowRadius};
         }
-        expectedAttachmentCount = data.layoutManager->buildParagraph(props.backgroundColor, data.attributedString, paragraphAttributes_,shadow,true, paraBuilder);
+        expectedAttachmentCount = data.layoutManager->buildParagraph(paraStyle, props.backgroundColor, data.attributedString, paragraphAttributes_,shadow,true, paraBuilder);
         currentAttachmentCount = 0;
         std::shared_ptr<Paragraph> para = paraBuilder->Build();
 
@@ -126,7 +128,8 @@ void RSkComponentParagraph::OnPaint(SkCanvas *canvas) {
                           layer()->shadowFilter);
             }
 
-            setTextLines(para,
+            setTextLines(paraStyle,
+                        para,
                         paraBuilder,
                         component.layoutMetrics,
                         paragraphAttributes_,

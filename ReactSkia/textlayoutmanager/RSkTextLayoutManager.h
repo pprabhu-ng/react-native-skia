@@ -33,7 +33,8 @@ public:
                                  ParagraphAttributes paragraphAttributes,
                                  LayoutConstraints layoutConstraints) const;
    
-   void buildText (ParagraphAttributes paragraphAttributes,
+   void buildText (skia::textlayout::ParagraphStyle &paraStyle,
+                     ParagraphAttributes paragraphAttributes,
                      TextAttributes textAttributes,
                      std::string textString,
                      skia::textlayout::TextShadow shadow,
@@ -42,7 +43,8 @@ public:
 
    /* Build attributedString  paragraph using skia's skparagraph module */ 
    /* Set fontDecorationRequired to true, to consider font paint & decoration attributes for paragraph build */
-   uint32_t buildParagraph (SharedColor backGroundColor,
+   uint32_t buildParagraph (skia::textlayout::ParagraphStyle &paraStyle,
+                                 SharedColor backGroundColor,
                                  AttributedString attributedString,
                                  ParagraphAttributes paragraphAttributes,
                                  skia::textlayout::TextShadow shadow,

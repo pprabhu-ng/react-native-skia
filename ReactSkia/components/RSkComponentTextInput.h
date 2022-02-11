@@ -48,6 +48,7 @@ class RSkComponentTextInput final : public RSkComponent {
   std::shared_ptr<skia::textlayout::Paragraph> paragraph_;
   void flushLayer();
   void drawTextInput(
+      skia::textlayout::ParagraphStyle &paraStyle,
       SkCanvas *canvas,
       LayoutMetrics layout,
       std::shared_ptr<skia::textlayout::ParagraphBuilder> &builder,

@@ -58,12 +58,13 @@ void RSkComponentTextInput::flushLayer(){
   layer()->client().notifyFlushRequired();
 }
 
-void RSkComponentTextInput::drawTextInput(SkCanvas *canvas,
+void RSkComponentTextInput::drawTextInput(ParagraphStyle &paraStyle,
+  SkCanvas *canvas,
   LayoutMetrics layout,
   std::shared_ptr<ParagraphBuilder> &builder,
   const TextInputProps& props) {
   Rect frame = layout.frame;
-  ParagraphStyle paraStyle;
+  //ParagraphStyle paraStyle;
   float yOffset;
   
   //cursor
@@ -75,7 +76,7 @@ void RSkComponentTextInput::drawTextInput(SkCanvas *canvas,
   paraStyle.setMaxLines(NUMBER_OF_LINES);
   paraStyle.setEllipsis(u"\u2026");
   builder->setParagraphStyle(paraStyle);
-
+  
   // buildParagraph
   paragraph_ = builder->Build();
   paragraph_->layout(layout.getContentFrame().size.width);
@@ -89,18 +90,22 @@ void RSkComponentTextInput::drawTextInput(SkCanvas *canvas,
   paragraph_->paint(canvas, frame.origin.x + layout.contentInsets.left, frame.origin.y + layout.contentInsets.top + yOffset);
 
   // draw Cursor
-  if (!caretHidden_) {
+  std::cout<<"isTextInputInFocus_ = "<<isTextInputInFocus_<<std::endl;
+  std::cout<<"!caretHidden_ = "<<!caretHidden_<<std::endl;
+  std::cout<<"isInEditingMode_ = "<<isInEditingMode_<<std::endl;
+
+  if (!caretHidden_ && isInEditingMode_) {
   position = cursor_.end - cursor_.locationFromEnd;
   if (cursor_.locationFromEnd == cursor_.end) {
     rects = paragraph_->getRectsForRange(0, position+1, RectHeightStyle::kTight, RectWidthStyle::kTight);
-    cursorRect.fLeft =  frame.origin.x + rects[0].rect.left() + layout.contentInsets.left;
+    cursorRect.fLeft =  frame.origin.x + rects[0].rect.left() + layout.contentInsets.left + 1;
     cursorRect.fRight = cursorRect.fLeft;
   } else {
     rects = paragraph_->getRectsForRange(0, position, RectHeightStyle::kTight, RectWidthStyle::kTight);
     cursorRect.fLeft =  frame.origin.x + rects[0].rect.right() + layout.contentInsets.left;
     cursorRect.fRight = cursorRect.fLeft;
   }
-  cursorRect.fTop = frame.origin.y + yOffset + layout.contentInsets.top;
+  cursorRect.fTop = frame.origin.y + yOffset + layout.contentInsets.top+ 1;
   cursorRect.fBottom = cursorRect.fTop + paragraph_->getHeight();
   canvas->drawRect(cursorRect, cursorPaint_);
   }
@@ -122,18 +127,18 @@ void RSkComponentTextInput::OnPaint(SkCanvas *canvas) {
 
   if (0 == displayString_.size()) {
     textAttributes.foregroundColor = placeholderColor_;
-    data.layoutManager->buildText(textInputProps.paragraphAttributes, textAttributes, placeholderString_, shadow, true, paraBuilder);
+    data.layoutManager->buildText(paraStyle, textInputProps.paragraphAttributes, textAttributes, placeholderString_, shadow, true, paraBuilder);
   } else {
     if (secureTextEntry_) {
       std::string secureTextString(displayString_);
-      data.layoutManager->buildText(textInputProps.paragraphAttributes, textAttributes, secureTextString.replace( secureTextString.begin(), secureTextString.end(), secureTextString.size(), '*'), shadow, true, paraBuilder);
+      data.layoutManager->buildText(paraStyle, textInputProps.paragraphAttributes, textAttributes, secureTextString.replace( secureTextString.begin(), secureTextString.end(), secureTextString.size(), '*'), shadow, true, paraBuilder);
     } else {
-      data.layoutManager->buildText(textInputProps.paragraphAttributes, textAttributes, displayString_, shadow, true, paraBuilder);
+      data.layoutManager->buildText(paraStyle, textInputProps.paragraphAttributes, textAttributes, displayString_, shadow, true, paraBuilder);
     }
   }
 
   drawShadow(canvas, frame, borderMetrics, textInputProps.backgroundColor, layer()->shadowOpacity, layer()->shadowFilter);
-  drawTextInput(canvas, component.layoutMetrics, paraBuilder, textInputProps);
+  drawTextInput(paraStyle, canvas, component.layoutMetrics, paraBuilder, textInputProps);
   drawBorder(canvas, frame, borderMetrics, textInputProps.backgroundColor);
 }
 
@@ -168,6 +173,10 @@ void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool *stopPropagati
     textInputMetrics.contentSize.height = paragraph_->getHeight();
     textInputEventEmitter->onFocus(textInputMetrics);
     isInEditingMode_ = true;
+    if (!caretHidden_) {
+      std::cout<<"after onFocus!!!!!!!!!"<<std::endl;
+      flushLayer();
+    }
   } else if (isInEditingMode_) {
     // Logic to update the textinput string.
     // Requirement: Textinput is in Editing mode.
@@ -191,7 +200,7 @@ void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool *stopPropagati
       }
       
       //We need to Handle the StopPrpagation & select in the onHandle.
-      if ((eventKeyType >= RNS_KEY_Right && eventKeyType <= RNS_KEY_Back)) {
+      if ((eventKeyType >= RNS_KEY_Up && eventKeyType <= RNS_KEY_Back)) {
         *stopPropagation = true;
         inputQueue.push(eventKeyType);
       } else if (eventKeyType ==  RNS_KEY_Select) {
@@ -241,7 +250,10 @@ void RSkComponentTextInput::processEventKey (rnsKey eventKeyType,bool* stopPropa
           }
           *stopPropagation = true;
           keyPressMetrics.eventCount = eventCount_;
-          flushLayer();
+          if (!caretHidden_) {
+            std::cout<<"after RNS_KEY_Left!!!!!!!!!"<<std::endl;
+            flushLayer();
+          }
           textInputEventEmitter->onKeyPress(keyPressMetrics);
           *waitForupdateProps = false;
           return;
@@ -252,7 +264,10 @@ void RSkComponentTextInput::processEventKey (rnsKey eventKeyType,bool* stopPropa
           }
           *stopPropagation = true;
           keyPressMetrics.eventCount = eventCount_;
-          flushLayer();
+          if (!caretHidden_) {
+            std::cout<<"after RNS_KEY_Right!!!!!!!!!"<<std::endl;
+            flushLayer();
+          }
           textInputEventEmitter->onKeyPress(keyPressMetrics);
           *waitForupdateProps = false;
           return;
@@ -270,6 +285,15 @@ void RSkComponentTextInput::processEventKey (rnsKey eventKeyType,bool* stopPropa
           textInputEventEmitter->onEndEditing(textInputMetrics);
           textInputEventEmitter->onBlur(textInputMetrics);
           isInEditingMode_ = false;
+          *stopPropagation = true;
+          if (!caretHidden_) {
+            std::cout<<"after onBlur!!!!!!!!!"<<std::endl;
+            flushLayer();
+          }
+          return;
+        case RNS_KEY_Up:
+        case RNS_KEY_Down:
+          *waitForupdateProps = false;
           *stopPropagation = true;
           return;
         default:
@@ -352,8 +376,8 @@ RnsShell::LayerInvalidateMask  RSkComponentTextInput::updateComponentProps(const
       sem_post(&jsUpdateMutex);
     mask |= LayerPaintInvalidate;
   }
-  if ((textInputProps.placeholder.size()) 
-      && ((placeholderString_) != (textInputProps.placeholder)) 
+  if ((textInputProps.placeholder.size())
+      && ((placeholderString_) != (textInputProps.placeholder))
       &&(!textInputProps.value.has_value())) {
 
     placeholderString_ = textInputProps.placeholder.c_str();

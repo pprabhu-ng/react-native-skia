@@ -18,7 +18,8 @@ namespace facebook {
 namespace react {
 namespace RSkTextUtils {
 
-void setTextLines(std::shared_ptr<Paragraph>& paragraph,
+void setTextLines(ParagraphStyle &paragraphStyle,
+            std::shared_ptr<Paragraph>& paragraph,
             std::shared_ptr<ParagraphBuilder>& builder,
             LayoutMetrics layoutout,
             ParagraphAttributes paragraphAttributes,

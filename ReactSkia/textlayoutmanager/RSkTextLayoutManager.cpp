@@ -99,7 +99,7 @@ TextMeasurement RSkTextLayoutManager::doMeasure (SharedColor backGroundColor,
     TextShadow shadow;
 
     std::shared_ptr<ParagraphBuilder> builder = std::static_pointer_cast<ParagraphBuilder>(std::make_shared<ParagraphBuilderImpl>(paraStyle,collection_));
-    buildParagraph(backGroundColor, attributedString, paragraphAttributes, shadow, false, builder);
+    buildParagraph(paraStyle, backGroundColor, attributedString, paragraphAttributes, shadow, false, builder);
     auto paragraph = builder->Build();
     paragraph->layout(layoutConstraints.maximumSize.width);
 
@@ -132,14 +132,15 @@ TextMeasurement RSkTextLayoutManager::doMeasure (SharedColor backGroundColor,
     return TextMeasurement{size, attachments};
 }
 
-void RSkTextLayoutManager::buildText (ParagraphAttributes paragraphAttributes,
+void RSkTextLayoutManager::buildText (ParagraphStyle &paraStyle,
+    ParagraphAttributes paragraphAttributes,
     TextAttributes textAttributes,
     std::string textString,
     TextShadow shadow,
     bool fontDecorationRequired,
     std::shared_ptr<ParagraphBuilder> builder) const {
     TextStyle style;
-    ParagraphStyle paraStyle;
+    //ParagraphStyle paraStyle;
     auto fontSize = TextAttributes::defaultTextAttributes().fontSize;
     auto fontSizeMultiplier = TextAttributes::defaultTextAttributes().fontSizeMultiplier;
     int fontWeight = SkFontStyle::kNormal_Weight;
@@ -225,7 +226,8 @@ void RSkTextLayoutManager::buildText (ParagraphAttributes paragraphAttributes,
     builder->pop();
 }
 
-uint32_t RSkTextLayoutManager::buildParagraph (SharedColor backGroundColor,
+uint32_t RSkTextLayoutManager::buildParagraph (ParagraphStyle &paraStyle,
+                SharedColor backGroundColor,
                 AttributedString attributedString,
                 ParagraphAttributes paragraphAttributes,
                 TextShadow shadow,
@@ -239,7 +241,8 @@ uint32_t RSkTextLayoutManager::buildParagraph (SharedColor backGroundColor,
            continue;
         }
 
-        buildText (paragraphAttributes,
+        buildText (paraStyle,
+                    paragraphAttributes,
                     fragment.textAttributes,
                     fragment.string.c_str(),
                     shadow,

@@ -6,6 +6,7 @@
  */
 
 #include "ReactSkia/views/common/RSkTextUtils.h"
+#include <iostream>
 
 using namespace skia::textlayout;
 
@@ -14,6 +15,7 @@ namespace react {
 namespace {
 inline int getLines(std::vector<LineMetrics>& metrics, float frameHeight) {
     int minNumberOfLines = metrics.size();
+    std::cout<<"minNumberOfLines = "<<minNumberOfLines<<std::endl;
     for(int i=0; i< metrics.size(); i++) {
         if ((metrics[i]).fBaseline > frameHeight) {
             minNumberOfLines = (metrics[i]).fLineNumber;
@@ -45,7 +47,8 @@ inline SkScalar yPosOffset(AttributedString attributedString, SkScalar paraHeigh
 } //namespace
 
 namespace RSkTextUtils{
-void setTextLines(std::shared_ptr<Paragraph>& paragraph,
+void setTextLines(ParagraphStyle &paragraphStyle,
+            std::shared_ptr<Paragraph>& paragraph,
             std::shared_ptr<ParagraphBuilder>& builder,
             LayoutMetrics layout,
             ParagraphAttributes paragraphAttributes,

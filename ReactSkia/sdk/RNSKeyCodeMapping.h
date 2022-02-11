@@ -33,9 +33,9 @@ typedef enum rnsKey{
     RNS_KEY_Guia,
     //Navigation Keys
     
+    RNS_KEY_Select,
     RNS_KEY_Up,
     RNS_KEY_Down,
-    RNS_KEY_Select,
     RNS_KEY_Right,
     RNS_KEY_Left,
     /*
@@ -199,10 +199,10 @@ static std::string RNSKeyMap[RNS_KEY_End]={
     "cancel",
     "mute",
     "guia",
-    //Navigation Keys   
+    //Navigation Keys
+    "select",
     "up",
     "down",
-    "select",
     "right",
     "left",
     /*
