@@ -47,27 +47,43 @@ OnScreenKeyboard::OnScreenKeyboard() :
 }
 
 void OnScreenKeyboard::launch(OSKConfig oskConfig) {
+
 /* Setup Screen dimension */
-    OSKHandle_->configureScreenSize();
+    SkSize mainScreenSize=RnsShell::PlatformDisplay::sharedDisplay().screenSize();
+    if(ScreenSize != mainScreenSize) {
+        generateOSKLayout=true;
+        ScreenSize=mainScreenSize;
+    } else {
+        generateOSKLayout=false;
+    }
+
 /* Create OSK instance */
     OSKHandle_=std::make_unique<OnScreenKeyboard>();
 // Set up OSk configuration
     OSKHandle_->oskTheme_=oskConfig.oskTheme;
-    if(oskConfig.oskTheme == OSK_LIGHT_THEME) {
-        OSKHandle_->bgColor_ = LIGHT_THEME_BG_COLOR ;
-        OSKHandle_->fontColor_ = LIGHT_THEME_FONT_COLOR;
-    } else {
-        OSKHandle_->bgColor_ = DARK_THEME_BG_COLOR ;
-        OSKHandle_->fontColor_ =DARK_THEME_FONT_COLOR;
+    switch(OSKHandle_->oskTheme_) {
+        case OSK_LIGHT_THEME:
+            OSKHandle_->bgColor_ = LIGHT_THEME_BG_COLOR ;
+            OSKHandle_->fontColor_ = LIGHT_THEME_FONT_COLOR;
+        break;
+        case OSK_DARK_THEME:
+        default:
+            OSKHandle_->bgColor_ = DARK_THEME_BG_COLOR ;
+            OSKHandle_->fontColor_ =DARK_THEME_FONT_COLOR;
+        break;
     }
     OSKHandle_->returnKeyLabel_=oskConfig.returnKeyLabel;
     OSKHandle_->placeHolderName=oskConfig.placeHolderName;
     OSKHandle_->ctrlReturnKey_=oskConfig.enablesReturnKeyAutomatically;
 /* Display OSK */
+    OSKHandle_->oskLayout_.textFontSize= FONT_SIZE *(ScreenSize.width()/baseScreenSize.width());
+    OSKHandle_->oskLayout_.textHLFontSize= HIGHLIGHT_FONT_SIZE *(ScreenSize.width()/baseScreenSize.width());
+
     OSKHandle_->OSKwindow_->show();
     OSKHandle_->OSKcanvas_->clear(OSKHandle_->bgColor_);
     OSKHandle_->drawPlaceHolder();
     OSKHandle_->drawOSK(oskConfig.oskType);
+
     RNS_LOG_TODO("Need to do emit , keyboardWillHide Event to APP");
 }
 
@@ -80,7 +96,6 @@ void OnScreenKeyboard::exit() {
 }
 
 void OnScreenKeyboard::drawOSK(OSKTypes oskType) {
-    configureScreenSize();
     RNS_PROFILE_START(OSKLayoutCreateTime)
     createOSKLayout(oskType);
     RNS_PROFILE_END("OSK Layout Create",OSKLayoutCreateTime)
@@ -92,20 +107,21 @@ void OnScreenKeyboard::drawOSK(OSKTypes oskType) {
                                 );
     SkPaint paintObj;
     paintObj.setColor(bgColor_);
-    //OSKcanvas_->drawRect(kbArea,paintObj);
+    OSKcanvas_->drawRect(kbArea,paintObj);
     if(oskLayout_.keyInfo && oskLayout_.keyPos) {
         RNS_PROFILE_START(OSKDrawTimeStamp)
         /*1. Draw Keys */
-        for(unsigned int index=0;index<oskLayout_.keysCount;index++) {
-            drawFont(index,fontColor_);
+        for (unsigned int rowIndex = 0; rowIndex < oskLayout_.keyInfo->size(); rowIndex++) {
+            for (unsigned int keyIndex = 0; keyIndex < oskLayout_.keyInfo->at(rowIndex).size(); keyIndex++) {
+                drawFont({keyIndex,rowIndex},fontColor_);
+            }
         }
         /*2. Draw Kb partition*/
         drawOSKPartition();
         RNS_PROFILE_END("OSk Draw Done : ",OSKDrawTimeStamp)
         /*3. Highlighlight default focussed key*/
-        highlightFocussedKey(1);
-        focussedIndex_= 1;
-        pushToDisplay();
+        highlightFocussedKey({1,0});
+        focussedIndex_.set(1,0);
     }
 }
 
@@ -129,104 +145,142 @@ void OnScreenKeyboard::drawPlaceHolder(){
     OSKcanvas_->drawRect(rect,paint);
 }
 
-inline void OnScreenKeyboard::drawFont(unsigned int index,SkColor color,bool onHLTile) {
-    if((index >=0) && (index < oskLayout_.keysCount) && (oskLayout_.keyInfo[index].keyName) ) {
+inline void OnScreenKeyboard::drawFont(SkPoint index,SkColor color,bool onHLTile) {
+    unsigned int rowIndex=index.y(),keyIndex=index.x();
+
+    if(oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyName ) {
         SkPaint textPaint;
         SkFont font;
-        char *keyName=(char*)oskLayout_.keyInfo[index].keyName;
-        unsigned int textX,textY;
+        SkString uniChar;
+        char upperCase;
+        char *keyName=(char*)oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyName;
+        unsigned int textX,textY,groupID;
+
         textPaint.setColor(color);
         textPaint.setAntiAlias(true);
-        if((oskLayout_.KBKeyType == ALPHA_UPPERCASE_KEYS) && (oskLayout_.keyInfo[index].keyType == ALPHA_LOWERCASE_KEYS) ) {
-            keyName=(char*)oskLayout_.keyInfo[index].keyCaps;
+        groupID=oskLayout_.keyInfo->at(rowIndex).at(keyIndex).KBPartitionId;
+
+        if(( oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyType == TEXT_KEY ) &&
+           (isalpha(*keyName)) && oskLayout_.KBLayoutType == ALPHA_UPPERCASE_LAYOUT ) {
+            upperCase=(*keyName-LOWER_TO_UPPER_CASE_OFFSET);
+            keyName=&upperCase;
         }
+
         if(onHLTile) {
-            font.setSize(oskLayout_.textHLFontSize);
-            //Fix to match font icon size uniform
-            if(!(strcmp(keyName , "space"))) font.setSize(oskLayout_.textHLFontSize*2);
-            if(!(strcmp(keyName , "done"))) font.setSize(oskLayout_.textHLFontSize*1.5);
-
-            if((oskLayout_.KBKeyType == ALPHA_UPPERCASE_KEYS) && (oskLayout_.keyInfo[index].keyType == ALPHA_LOWERCASE_KEYS) ) {
-                textX=oskLayout_.keyPos[index].textCapsHLXY.x();
-                textY=oskLayout_.keyPos[index].textCapsHLXY.y();
+            font.setSize(oskLayout_.textHLFontSize* oskLayout_.KBGroupConfig[groupID].fontScaleFactor);
+            if(( oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyType == TEXT_KEY ) &&
+               (isalpha(*keyName)) && oskLayout_.KBLayoutType == ALPHA_UPPERCASE_LAYOUT ) {
+                textX=oskLayout_.keyPos->at(rowIndex).at(keyIndex).textCapsHLXY.x();
+                textY=oskLayout_.keyPos->at(rowIndex).at(keyIndex).textCapsHLXY.y();
             } else {
-                textX=oskLayout_.keyPos[index].textHLXY.x();
-                textY=oskLayout_.keyPos[index].textHLXY.y();
+                textX=oskLayout_.keyPos->at(rowIndex).at(keyIndex).textHLXY.x();
+                textY=oskLayout_.keyPos->at(rowIndex).at(keyIndex).textHLXY.y();
             }
         } else {
-            font.setSize(oskLayout_.textFontSize);
-            //Fix to match font icon size uniform
-            if(!(strcmp(keyName , "space"))) font.setSize(oskLayout_.textFontSize*2);
-            if(!(strcmp(keyName , "done"))) font.setSize(oskLayout_.textFontSize*1.5);
-            textX=oskLayout_.keyPos[index].textXY.x();
-            textY=oskLayout_.keyPos[index].textXY.y();
+            if (oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyType == TOGGLE_KEY){
+                ToggleKeyMap :: iterator keyFunction =toggleKeyMap.find(keyName);
+                if(keyFunction != toggleKeyMap.end()) {
+                   if(keyFunction->second != oskLayout_.KBLayoutType) 
+                       textPaint.setColor((oskTheme_ == OSK_LIGHT_THEME) ? LIGHT_THEME_INACTIVE_FONT_COLOR: DARK_THEME_INACTIVE_FONT_COLOR);
+                }
+            }
+            font.setSize(oskLayout_.textFontSize * oskLayout_.KBGroupConfig[groupID].fontScaleFactor);
+            textX=oskLayout_.keyPos->at(rowIndex).at(keyIndex).textXY.x();
+            textY=oskLayout_.keyPos->at(rowIndex).at(keyIndex).textXY.y();
         }
 
-        if(oskLayout_.keyInfo[index].keyType == ACTION_KEYS) {
-            sk_sp<SkFontMgr> mgr(SkFontMgr::RefDefault());
-            sk_sp<SkTypeface> typeface(mgr->matchFamilyStyleCharacter(
-                    nullptr, SkFontStyle(), nullptr, 0, oskLayout_.keyInfo[index].unicharValue));
-            if (typeface) {
-                SkString uniChar;
-                uniChar.appendUnichar(oskLayout_.keyInfo[index].unicharValue);
-                font.setTypeface(typeface);
-                OSKcanvas_->drawString(uniChar,textX,textY,font,textPaint);
+        if(oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyType == FUNCTION_KEY) {
+            FunctionKeymap :: iterator keyFunction =functionKeyMap.find(keyName);
+            if(keyFunction != functionKeyMap.end()) {
+                UnicharFontConfig_t uniCharConfig = keyFunction->second;
+                sk_sp<SkFontMgr> mgr(SkFontMgr::RefDefault());
+                sk_sp<SkTypeface> typeface(mgr->matchFamilyStyleCharacter(nullptr, SkFontStyle(), nullptr, 0, uniCharConfig.unicharValue));
+                if (typeface) {
+                    uniChar.appendUnichar(uniCharConfig.unicharValue);
+                    font.setTypeface(typeface);
+                    if(onHLTile) 
+                        font.setSize(oskLayout_.textHLFontSize* uniCharConfig.fontScaleFactor);
+                    else
+                        font.setSize(oskLayout_.textFontSize* uniCharConfig.fontScaleFactor);
+                    keyName=(char *)uniChar.c_str();
+                } else {
+                /*To indicate unichar not supported*/
+                    keyName=(char *)DRAW_FONT_FAILURE_INDICATOR;
+                }
             }
-        } else {
-            OSKcanvas_->drawSimpleText(keyName, strlen(keyName), SkTextEncoding::kUTF8,
-                                       textX,textY,font, textPaint
-                                      );
-        }
+        } 
+        RNS_LOG_INFO("Drawing text"<<keyName);
+        OSKcanvas_->drawSimpleText(keyName, strlen(keyName), SkTextEncoding::kUTF8,
+                                   textX,textY,font, textPaint
+                                  );
+#ifdef SHOW_FONT_PLACING_ON_HLTILE
+        textPaint.setColor(SK_ColorRED);
+        textPaint.setStrokeWidth(4);
+        OSKcanvas_->drawPoint(textX,textY,textPaint);
+        textPaint.setColor(SK_ColorGREEN);
+        textPaint.setStrokeWidth(2);
+        OSKcanvas_->drawLine(oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile.fLeft,
+                             oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile.fTop+(oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile.height()/2),
+                             oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile.fRight,
+                             oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile.fTop+(oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile.height()/2),
+                             textPaint);
+        OSKcanvas_->drawLine(oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile.fLeft+(oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile.width()/2),
+                             oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile.fTop,
+                             oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile.fLeft+(oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile.width()/2),
+                             oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile.fBottom,
+                             textPaint);
+
+#endif/*SHOW_FONT_PLACING_ON_HLTILE*/
+
     }
 }
 
 void OnScreenKeyboard::drawOSKPartition() {
-    if(oskLayout_.KBKeyType != NUMERIC_KEYS) {
-        unsigned int index=1;
+    if(oskLayout_.KBtype != OSK_NUMERIC_KB) {
         SkPaint paint;
         paint.setColor((oskTheme_ == OSK_LIGHT_THEME) ? LIGHT_THEME_PH_COLOR: DARK_THEME_PH_COLOR);
         paint.setStrokeWidth(2);
-        unsigned int xpos{0};
-        unsigned int startY= oskLayout_.keyPos[index].highlightTile.y()-3;
-        unsigned int endY=oskLayout_.keyPos[oskLayout_.keysCount-1].highlightTile.fBottom + 3;
-        while(oskLayout_.keyInfo[index].indexes.y() == 1) {
+        unsigned int startY,endY,xpos,rowCount=oskLayout_.keyInfo->size()-1;
+        unsigned int KeyCount=oskLayout_.keyInfo->at(rowCount).size()-1;
+        endY=oskLayout_.keyPos->at(rowCount).at(KeyCount).highlightTile.fBottom+3;
+        startY=oskLayout_.keyPos->at(0).at(0).highlightTile.fTop - oskLayout_.KBGroupConfig[oskLayout_.keyInfo->at(0).at(0).KBPartitionId].groupKeySpacing.y();
+        for (unsigned int index=1;index<oskLayout_.keyInfo->at(0).size();index++) {
         /*row 1*/
-            if(oskLayout_.keyInfo[index].keyType != oskLayout_.keyInfo[index-1].keyType) {
-                xpos=oskLayout_.keyPos[index].highlightTile.x()-(oskLayout_.keyPos[index].highlightTile.fLeft - oskLayout_.keyPos[index-1].highlightTile.fRight)/2;
+            if(oskLayout_.keyInfo->at(0).at(index).KBPartitionId != oskLayout_.keyInfo->at(0).at(index-1).KBPartitionId) {
+                xpos=oskLayout_.keyPos->at(0).at(index).highlightTile.x()-(oskLayout_.keyPos->at(0).at(index).highlightTile.fLeft - oskLayout_.keyPos->at(0).at(index-1).highlightTile.fRight)/2;
                 OSKcanvas_->drawLine(xpos,startY,xpos,endY,paint);
                 RNS_LOG_DEBUG("X: "<<xpos<<" y: "<<startY<<" endY: "<<endY);
             }
-            index ++;
         }
     }
 }
 
-void OnScreenKeyboard ::highlightFocussedKey(unsigned int index) {
+void OnScreenKeyboard ::highlightFocussedKey(SkPoint index) {
     SkPaint paintObj;
-    if((index <0) || (index >oskLayout_.keysCount))
-        return;
-     //reset old
-    if((lastFocussedIndex_ >= 0) && (lastFocussedIndex_ <= oskLayout_.keysCount)) {
-        paintObj.setColor(bgColor_);
-        paintObj.setAntiAlias(true);
-        OSKcanvas_->drawRect(oskLayout_.keyPos[lastFocussedIndex_].highlightTile,paintObj);
-        drawFont(lastFocussedIndex_,fontColor_);
-    }
-    //Hight new
-    if((index >= 0) && (index <= oskLayout_.keysCount)) {
-        paintObj.setColor(HIGHLIGHT_BG_COLOR);
-        OSKcanvas_->drawRect(oskLayout_.keyPos[index].highlightTile,paintObj);
-        drawFont(index,HIGHLIGHT_FONT_COLOR,true);
-    }
+    unsigned int rowIndex=index.y(),keyIndex=index.x();
+    unsigned int lastRowIndex=lastFocussedIndex_.y(),lastKeyIndex=lastFocussedIndex_.x();
+
+     //reset last focussed item
+     paintObj.setColor(bgColor_);
+     paintObj.setAntiAlias(true);
+     OSKcanvas_->drawRect(oskLayout_.keyPos->at(lastRowIndex).at(lastKeyIndex).highlightTile,paintObj);
+     drawFont({lastKeyIndex,lastRowIndex},fontColor_);
+
+    //Hight current focussed item
+    paintObj.setColor(HIGHLIGHT_BG_COLOR);
+    OSKcanvas_->drawRect(oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile,paintObj);
+    drawFont({keyIndex,rowIndex},HIGHLIGHT_FONT_COLOR,true);
     pushToDisplay();
     return;
 }
 
 void OnScreenKeyboard::onHWkeyHandler(rnsKey keyValue, rnsKeyAction eventKeyAction){
-    if(eventKeyAction != RNS_KEY_Press)
-        return;
-    unsigned int index=focussedIndex_;
-    lastFocussedIndex_=focussedIndex_;
+    if(eventKeyAction != RNS_KEY_Press) return;
+
+    SkPoint siblingIndex;
+    siblingIndex=lastFocussedIndex_=focussedIndex_;
+    unsigned int rowIndex=focussedIndex_.y(),keyIndex=focussedIndex_.x();
+
     RNS_LOG_DEBUG("KEY RECEIVED : "<<RNSKeyMap[keyValue]);
     switch( keyValue ) {
     /*Case 1: handle Enter/selection key*/
@@ -235,185 +289,257 @@ void OnScreenKeyboard::onHWkeyHandler(rnsKey keyValue, rnsKeyAction eventKeyActi
         break;
     /* Case  2: Process Navigation Keys*/
         case RNS_KEY_Right:
-            index= oskLayout_.keyInfo[focussedIndex_].indexRight;
+            siblingIndex= oskLayout_.siblingInfo->at(rowIndex).at(keyIndex).siblingRight;
         break;
         case RNS_KEY_Left:
-            index= oskLayout_.keyInfo[focussedIndex_].indexLeft;
+            siblingIndex= oskLayout_.siblingInfo->at(rowIndex).at(keyIndex).siblingLeft;
         break;
         case RNS_KEY_Up:
-            index= oskLayout_.keyInfo[focussedIndex_].indexUp;
+            siblingIndex= oskLayout_.siblingInfo->at(rowIndex).at(keyIndex).siblingUp;
         break;
         case RNS_KEY_Down:
-            index= oskLayout_.keyInfo[focussedIndex_].indexDown;
+            siblingIndex= oskLayout_.siblingInfo->at(rowIndex).at(keyIndex).siblingDown;
         break;
         default:
         {
             if(keyValue !=RNS_KEY_UnKnown ) {
     /*Case 3: Emit back other known keys*/
                 NotificationCenter::OSKCenter().emit("onOSKKeyEvent", keyValue, eventKeyAction);
-                for (unsigned int count=0; count<oskLayout_.keysCount;count++) {
-                    if(oskLayout_.keyInfo[count].keyValue == keyValue) {
-                        index = count;
-                        break;
+                for (unsigned int rowIndex=0; rowIndex < oskLayout_.keyInfo->size();rowIndex++) {
+                    for (unsigned int index=0; index<oskLayout_.keyInfo->at(rowIndex).size();index++) {
+                        if(oskLayout_.keyInfo->at(rowIndex).at(index).keyValue == keyValue) {
+                            siblingIndex.set(index,rowIndex);
+                            break;
+                        }
                     }
                 }
             }
         }
         break;
     }
-    focussedIndex_ = index;
-    if(index != lastFocussedIndex_) {
-        highlightFocussedKey(index);
+    focussedIndex_ = siblingIndex;
+    if(siblingIndex != lastFocussedIndex_) {
+        highlightFocussedKey(siblingIndex);
     }
 }
 
 void OnScreenKeyboard::handleSelection() {
-    if((focussedIndex_>=0) && (focussedIndex_ <= oskLayout_.keysCount)) {
-        if(oskLayout_.keyInfo[focussedIndex_].keyValue == RNS_KEY_Select) {
-            exit();
-        } else if(oskLayout_.keyInfo[focussedIndex_].keyValue != RNS_KEY_UnKnown) {
-            NotificationCenter::OSKCenter().emit("onOSKKeyEvent", oskLayout_.keyInfo[focussedIndex_].keyValue, RNS_KEY_Press);
-        } else if( oskLayout_.keyInfo[focussedIndex_].keyType & GROUP_KEYS ) {
-            if((oskLayout_.keyInfo[focussedIndex_].keyType & ALPHA_UPPERCASE_KEYS) &&
-               (oskLayout_.KBKeyType != ALPHA_UPPERCASE_KEYS)) {
-                oskLayout_.KBKeyType= ALPHA_UPPERCASE_KEYS;
-                drawOSK(OSK_ALPHA_NUMERIC_KB);
-            } else if((oskLayout_.keyInfo[focussedIndex_].keyType & SYMBOL_KEYS) &&
-                      (oskLayout_.KBKeyType != SYMBOL_KEYS)) {
-                oskLayout_.KBKeyType=SYMBOL_KEYS;
-                drawOSK(OSK_ALPHA_NUMERIC_KB);
-            } else if(oskLayout_.KBKeyType != ALPHA_LOWERCASE_KEYS) {
-                oskLayout_.KBKeyType= ALPHA_LOWERCASE_KEYS;
-                drawOSK(OSK_ALPHA_NUMERIC_KB);
-            }
+    unsigned int keyIndex=focussedIndex_.x(),rowIndex=focussedIndex_.y();
+    if(oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyValue == RNS_KEY_Select) {
+       exit();
+    } else if (oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyType == TOGGLE_KEY){
+        ToggleKeyMap :: iterator keyFunction =toggleKeyMap.find(oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyName);
+        if((keyFunction != toggleKeyMap.end()) && (keyFunction->second != oskLayout_.KBLayoutType)) {
+            oskLayout_.KBLayoutType=keyFunction->second;
+            drawOSK(OSK_ALPHA_NUMERIC_KB);
         }
+    }else {
+        NotificationCenter::OSKCenter().emit("onOSKKeyEvent", oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyValue, RNS_KEY_Press);
     }
 }
 
 void OnScreenKeyboard::createOSKLayout(OSKTypes KBtype) {
-    if(KBtype == OSK_NUMERIC_KB) {
-        oskLayout_.keysCount = NUMERIC_KEY_COUNT;
-        oskLayout_.keyInfo=numericKBLayout;
-        oskLayout_.keyPos=numericKBPos;
+
+    if(oskLayout_.KBtype == OSK_NUMERIC_KB) {
+        oskLayout_.keyInfo=&numericKBKeyKeyInfo;
+        oskLayout_.keyPos=&numericKBKeyPos;
+        oskLayout_.siblingInfo=&numericKBKeySiblingInfo;
+        oskLayout_.KBGroupConfig=numericKBGroupConfig;
+
     } else {
-        if(oskLayout_.KBKeyType == SYMBOL_KEYS) {
-            oskLayout_.keysCount = SYMBOL_KEY_COUNT;
-            oskLayout_.keyInfo=symbolKBLayout;
-            oskLayout_.keyPos=symbolKBPos;
+        if(oskLayout_.KBLayoutType == SYMBOL_LAYOUT) {
+            oskLayout_.keyInfo=&symbolKBKBKeyInfo;
+            oskLayout_.keyPos=&symbolKBKBKeyPos;
+            oskLayout_.siblingInfo=&symbolKBKBKeySiblingInfo;
+            oskLayout_.KBGroupConfig=symbolKBGroupConfig;
         } else {
-            oskLayout_.keysCount = ALPHA_NUMERIC_KEY_COUNT;
-            oskLayout_.keyInfo=alphaNumericKBLayout;
-            oskLayout_.keyPos=alphaNumericKBPos;
+            oskLayout_.keyInfo=&alphaNumericKBKeyInfo;
+            oskLayout_.keyPos=&alphaNumericKBKeyPos;
+            oskLayout_.siblingInfo=&alphaNumericKBKeySiblingInfo;
+            oskLayout_.KBGroupConfig=alphaNumericKBGroupConfig;
         }
     }
     // Generate key Position info based on screen Size
     // Not needed, if screen Size is not changed & Layout already created
-    if((oskLayout_.keyPos[0].textXY.x() == -1) || generateOSKLayout ) {
-        unsigned int      XscaleFactor,YscaleFactor,verticalKeySpacing;
-        XscaleFactor = ScreenSize.width()/baseScreenSize.width();
-        YscaleFactor =ScreenSize.height()/baseScreenSize.height();
-        oskLayout_.textFontSize= FONT_SIZE *XscaleFactor;
-        oskLayout_.textHLFontSize= HIGHLIGHT_FONT_SIZE *XscaleFactor;
-        RNS_LOG_INFO(" Scaled Params: "<< " ScaleX: "<< XscaleFactor<<" Scale Y:"<<YscaleFactor);
+    if((!oskLayout_.keyPos->empty()) && (! generateOSKLayout )) return;
 
-        for ( unsigned int i=0;i<oskLayout_.keysCount;i++ ) {
+     RNS_LOG_INFO(" CREATING OSK LAYOUT AGAIN for KB TYPEPE::"<<oskLayout_.KBLayoutType);
+
+    if(oskLayout_.keyPos && oskLayout_.siblingInfo ) {
+        oskLayout_.keyPos->clear();
+        oskLayout_.siblingInfo->clear();
+    }
+
+    unsigned int rowSize=oskLayout_.keyInfo->size(); 
+    unsigned int XscaleFactor = ScreenSize.width()/baseScreenSize.width();
+    unsigned int YscaleFactor =ScreenSize.height()/baseScreenSize.height();
+    unsigned int groupKeyIndex{0},hlX,hlY,groupHLTileWidth,groupHLTileHeigth,groupID;
+    SkPoint groupOffset,groupKeySpacing;
+    SkRect bounds,boundsCapsHL,boundsHL;
+    SkFont font,fontHL;
+    char * keyName;
+    SkString uniChar;
+
+    oskLayout_.keyPos->resize(rowSize);
+    oskLayout_.siblingInfo->resize(rowSize);
+    oskLayout_.textFontSize= FONT_SIZE *XscaleFactor;
+    oskLayout_.textHLFontSize= HIGHLIGHT_FONT_SIZE *XscaleFactor;
+    SkPoint oskStartpt{(START_OFFSET_OSK_X*ScreenSize.width()*XscaleFactor),
+                       (START_OFFSET_OSK_Y*ScreenSize.height()*YscaleFactor)};
+
+    for (unsigned int rowIndex = 0; rowIndex < rowSize; rowIndex++) {
+
+        unsigned int columnSize=oskLayout_.keyInfo->at(rowIndex).size();
+        oskLayout_.keyPos->at(rowIndex).resize(columnSize);
+        oskLayout_.siblingInfo->at(rowIndex).resize(columnSize);
+        for (unsigned int columnIndex = 0; columnIndex < columnSize; columnIndex++) {
+
+    //1.  Calculate Highlight Tile
+            groupID=oskLayout_.keyInfo->at(rowIndex).at(columnIndex).KBPartitionId;
+            groupKeyIndex=(columnIndex !=0) ?((groupID != oskLayout_.keyInfo->at(rowIndex).at(columnIndex-1).KBPartitionId) ? 0: (groupKeyIndex+1)): columnIndex;
+            keyName=(char*)oskLayout_.keyInfo->at(rowIndex).at(columnIndex).keyName;
+
+            RNS_LOG_DEBUG("Group Index : "<<groupKeyIndex<<"Partition Id : "<<groupID);
+            RNS_LOG_DEBUG("Group Offset : x "<<oskLayout_.KBGroupConfig[groupID].groupOffset.x()<<"y : "<<oskLayout_.KBGroupConfig[groupID].groupOffset.y());
+            RNS_LOG_DEBUG("Group Key Spacing : x "<<oskLayout_.KBGroupConfig[groupID].groupKeySpacing.x()<<"y : "<<oskLayout_.KBGroupConfig[groupID].groupKeySpacing.x());
+
+            if(!groupKeyIndex) {
+                groupHLTileWidth=groupHLTileHeigth =(oskLayout_.textHLFontSize * oskLayout_.KBGroupConfig[groupID].maxTextLength* oskLayout_.KBGroupConfig[groupID].fontScaleFactor) * oskLayout_.KBGroupConfig[groupID].hlTileFontSizeMultiplier;
+                if(oskLayout_.KBGroupConfig[groupID].maxTextLength) {
+                    groupHLTileHeigth =(oskLayout_.textHLFontSize * oskLayout_.KBGroupConfig[groupID].fontScaleFactor * oskLayout_.KBGroupConfig[groupID].hlTileFontSizeMultiplier);
+                }
+                groupOffset=oskLayout_.KBGroupConfig[groupID].groupOffset;
+                groupKeySpacing=oskLayout_.KBGroupConfig[groupID].groupKeySpacing;
+                font.setSize(oskLayout_.textFontSize * oskLayout_.KBGroupConfig[groupID].fontScaleFactor);
+                font.setEdging(SkFont::Edging::kAntiAlias);
+                fontHL.setSize(oskLayout_.textHLFontSize * oskLayout_.KBGroupConfig[groupID].fontScaleFactor);
+                fontHL.setEdging(SkFont::Edging::kAntiAlias);
+            }
+            /* Note Enchancement :To Handle Variable tile width on the same group: Need to add Tile width info in the  Layout
+                and here on generating tile x,y co-ordinate, previous tiles spacing to be accumulated and considered as groupKeySpacing
+             */
+            hlX = oskStartpt.x()+groupOffset.x()+(( groupHLTileWidth + groupKeySpacing.x()) * groupKeyIndex);
+            hlY = oskStartpt.y()+groupOffset.y()+ (( groupHLTileHeigth + groupKeySpacing.y()) * rowIndex);
+            oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.setXYWH(hlX,hlY,groupHLTileWidth,groupHLTileHeigth);
+
+    //2.  Calculate text draw position
             /*Calculate Font dimenesion */
-            unsigned int fontWidth{0},fontCapsWidth{0},fontHLWidth{0};
-            SkRect bounds,boundsCaps,boundsHL;
-            SkFont font,fontHL;
-            font.setSize(oskLayout_.textFontSize);
-            font.setEdging(SkFont::Edging::kAntiAlias);
-            fontHL.setSize(oskLayout_.textHLFontSize);
-            fontHL.setEdging(SkFont::Edging::kAntiAlias);
-            //Fix to match font icon size uniform
-            if(!(strcmp(oskLayout_.keyInfo[i].keyName , "space"))) font.setSize(oskLayout_.textFontSize*2);
-            if(!(strcmp(oskLayout_.keyInfo[i].keyName , "done"))) font.setSize(oskLayout_.textFontSize*1.5);
-
-            if(!(strcmp(oskLayout_.keyInfo[i].keyName , "space"))) fontHL.setSize(oskLayout_.textHLFontSize*2);
-            if(!(strcmp(oskLayout_.keyInfo[i].keyName , "done"))) fontHL.setSize(oskLayout_.textHLFontSize*1.5);
-
-            verticalKeySpacing=oskLayout_.keyInfo[i].keySpacing.y()*oskLayout_.keyInfo[i].indexes.y();
-            if(oskLayout_.keyInfo[i].keyType != ACTION_KEYS) {
-                fontWidth=font.measureText(oskLayout_.keyInfo[i].keyName, strlen(oskLayout_.keyInfo[i].keyName), SkTextEncoding::kUTF8, &bounds);
-                fontHLWidth=fontHL.measureText(oskLayout_.keyInfo[i].keyName, strlen(oskLayout_.keyInfo[i].keyName), SkTextEncoding::kUTF8,&boundsHL);
-                if(oskLayout_.keyInfo[i].keyType == ALPHA_LOWERCASE_KEYS) {
-                    fontCapsWidth=font.measureText(oskLayout_.keyInfo[i].keyName, strlen(oskLayout_.keyInfo[i].keyName), SkTextEncoding::kUTF8, &boundsCaps);
+            if(oskLayout_.keyInfo->at(rowIndex).at(columnIndex).keyType == FUNCTION_KEY) {
+                FunctionKeymap :: iterator keyFunction =functionKeyMap.find(keyName);
+                if(keyFunction != functionKeyMap.end()) {
+                    UnicharFontConfig_t uniCharConfig = keyFunction->second;
+                    sk_sp<SkFontMgr> mgr(SkFontMgr::RefDefault());
+                    sk_sp<SkTypeface> typeface(mgr->matchFamilyStyleCharacter(nullptr, SkFontStyle(), nullptr, 0, uniCharConfig.unicharValue));
+                    if (typeface) {
+                        font.setTypeface(typeface);
+                        fontHL.setTypeface(typeface);
+                        font.setSize(oskLayout_.textFontSize * uniCharConfig.fontScaleFactor);
+                        fontHL.setSize(oskLayout_.textHLFontSize * uniCharConfig.fontScaleFactor);
+                        uniChar.reset();
+                        uniChar.appendUnichar(uniCharConfig.unicharValue);
+                        keyName=(char*)uniChar.c_str();
+#ifdef SHOW_UNICHAR_FAMILY_INFO
+                        RNS_LOG_INFO("Draw Unicahr: "<<uniChar.c_str());
+                        typeface->getFamilyName(&familyName);
+                        RNS_LOG_INFO("UniCahr Found in FAMILY :"<<familyName.c_str());
+#endif/*SHOW_UNICHAR_FAMILY_INFO*/
+                    } else {
+                        RNS_LOG_ERROR("UniChar not supported in any of the available font family");
+                        keyName=(char*)DRAW_FONT_FAILURE_INDICATOR;
+                    }
                 }
             } else {
-                sk_sp<SkFontMgr> mgr(SkFontMgr::RefDefault());
-                sk_sp<SkTypeface> typeface(mgr->matchFamilyStyleCharacter(
-                         nullptr, SkFontStyle(), nullptr, 0, oskLayout_.keyInfo[i].unicharValue));
-                if (typeface) {
-                    SkString uniChar;
-                    font.setTypeface(typeface);
-                    uniChar.appendUnichar(oskLayout_.keyInfo[i].unicharValue);
-                    fontWidth=font.measureText(uniChar.c_str(), uniChar.size(), SkTextEncoding::kUTF8,&bounds);
-                    fontHLWidth=fontHL.measureText(uniChar.c_str(), uniChar.size(), SkTextEncoding::kUTF8,&boundsHL);
+                if(( oskLayout_.keyInfo->at(rowIndex).at(columnIndex).keyType == TEXT_KEY ) && (isalpha(*keyName))) {
+                    char upperCase=*keyName-LOWER_TO_UPPER_CASE_OFFSET;
+                    fontHL.measureText(&upperCase, strlen(keyName), SkTextEncoding::kUTF8, &boundsCapsHL);
+                    oskLayout_.keyPos->at(rowIndex).at(columnIndex).textCapsHLXY.set(
+                                (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.x() + (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.width() - boundsCapsHL.width() )/2),
+                                (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.y() + (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.height() + boundsCapsHL.height() )/2));
                 }
             }
+            font.measureText(keyName, strlen(keyName), SkTextEncoding::kUTF8, &bounds);
+            fontHL.measureText(keyName, strlen(keyName), SkTextEncoding::kUTF8,&boundsHL);
 
-            unsigned int HLTileX,HLTileY,HLTilewidth,HLTileheight;
-            unsigned int textX,textY,textHLX,textHLY,textCapsX,textCapsY;
-            unsigned int YstartOffset,XstartOffset;
+            oskLayout_.keyPos->at(rowIndex).at(columnIndex).textXY.set(
+                        (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.x() + (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.width() - bounds.width() )/2),
+                        (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.y() + (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.height() + bounds.height() )/2));
+            oskLayout_.keyPos->at(rowIndex).at(columnIndex).textHLXY.set(
+                        (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.x() + (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.width() - boundsHL.width() )/2),
+                        (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.y() + (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.height() + boundsHL.height() )/2));
 
-            HLTilewidth=HLTileheight=HIGHLIGHT_AREA_WIDTH*XscaleFactor;
-            XstartOffset = (START_OFFSET_OSK_X*ScreenSize.width()*XscaleFactor)+oskLayout_.keyInfo[i].keySpacing.x();
-            YstartOffset = (START_OFFSET_OSK_Y*ScreenSize.height()*YscaleFactor)+ verticalKeySpacing;
-            HLTileY = YstartOffset - (oskLayout_.keyInfo[i].keySpacing.y()/3);
-            HLTileX = XstartOffset+ (KEY_HORIZONTAL_GAP/3);
-
-            if(oskLayout_.keyInfo[i].indexes.x() == 0) {
-                if(oskLayout_.keyInfo[i].keyType & GROUP_KEYS) {
-                    HLTileX=boundsHL.fLeft+XstartOffset;
-                    HLTileY=boundsHL.fTop+YstartOffset;
-                    HLTilewidth=(boundsHL.fRight-boundsHL.fLeft);
-                    HLTileheight=(boundsHL.fBottom-boundsHL.fTop);
-                    textHLX=textX=HLTileX;
-                    textHLY=textY=HLTileY+HLTileheight;
-                }
-            }
-/*Set up Highlight Tile Area*/
-            if(oskLayout_.keyInfo[i].indexes.x()) {
-                oskLayout_.keyPos[i].highlightTile.setXYWH((oskLayout_.keyPos[oskLayout_.keyInfo[i].indexLeft].highlightTile.fLeft + oskLayout_.keyInfo[i].keySpacing.x() + (KEY_HORIZONTAL_GAP/3)),
-                                                             HLTileY,HLTilewidth,HLTileheight
-                                                          );
-            } else {
-                oskLayout_.keyPos[i].highlightTile.setXYWH(HLTileX,HLTileY,HLTilewidth,HLTileheight);
-            }
-            if(oskLayout_.keyInfo[i].keyType & GROUP_KEYS) {
-                oskLayout_.keyPos[i].highlightTile.outset(10,10);
-            }
-            RNS_LOG_INFO("HL X : "<<oskLayout_.keyPos[i].highlightTile.x()<<"HL Y: "<<oskLayout_.keyPos[i].highlightTile.y());
-            RNS_LOG_INFO("HL W : "<<oskLayout_.keyPos[i].highlightTile.width()<<"HL H: "<<oskLayout_.keyPos[i].highlightTile.height());
-
-/*Set up Text draw Pt*/
-            if(!(oskLayout_.keyInfo[i].keyType & GROUP_KEYS)) {
-                textX=oskLayout_.keyPos[i].highlightTile.x()+(oskLayout_.keyPos[i].highlightTile.width()/2)-(fontWidth/2);
-                textY=oskLayout_.keyPos[i].highlightTile.y()+(oskLayout_.keyPos[i].highlightTile.height()/2)+(bounds.height()/2);
-                textHLX=oskLayout_.keyPos[i].highlightTile.x()+(oskLayout_.keyPos[i].highlightTile.width()/2)-(fontHLWidth/2);
-                textHLY=oskLayout_.keyPos[i].highlightTile.y()+(oskLayout_.keyPos[i].highlightTile.height()/2)+(boundsHL.height()/2);
-                textCapsX=oskLayout_.keyPos[i].highlightTile.x()+((oskLayout_.keyPos[i].highlightTile.width()/2)-(fontCapsWidth/2));
-                textCapsY=oskLayout_.keyPos[i].highlightTile.y()+(oskLayout_.keyPos[i].highlightTile.height()/2)+(boundsCaps.height()/2);
-            }
-            oskLayout_.keyPos[i].textXY.set(textX,textY);
-            oskLayout_.keyPos[i].textHLXY.set(textHLX,textHLY);
-            if(oskLayout_.keyInfo[i].keyType == ALPHA_LOWERCASE_KEYS) {
-                oskLayout_.keyPos[i].textCapsHLXY.set(textCapsX,textCapsY);
-            }
-            #ifdef SHOW_CREATED_COORDINATE
+#ifdef SHOW_FONT_BOUNDS
             SkPaint paint;
             paint.setColor(SK_ColorRED);
             paint.setStyle(SkPaint::kStroke_Style);
-            OSKcanvas_->drawRect(oskLayout_.keyPos[i].highlightTile,paint);
-            paint.setColor(SK_ColorGREEN);
             OSKcanvas_->drawRect(bounds,paint);
             paint.setColor(SK_ColorBLUE);
-            paint.setStrokeWidth(5);
-            OSKcanvas_->drawPoint(oskLayout_.keyPos[i].textXY.x(),oskLayout_.keyPos[i].textXY.y(),paint);
-            RNS_LOG_INFO("Key Name : "<<oskLayout_.keyInfo[i].keyName);
-            RNS_LOG_INFO("text X : "<<oskLayout_.keyPos[i].textXY.x()<<" Y: "<<oskLayout_.keyPos[i].textXY.y());
-            RNS_LOG_INFO("HL X : "<<oskLayout_.keyPos[i].highlightTile.x()<<" Y: "<<oskLayout_.keyPos[i].highlightTile.y());
-            #endif
+            OSKcanvas_->drawRect(boundsHL,paint);
+#endif/*SHOW_CREATED_COORDINATE*/
+        }
+    }
+
+//3.  Calculation Navigation index
+     for (unsigned int rowIndex = 0; rowIndex < oskLayout_.keyInfo->size(); rowIndex++) {
+         for (unsigned int columnIndex = 0; columnIndex < oskLayout_.keyInfo->at(rowIndex).size(); columnIndex++) {
+             groupID=oskLayout_.keyInfo->at(rowIndex).at(columnIndex).KBPartitionId;
+             unsigned int keyCount=oskLayout_.keyInfo->at(rowIndex).size(),index;
+             unsigned int rowCount=oskLayout_.keyInfo->size();
+
+             //Predicting sibling on Left
+            index =(columnIndex) ? (columnIndex-1): keyCount-1;
+            oskLayout_.siblingInfo->at(rowIndex).at(columnIndex).siblingLeft.set( index,rowIndex);
+
+            //Predicting sibling on Right
+            index =(columnIndex < keyCount-1) ? (columnIndex+1): 0;
+            oskLayout_.siblingInfo->at(rowIndex).at(columnIndex).siblingRight.set( index,rowIndex);
+
+            //Predicting neighbour for Up Navigation 
+            index =rowIndex;
+            bool siblingFound{false};
+           for(unsigned int i=0;(i<rowCount) && (!siblingFound);i++ ) {
+                index = (index  !=0 ) ? index -1 :rowCount-1;
+                for( unsigned int i=0; i< oskLayout_.keyPos->at(index).size();i++) {
+                    if(groupID == oskLayout_.keyInfo->at(index).at(i).KBPartitionId) {
+                        if(( oskLayout_.keyPos->at(index).at(i).highlightTile.fLeft >= oskLayout_.keyPos->at(rowIndex ).at(columnIndex).highlightTile.x() ) || 
+                            (  oskLayout_.keyPos->at(index).at(i).highlightTile.fRight >= oskLayout_.keyPos->at(rowIndex ).at(columnIndex).highlightTile.x())) {
+                               oskLayout_.siblingInfo->at(rowIndex).at(columnIndex).siblingUp.set( i,index);
+                               siblingFound=true;
+                               break;
+                        }
+                    }
+                }
+            }
+
+            //Predicting neighbour for down Navigation 
+            index =rowIndex;
+            siblingFound=false;
+            for(unsigned int i=0;(i<rowCount) && (!siblingFound);i++ ) {
+                index = (index  != (rowCount-1) ) ? index +1 :0;
+                 for( unsigned int i=0; i< oskLayout_.keyPos->at(index).size();i++) {
+                     if(groupID == oskLayout_.keyInfo->at(index).at(i).KBPartitionId) {
+                         if(( oskLayout_.keyPos->at(index).at(i).highlightTile.fLeft >= oskLayout_.keyPos->at(rowIndex ).at(columnIndex).highlightTile.x() ) || 
+                             (  oskLayout_.keyPos->at(index).at(i).highlightTile.fRight >= oskLayout_.keyPos->at(rowIndex ).at(columnIndex).highlightTile.x())) {
+                                oskLayout_.siblingInfo->at(rowIndex).at(columnIndex).siblingDown.set( i,index);
+                                siblingFound=true;
+                                break;
+                         }
+                     }
+                 }
+             }
+#ifdef SHOW_SIBLING_INFO
+            unsigned int indexL=oskLayout_.siblingInfo->at(rowIndex).at(columnIndex).siblingLeft.x();
+            unsigned int indexR=oskLayout_.siblingInfo->at(rowIndex).at(columnIndex).siblingRight.x();
+            unsigned int upRow=oskLayout_.siblingInfo->at(rowIndex).at(columnIndex).siblingUp.y();
+            unsigned int upKey=oskLayout_.siblingInfo->at(rowIndex).at(columnIndex).siblingUp.x();
+            unsigned int downRow=oskLayout_.siblingInfo->at(rowIndex).at(columnIndex).siblingDown.y();
+            unsigned int downKey=oskLayout_.siblingInfo->at(rowIndex).at(columnIndex).siblingDown.x();
+
+            RNS_LOG_INFO(" Sibling key for key : "<<oskLayout_.keyInfo->at(rowIndex).at(columnIndex).keyName 
+                <<" left Key :  "<< oskLayout_.keyInfo->at(rowIndex).at(indexL).keyName
+                <<"  rigt Key :  "<< oskLayout_.keyInfo->at(rowIndex).at(indexR).keyName
+                <<"  Up Key :  "<< oskLayout_.keyInfo->at(upRow).at(upKey).keyName
+                <<"  down Key :  "<< oskLayout_.keyInfo->at(downRow).at(downKey).keyName);
+#endif/*SHOW_SIBLING_INFO*/
         }
     }
 }
@@ -422,14 +548,5 @@ inline void OnScreenKeyboard::pushToDisplay() {
     backBuffer_->flushAndSubmit();
     std::vector<SkIRect> emptyRect;
     OSKwindowContext_->swapBuffers(emptyRect);
-}
-inline void OnScreenKeyboard::configureScreenSize() {
-    SkSize mainScreenSize=RnsShell::PlatformDisplay::sharedDisplay().screenSize();
-    if(ScreenSize != mainScreenSize) {
-      generateOSKLayout=true;
-      ScreenSize=mainScreenSize;
-    } else {
-      generateOSKLayout=false;
-    }
 }
 

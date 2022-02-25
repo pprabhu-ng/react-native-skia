@@ -13,14 +13,16 @@
 #define DARK_THEME_BG_COLOR          SkColorSetARGB(0xFF, 0x34, 0x34, 0x34)
 #define DARK_THEME_FONT_COLOR        SK_ColorWHITE
 #define DARK_THEME_PH_COLOR          SK_ColorDKGRAY
+#define DARK_THEME_INACTIVE_FONT_COLOR  SK_ColorGRAY
 // LIGHT Theme configuration
 #define LIGHT_THEME_BG_COLOR         SK_ColorGRAY
 #define LIGHT_THEME_FONT_COLOR       SK_ColorBLACK
 #define LIGHT_THEME_PH_COLOR         SK_ColorLTGRAY
+#define LIGHT_THEME_INACTIVE_FONT_COLOR  SK_ColorDKGRAY
 //Highlight configuration
 #define HIGHLIGHT_AREA_WIDTH          40
 #define HIGHLIGHT_AREA_HEIGTH         40
-#define HIGHLIGHT_FONT_SIZE           28
+#define HIGHLIGHT_FONT_SIZE           32
 #define HIGHLIGHT_BG_COLOR           SK_ColorWHITE
 #define HIGHLIGHT_FONT_COLOR         SK_ColorBLACK
 //OSK Screen & component placement confiuration
@@ -46,4 +48,6 @@
 #define DEFAULT_THEME_BG_COLOR       DARK_THEME_BG_COLOR // default as Dark Theme
 #define DEFAULT_THEME_FONT_COLOR     DARK_THEME_FONT_COLOR  // default as Dark Theme
 #define DEFAULT_RETURN_KEY_LABEL     "done"
+//Fail Safe Configurations
+#define DRAW_FONT_FAILURE_INDICATOR  "??"
 #endif //OSK_CONFIG_H

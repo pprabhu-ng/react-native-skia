@@ -30,6 +30,20 @@ enum OSKThemes {
     OSK_DARK_THEME=OSK_DEFAULT_THEME,
     OSK_LIGHT_THEME
 };
+enum KBLayoutType {
+    ALPHA_LOWERCASE_LAYOUT,
+    ALPHA_UPPERCASE_LAYOUT,
+    SYMBOL_LAYOUT
+};
+
+enum keyType {
+    TOGGLE_KEY ,
+    TEXT_KEY,
+    FUNCTION_KEY,
+    KEY_TYPE_COUNT
+};
+
+
 //Configuration to be specified while OSK Launch
 struct OSKConfig {
     OSKTypes  oskType;
@@ -39,16 +53,6 @@ struct OSKConfig {
     bool      enablesReturnKeyAutomatically;
 };
 
-enum keyTypes {
-    ALPHA_LOWERCASE_KEYS = 1<<0,
-    ALPHA_UPPERCASE_KEYS = 1<<1,
-    SYMBOL_KEYS = 1<<2,
-    NUMERIC_KEYS = 1<<3,
-    GROUP_KEYS =  1<<4,
-    ACTION_KEYS =  1<<5,
-    KEY_TYPE_End
-};
-
 typedef struct keyPosition {
     SkPoint        textXY{}; // text X,Y to draw
     SkPoint        textHLXY{}; // font's X,Y to draw
@@ -56,25 +60,40 @@ typedef struct keyPosition {
     SkRect         highlightTile; // Area to highlight on Key Focus
 }keyPosition_t;
 
-typedef struct KeyLayoutInfo {
+typedef struct KeyInfo {
     const char *   keyName;
-    keyTypes       keyType;
-    SkPoint        keySpacing; // X,Y spacing for teh key
-    SkPoint        indexes;   // Row & Column index of the key
-    rnsKey         keyValue;  // RNS key value
-    unsigned int   indexLeft; // Index of the key on immediate Left
-    unsigned int   indexRight; // Index of the key on immediate Right
-    unsigned int   indexUp;  // Index of the key on immediate Up
-    unsigned int   indexDown; // Index of the key on immediate down
-    const char *   keyCaps;    // info about associated key, if any ex: Alpha lower & upper
-    uint32_t       unicharValue;  //unichar vale of fonticon for non KB font's
-}KeyLayoutInfo_t;
+    rnsKey         keyValue;
+    keyType        keyType;
+    unsigned int   KBPartitionId;
+}KeyInfo_t;
+
+typedef struct KeySiblingInfo {
+    SkPoint siblingRight;
+    SkPoint siblingLeft;
+    SkPoint siblingUp;
+    SkPoint siblingDown;
+}keySiblingInfo_t;
+
+typedef struct keyPlacementConfig {
+    SkPoint groupOffset;
+    SkPoint groupKeySpacing;
+    float hlTileFontSizeMultiplier;
+    float fontScaleFactor;
+    unsigned int maxTextLength;
+}keyPlacementConfig_t;
+
+typedef std::vector<std::vector<KeyInfo_t>> KBLayoutKeyInfoContainer;
+typedef std::vector<std::vector<keyPosition_t>> KBLayoutKeyPosContainer;
+typedef std::vector<std::vector<keySiblingInfo_t>> KBLayoutSibblingInfoContainer;
+
 
 struct OSKLayout {
-    KeyLayoutInfo_t*  keyInfo;
-    keyPosition_t*    keyPos;
-    unsigned int      keysCount;
-    keyTypes          KBKeyType;
+    KBLayoutKeyInfoContainer*  keyInfo;
+    KBLayoutKeyPosContainer*    keyPos;
+    KBLayoutSibblingInfoContainer*    siblingInfo;
+    keyPlacementConfig_t*          KBGroupConfig;
+    OSKTypes          KBtype;
+    KBLayoutType      KBLayoutType;
     unsigned int      textFontSize;
     unsigned int      textHLFontSize;
 };
@@ -92,11 +111,11 @@ class OnScreenKeyboard {
 
         void createOSKLayout(OSKTypes KBtype );
         void onHWkeyHandler(rnsKey key, rnsKeyAction eventKeyAction);
-        void highlightFocussedKey(unsigned int index);
+        void highlightFocussedKey(SkPoint index);
         void handleSelection();
         void drawOSK(OSKTypes oskType);
         void drawPlaceHolder();
-        void drawFont(unsigned int index,SkColor color,bool onHLTile=false);
+        void drawFont(SkPoint index,SkColor color,bool onHLTile=false);
         void drawOSKPartition();
         void pushToDisplay();
         void configureScreenSize();
@@ -104,10 +123,10 @@ class OnScreenKeyboard {
 // State Maintainence
         const char *  placeHolderName{nullptr};
         const char*   returnKeyLabel_{nullptr};
-        unsigned int  focussedIndex_{0};
-        unsigned int  lastFocussedIndex_{0};
-        OSKLayout     oskLayout_;
-        OSKThemes     oskTheme_;
+        SkPoint       focussedIndex_{0};
+        SkPoint       lastFocussedIndex_{0};
+        OSKLayout     oskLayout_{0};
+        OSKThemes     oskTheme_{OSK_DEFAULT_THEME};
         SkColor       bgColor_{SK_ColorWHITE};
         SkColor       fontColor_{SK_ColorWHITE};
         bool          ctrlReturnKey_{false};
