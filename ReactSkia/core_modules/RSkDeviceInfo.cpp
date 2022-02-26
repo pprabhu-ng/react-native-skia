@@ -16,17 +16,17 @@ namespace facebook {
 namespace react {
 
 RSkDeviceInfoModule::RSkDeviceInfoModule(
-  const std::string &name,
-  std::shared_ptr<CallInvoker> jsInvoker,
-  Instance *bridgeInstance)
-  : TurboModule(name, jsInvoker), bridgeInstance_(bridgeInstance) {
-  methodMap_["getConstants"] = MethodMetadata{0, getConstants};
-  std::function<void ()> dimensionHandler = std::bind(&RSkDeviceInfoModule::handlewindowDimensionEventNotification, this);  // folly::dynamic
-  navEventId_ = NotificationCenter::defaultCenter().addListener(dimensionEventName_, dimensionHandler);
+    const std::string &name,
+    std::shared_ptr<CallInvoker> jsInvoker,
+    Instance *bridgeInstance)
+    : TurboModule(name, jsInvoker), bridgeInstance_(bridgeInstance) {
+    methodMap_["getConstants"] = MethodMetadata{0, getConstants};
+    std::function<void ()> dimensionHandler = std::bind(&RSkDeviceInfoModule::handlewindowDimensionEventNotification, this);  // folly::dynamic
+    navEventId_ = NotificationCenter::defaultCenter().addListener(dimensionEventName_, dimensionHandler);
 }
 
 RSkDeviceInfoModule::~RSkDeviceInfoModule(){
- NotificationCenter::defaultCenter().removeListener(navEventId_);
+    NotificationCenter::defaultCenter().removeListener(navEventId_);
 }
 
 jsi::Value RSkDeviceInfoModule::getConstants(

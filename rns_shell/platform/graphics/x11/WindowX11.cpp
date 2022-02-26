@@ -66,8 +66,8 @@ void Window::createEventLoop(Application* app) {
                 switch (event.type) {
                     case ConfigureNotify:{
 
-                       if(event.xconfigurerequest.window == DefaultRootWindow(display)) {
-                           RNS_LOG_INFO(" ROOT Window(Screen) Size :" << event.xconfigurerequest.width << "x" << event.xconfigurerequest.height);
+                        if(event.xconfigurerequest.window == DefaultRootWindow(display)) {
+                            RNS_LOG_INFO(" ROOT Window(Screen) Size :" << event.xconfigurerequest.width << "x" << event.xconfigurerequest.height);
 
                             if(((RnsShell::PlatformDisplay::sharedDisplay().getCurrentScreenSize().width()!=event.xconfigurerequest.width) ||
                                 (PlatformDisplay::sharedDisplay().getCurrentScreenSize().height()!=event.xconfigurerequest.height)) &&
