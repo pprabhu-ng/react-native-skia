@@ -70,15 +70,15 @@ void PlatformDisplayX11::initializeEGLDisplay()
 #endif // USE(EGL)
 
 SkSize PlatformDisplayX11::screenSize() {
-    Screen *screen = nullptr;
-    SkSize size = SkSize::MakeEmpty();
+XWindowAttributes winAttr;
+Window rootWin = DefaultRootWindow(display_); // Root Window always returns the updated screen size.
+SkSize size = SkSize::MakeEmpty();
 
-    if(ScreenCount(display_) > 0 && (screen = ScreenOfDisplay(display_, 0))) {
-        size.set(screen->width, screen->height);
-    }
-    return size;
+XGetWindowAttributes(display_, rootWin, &winAttr);
+size.set(winAttr.width, winAttr.height);
+
+return size;
 }
-
 } // namespace RnsShell
 
 #endif // PLATFORM(X11)

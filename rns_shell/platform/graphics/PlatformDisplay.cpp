@@ -23,6 +23,7 @@
 namespace RnsShell {
 
 static PlatformDisplay* s_sharedDisplayForCompositing;
+SkSize PlatformDisplay::currentScreenDimension = {-1,-1};
 
 PlatformDisplay::PlatformDisplay(bool displayOwned)
     : nativeDisplayOwned_(displayOwned)
@@ -158,6 +159,14 @@ bool PlatformDisplay::initialize() {
 #else
     return true;
 #endif
+}
+
+SkSize PlatformDisplay::getCurrentScreenSize() {
+    return currentScreenDimension;
+}
+
+void PlatformDisplay::setCurrentScreenSize(int width,int height) {
+    currentScreenDimension.set(width,height);
 }
 
 } // namespace RnsShell

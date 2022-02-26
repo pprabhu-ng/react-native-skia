@@ -26,6 +26,7 @@ namespace RnsShell {
 
 SkTDynamicHash<WindowX11, XWindow> WindowX11::gWindowMap;
 Window* Window::mainWindow_;
+SkSize Window::currentWindowDimension={-1,-1};
 
 const long kEventMask = ExposureMask | StructureNotifyMask |
                         KeyPressMask | KeyReleaseMask |
@@ -38,11 +39,15 @@ Window* Window::createNativeWindow(void* platformData) {
 
     WindowX11* window = new WindowX11();
     if (!window->initWindow(pDisplay)) {
+
         delete window;
         return nullptr;
     }
-    if(!mainWindow_)
+    if(!mainWindow_) {
+        Display* display = dynamic_cast<PlatformDisplayX11*>(pDisplay)->native();
+        XSelectInput (display, DefaultRootWindow(display), ExposureMask | StructureNotifyMask);
         mainWindow_ = window;
+    }
     return window;
 }
 
@@ -58,13 +63,38 @@ void Window::createEventLoop(Application* app) {
             while (count-- && !done) {
                 XEvent event;
                 XNextEvent(display, &event);
-
                 switch (event.type) {
-                    case ConfigureNotify:
-                        RNS_LOG_INFO("Resize Request with (Width x Height) : (" << event.xconfigurerequest.width <<
+                    case ConfigureNotify:{
+
+                       if(event.xconfigurerequest.window == DefaultRootWindow(display)) {
+                           RNS_LOG_INFO(" ROOT Window(Screen) Size :" << event.xconfigurerequest.width << "x" << event.xconfigurerequest.height);
+
+                            if(((RnsShell::PlatformDisplay::sharedDisplay().getCurrentScreenSize().width()!=event.xconfigurerequest.width) ||
+                                (PlatformDisplay::sharedDisplay().getCurrentScreenSize().height()!=event.xconfigurerequest.height)) &&
+                                ((PlatformDisplay::sharedDisplay().getCurrentScreenSize().height()!=-1) ||
+                                (PlatformDisplay::sharedDisplay().getCurrentScreenSize().width()!=-1))) {
+
+                                RnsShell::PlatformDisplay::sharedDisplay().setCurrentScreenSize(event.xconfigurerequest.width,event.xconfigurerequest.height);
+                                NotificationCenter::defaultCenter().emit("dimensionEventNotification");
+
+                            } else{
+                                    RnsShell::PlatformDisplay::sharedDisplay().setCurrentScreenSize(event.xconfigurerequest.width,event.xconfigurerequest.height);
+                            }
+
+                        } else {
+                                RNS_LOG_INFO("Resize Request with (Width x Height) : (" << event.xconfigurerequest.width <<
                                     " x " << event.xconfigurerequest.height << ")");
-                        app->sizeChanged(event.xconfigurerequest.width, event.xconfigurerequest.height);
+
+                                if((Window::currentWindowDimension.width()!=event.xconfigurerequest.width) ||
+                                    (Window::currentWindowDimension.height()!=event.xconfigurerequest.height)) {
+
+                                    Window::currentWindowDimension.set(event.xconfigurerequest.width,event.xconfigurerequest.height);
+                                    app->sizeChanged(event.xconfigurerequest.width, event.xconfigurerequest.height);
+                                    NotificationCenter::defaultCenter().emit("dimensionEventNotification");
+                                }
+                        }
                         break;
+                    }
                     default:
                         WindowX11* win = WindowX11::gWindowMap.find(event.xany.window);
                         if (win->handleEvent(event)) {

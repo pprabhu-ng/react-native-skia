@@ -64,6 +64,9 @@ public:
     GrDirectContext* directContext() const;
     virtual void didRenderFrame() {};
 
+private:
+    static SkSize currentWindowDimension;
+
 protected:
     Window();
     static Window *mainWindow_;
