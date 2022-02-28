@@ -22,7 +22,7 @@ RSkDeviceInfoModule::RSkDeviceInfoModule(
     : TurboModule(name, jsInvoker), bridgeInstance_(bridgeInstance) {
     methodMap_["getConstants"] = MethodMetadata{0, getConstants};
     std::function<void ()> dimensionHandler = std::bind(&RSkDeviceInfoModule::handlewindowDimensionEventNotification, this);  // folly::dynamic
-    navEventId_ = NotificationCenter::defaultCenter().addListener(dimensionEventName_, dimensionHandler);
+    navEventId_ = NotificationCenter::defaultCenter().addListener("dimensionEventNotification", dimensionHandler);
 }
 
 RSkDeviceInfoModule::~RSkDeviceInfoModule(){
@@ -30,36 +30,36 @@ RSkDeviceInfoModule::~RSkDeviceInfoModule(){
 }
 
 jsi::Value RSkDeviceInfoModule::getConstants(
-  jsi::Runtime &rt,
-  TurboModule &turboModule,
-  const jsi::Value *args,
-  size_t count)  {
+    jsi::Runtime &rt,
+    TurboModule &turboModule,
+    const jsi::Value *args,
+    size_t count)  {
 
-  if (count != 0) {
-      return jsi::Value::undefined();
-  }
+    if (count != 0) {
+        return jsi::Value::undefined();
+    }
 
-  SkSize screenSize = RnsShell::PlatformDisplay::sharedDisplay().screenSize();
-  SkSize mainWindowSize = RnsShell::Window::getMainWindowSize();
-  auto windowMetrics = folly::dynamic::object("width", mainWindowSize.width())("height", mainWindowSize.height())(
-      "scale", 1)("fontScale", 1);
-  auto screenMetrics = folly::dynamic::object("width", screenSize.width())("height", screenSize.height())(
-      "scale", 1)("fontScale", 1);
-  auto dimension = folly::dynamic::object("window", std::move(windowMetrics))(
-      "screen", std::move(screenMetrics));
-  return jsi::valueFromDynamic(rt, folly::dynamic::object("Dimensions", std::move(dimension)));
+    auto dimension = getDimension();
+
+    return jsi::valueFromDynamic(rt, folly::dynamic::object("Dimensions", std::move(dimension)));
 }
 
 void RSkDeviceInfoModule::handlewindowDimensionEventNotification() {
+
+    sendDeviceEventWithName("didUpdateDimensions", getDimension());
+}
+
+folly::dynamic RSkDeviceInfoModule::getDimension() {
+
     SkSize screenSize = RnsShell::PlatformDisplay::sharedDisplay().screenSize();
     SkSize mainWindowSize = RnsShell::Window::getMainWindowSize();
-    auto windowMetrics = folly::dynamic::object("width", mainWindowSize.width())("height", mainWindowSize.height())
-        ("scale", 1)("fontScale", 1);
-    auto screenMetrics = folly::dynamic::object("width", screenSize.width())("height", screenSize.height())
-        ("scale", 1)("fontScale", 1);
+    auto windowMetrics = folly::dynamic::object("width", mainWindowSize.width())("height", mainWindowSize.height())(
+      "scale", 1)("fontScale", 1);
+    auto screenMetrics = folly::dynamic::object("width", screenSize.width())("height", screenSize.height())(
+      "scale", 1)("fontScale", 1);
 
-    sendDeviceEventWithName(events_[0], folly::dynamic(folly::dynamic::object("window", std::move(windowMetrics))
-        ("screen", std::move(screenMetrics))));
+    return folly::dynamic::object("window", std::move(windowMetrics))(
+      "screen", std::move(screenMetrics));
 
 }
 
@@ -71,7 +71,7 @@ void RSkDeviceInfoModule::sendDeviceEventWithName(std::string eventName, folly::
         "RCTDeviceEventEmitter", "emit",
         params != NULL ? folly::dynamic::array(folly::dynamic::array(eventName),
         params)
-        : folly::dynamic::array(eventName));
+         : folly::dynamic::array(eventName));
 }
 
 }// namespace react

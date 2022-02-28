@@ -45,7 +45,7 @@ Window* Window::createNativeWindow(void* platformData) {
     }
     if(!mainWindow_) {
         Display* display = dynamic_cast<PlatformDisplayX11*>(pDisplay)->native();
-        XSelectInput (display, DefaultRootWindow(display), ExposureMask | StructureNotifyMask);
+        XSelectInput (display, DefaultRootWindow(display), ExposureMask | StructureNotifyMask); // Root window is used to monitor screen resolution change in X11
         mainWindow_ = window;
     }
     return window;
@@ -58,6 +58,10 @@ void Window::createEventLoop(Application* app) {
     const int x11_fd = ConnectionNumber(display);
 
     bool done = false;
+    auto screenDimension = RnsShell::PlatformDisplay::sharedDisplay().screenSize();
+
+    RnsShell::PlatformDisplay::sharedDisplay().setCurrentScreenSize(screenDimension.width(),screenDimension.height());
+
     while (!done) {
         if (int count = XPending(display)) {
             while (count-- && !done) {
@@ -68,17 +72,14 @@ void Window::createEventLoop(Application* app) {
 
                         if(event.xconfigurerequest.window == DefaultRootWindow(display)) {
                             RNS_LOG_INFO(" ROOT Window(Screen) Size :" << event.xconfigurerequest.width << "x" << event.xconfigurerequest.height);
+                            auto screenSize =RnsShell::PlatformDisplay::sharedDisplay().getCurrentScreenSize();
 
-                            if(((RnsShell::PlatformDisplay::sharedDisplay().getCurrentScreenSize().width()!=event.xconfigurerequest.width) ||
-                                (PlatformDisplay::sharedDisplay().getCurrentScreenSize().height()!=event.xconfigurerequest.height)) &&
-                                ((PlatformDisplay::sharedDisplay().getCurrentScreenSize().height()!=-1) ||
-                                (PlatformDisplay::sharedDisplay().getCurrentScreenSize().width()!=-1))) {
+                            if(((screenSize.width()!=event.xconfigurerequest.width) ||
+                                (screenSize.height()!=event.xconfigurerequest.height))) {
 
                                 RnsShell::PlatformDisplay::sharedDisplay().setCurrentScreenSize(event.xconfigurerequest.width,event.xconfigurerequest.height);
                                 NotificationCenter::defaultCenter().emit("dimensionEventNotification");
 
-                            } else{
-                                    RnsShell::PlatformDisplay::sharedDisplay().setCurrentScreenSize(event.xconfigurerequest.width,event.xconfigurerequest.height);
                             }
 
                         } else {

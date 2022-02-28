@@ -24,12 +24,11 @@ class RSkDeviceInfoModule : public TurboModule {
 
     private:
 
-        std::vector<std::string> events_ = {"didUpdateDimensions"};
-        std::string dimensionEventName_ = "dimensionEventNotification";
         unsigned int navEventId_ = UINT_MAX;
 
         void handlewindowDimensionEventNotification();
         void sendDeviceEventWithName(std::string eventName, folly::dynamic &&params);
+        static folly::dynamic getDimension();
 
         static jsi::Value getConstants(
             jsi::Runtime &rt,
