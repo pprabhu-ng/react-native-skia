@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#include <ctype.h>
-
 #include "include/core/SkFont.h"
 #include "include/core/SkFontMgr.h"
 
@@ -17,21 +15,22 @@
 #include "OSKLayout.h"
 
 static std::unique_ptr<OnScreenKeyboard> OSKHandle_;
-static unsigned int OSKeventId_;
+static int OSKeventId_{-1},exposeEventID_{-1};
 static SkSize ScreenSize{0,0};
 static SkSize baseScreenSize{1280,720};
 static bool   generateOSKLayout{true};
 
-OnScreenKeyboard::OnScreenKeyboard() :
+OnScreenKeyboard::OnScreenKeyboard(OSKConfig oskConfig) :
+    //1. Create sub window
     OSKwindow_(RnsShell::Window::createNativeWindow(&RnsShell::PlatformDisplay::sharedDisplayForCompositing(),
              SkSize::Make(ScreenSize.width(),ScreenSize.height()),
              RnsShell::SubWindow)) {
-
     if(OSKwindow_) {
         OSKwindow_->setTitle("OSK Window");
         OSKwindowContext_ = RnsShell::WCF::createContextForWindow(reinterpret_cast<GLNativeWindowType>(OSKwindow_->nativeWindowHandle()),
                    &RnsShell::PlatformDisplay::sharedDisplayForCompositing(), RnsShell::DisplayParams());
         if(OSKwindowContext_) {
+            OSKwindowContext_->makeContextCurrent();
             backBuffer_ = OSKwindowContext_->getBackbufferSurface();
         } else {
             RNS_LOG_ERROR("Invalid windowContext for nativeWindowHandle : " << OSKwindowContext_);
@@ -39,14 +38,32 @@ OnScreenKeyboard::OnScreenKeyboard() :
         }
     RNS_LOG_DEBUG("Native Window Handle : " << OSKwindow_->nativeWindowHandle() << " Window Context : " << OSKwindowContext_.get() << "Back Buffer : " << backBuffer_.get());
     OSKcanvas_ = backBuffer_->getCanvas();
-    std::function<void(rnsKey, rnsKeyAction)> handler = std::bind(&OnScreenKeyboard::onHWkeyHandler, this,
-                                                              std::placeholders::_1,
-                                                              std::placeholders::_2);
-    OSKeventId_ = NotificationCenter::OSKCenter().addListener("onHWKeyEvent", handler);
+
+    //2. Set up OSk configuration
+        oskConfig_=oskConfig;
+        switch(oskConfig_.oskTheme) {
+            case OSK_LIGHT_THEME:
+                bgColor_ = LIGHT_THEME_BG_COLOR ;
+                fontColor_ = LIGHT_THEME_FONT_COLOR;
+            break;
+            case OSK_DARK_THEME:
+            default:
+                bgColor_ = DARK_THEME_BG_COLOR ;
+                fontColor_ =DARK_THEME_FONT_COLOR;
+            break;
+        }
+        oskLayout_.textFontSize= FONT_SIZE *(ScreenSize.width()/baseScreenSize.width());
+        oskLayout_.textHLFontSize= HIGHLIGHT_FONT_SIZE *(ScreenSize.width()/baseScreenSize.width());
+
+    //3. Register for window event.
+        std::function<void()> handler = std::bind(&OnScreenKeyboard::onExposeHandler,this);
+        exposeEventID_ = NotificationCenter::OSKCenter().addListener("OSkWindowExposed", handler);
   }
 }
 
 void OnScreenKeyboard::launch(OSKConfig oskConfig) {
+
+RNS_LOG_INFO("Need to do emit , keyboardWillHide Event to APP");
 
 /* Setup Screen dimension */
     SkSize mainScreenSize=RnsShell::PlatformDisplay::sharedDisplay().screenSize();
@@ -56,60 +73,39 @@ void OnScreenKeyboard::launch(OSKConfig oskConfig) {
     } else {
         generateOSKLayout=false;
     }
-
 /* Create OSK instance */
-    OSKHandle_=std::make_unique<OnScreenKeyboard>();
-// Set up OSk configuration
-    OSKHandle_->oskTheme_=oskConfig.oskTheme;
-    switch(OSKHandle_->oskTheme_) {
-        case OSK_LIGHT_THEME:
-            OSKHandle_->bgColor_ = LIGHT_THEME_BG_COLOR ;
-            OSKHandle_->fontColor_ = LIGHT_THEME_FONT_COLOR;
-        break;
-        case OSK_DARK_THEME:
-        default:
-            OSKHandle_->bgColor_ = DARK_THEME_BG_COLOR ;
-            OSKHandle_->fontColor_ =DARK_THEME_FONT_COLOR;
-        break;
-    }
-    OSKHandle_->returnKeyLabel_=oskConfig.returnKeyLabel;
-    OSKHandle_->placeHolderName=oskConfig.placeHolderName;
-    OSKHandle_->ctrlReturnKey_=oskConfig.enablesReturnKeyAutomatically;
-/* Display OSK */
-    OSKHandle_->oskLayout_.textFontSize= FONT_SIZE *(ScreenSize.width()/baseScreenSize.width());
-    OSKHandle_->oskLayout_.textHLFontSize= HIGHLIGHT_FONT_SIZE *(ScreenSize.width()/baseScreenSize.width());
-
-    OSKHandle_->OSKwindow_->show();
-    OSKHandle_->OSKcanvas_->clear(OSKHandle_->bgColor_);
-    OSKHandle_->drawPlaceHolder();
-    OSKHandle_->drawOSK(oskConfig.oskType);
-
-    RNS_LOG_TODO("Need to do emit , keyboardWillHide Event to APP");
+    OSKHandle_=std::make_unique<OnScreenKeyboard>(oskConfig);
 }
 
 void OnScreenKeyboard::exit() {
-    RNS_LOG_TODO("Need to do emit,keyboardWillHide Event  to APP");
-    NotificationCenter::OSKCenter().removeListener(OSKeventId_);
+    RNS_LOG_TODO("Need to emitkeyboardWillHide Event  to APP");
+    if( OSKeventId_ )  {
+        NotificationCenter::OSKCenter().removeListener(OSKeventId_);
+        OSKeventId_= -1;
+    }
+    if(exposeEventID_) {
+        NotificationCenter::OSKCenter().removeListener(exposeEventID_);
+        exposeEventID_=-1;
+    }
     OSKHandle_->OSKwindow_->closeWindow();
     OnScreenKeyboard* fp = OSKHandle_.release();
     delete fp;
 }
 
 void OnScreenKeyboard::drawOSK(OSKTypes oskType) {
-    RNS_PROFILE_START(OSKLayoutCreateTime)
+    RNS_PROFILE_START(OSKLayoutCreate)
     createOSKLayout(oskType);
-    RNS_PROFILE_END("OSK Layout Create",OSKLayoutCreateTime)
+    RNS_PROFILE_START(OSKDraw)
 //clear KeyBoard Area
     SkRect kbArea=SkRect::MakeXYWH( ScreenSize.width()*START_OFFSET_OSK_X,
                                     ScreenSize.height()*START_OFFSET_OSK_Y,
                                     ScreenSize.width(),
                                     ScreenSize.height()- ScreenSize.height()*START_OFFSET_OSK_Y
-                                );
+                                  );
     SkPaint paintObj;
     paintObj.setColor(bgColor_);
     OSKcanvas_->drawRect(kbArea,paintObj);
     if(oskLayout_.keyInfo && oskLayout_.keyPos) {
-        RNS_PROFILE_START(OSKDrawTimeStamp)
         /*1. Draw Keys */
         for (unsigned int rowIndex = 0; rowIndex < oskLayout_.keyInfo->size(); rowIndex++) {
             for (unsigned int keyIndex = 0; keyIndex < oskLayout_.keyInfo->at(rowIndex).size(); keyIndex++) {
@@ -118,25 +114,25 @@ void OnScreenKeyboard::drawOSK(OSKTypes oskType) {
         }
         /*2. Draw Kb partition*/
         drawOSKPartition();
-        RNS_PROFILE_END("OSk Draw Done : ",OSKDrawTimeStamp)
         /*3. Highlighlight default focussed key*/
         highlightFocussedKey({1,0});
-        focussedIndex_.set(1,0);
+        focussedKey_.set(1,0);
     }
+    RNS_PROFILE_END("OSk Draw completion : ",OSKDraw)
 }
 
 void OnScreenKeyboard::drawPlaceHolder(){
     SkPaint paint;
-    if(placeHolderName) {
+    if(oskConfig_.placeHolderName) {
         SkFont font;
         paint.setColor(fontColor_);
         font.setSize(PLACEHOLDER_FONT_SIZE);
-        OSKcanvas_->drawSimpleText(placeHolderName,strlen(placeHolderName), SkTextEncoding::kUTF8,
+        OSKcanvas_->drawSimpleText(oskConfig_.placeHolderName,strlen(oskConfig_.placeHolderName), SkTextEncoding::kUTF8,
                                    ScreenSize.width()*START_OFFSET_NAME_X,
                                    ScreenSize.height()*START_OFFSET_NAME_Y,
                                    font, paint);
     }
-    paint.setColor((oskTheme_ == OSK_LIGHT_THEME) ? LIGHT_THEME_PH_COLOR: DARK_THEME_PH_COLOR);
+    paint.setColor((oskConfig_.oskTheme == OSK_LIGHT_THEME) ? LIGHT_THEME_PH_COLOR: DARK_THEME_PH_COLOR);
     SkRect rect=SkRect::MakeXYWH( ScreenSize.width()*START_OFFSET_PLACEHOLDER_X,
                                   ScreenSize.height()*START_OFFSET_PLACEHOLDER_Y,
                                   ScreenSize.width()*PLACEHOLDER_LENGTH,
@@ -152,8 +148,8 @@ inline void OnScreenKeyboard::drawFont(SkPoint index,SkColor color,bool onHLTile
         SkPaint textPaint;
         SkFont font;
         SkString uniChar;
-        char upperCase;
         char *keyName=(char*)oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyName;
+        char upperCase[2];
         unsigned int textX,textY,groupID;
 
         textPaint.setColor(color);
@@ -161,9 +157,10 @@ inline void OnScreenKeyboard::drawFont(SkPoint index,SkColor color,bool onHLTile
         groupID=oskLayout_.keyInfo->at(rowIndex).at(keyIndex).KBPartitionId;
 
         if(( oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyType == TEXT_KEY ) &&
-           (isalpha(*keyName)) && oskLayout_.KBLayoutType == ALPHA_UPPERCASE_LAYOUT ) {
-            upperCase=(*keyName-LOWER_TO_UPPER_CASE_OFFSET);
-            keyName=&upperCase;
+           (oskLayout_.KBLayoutType == ALPHA_UPPERCASE_LAYOUT) && (isalpha(*keyName))) {
+            upperCase[0] = *keyName-LOWER_TO_UPPER_CASE_OFFSET;
+            upperCase[1]='\0';
+            keyName=upperCase;
         }
 
         if(onHLTile) {
@@ -177,11 +174,11 @@ inline void OnScreenKeyboard::drawFont(SkPoint index,SkColor color,bool onHLTile
                 textY=oskLayout_.keyPos->at(rowIndex).at(keyIndex).textHLXY.y();
             }
         } else {
-            if (oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyType == TOGGLE_KEY){
+            if (oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyType == TOGGLE_KEY) {
                 ToggleKeyMap :: iterator keyFunction =toggleKeyMap.find(keyName);
                 if(keyFunction != toggleKeyMap.end()) {
-                   if(keyFunction->second != oskLayout_.KBLayoutType) 
-                       textPaint.setColor((oskTheme_ == OSK_LIGHT_THEME) ? LIGHT_THEME_INACTIVE_FONT_COLOR: DARK_THEME_INACTIVE_FONT_COLOR);
+                   if(keyFunction->second != oskLayout_.KBLayoutType)
+                       textPaint.setColor((oskConfig_.oskTheme == OSK_LIGHT_THEME) ? LIGHT_THEME_INACTIVE_FONT_COLOR: DARK_THEME_INACTIVE_FONT_COLOR);
                 }
             }
             font.setSize(oskLayout_.textFontSize * oskLayout_.KBGroupConfig[groupID].fontScaleFactor);
@@ -191,6 +188,7 @@ inline void OnScreenKeyboard::drawFont(SkPoint index,SkColor color,bool onHLTile
 
         if(oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyType == FUNCTION_KEY) {
             FunctionKeymap :: iterator keyFunction =functionKeyMap.find(keyName);
+            keyName=(char *)DRAW_FONT_FAILURE_INDICATOR;
             if(keyFunction != functionKeyMap.end()) {
                 UnicharFontConfig_t uniCharConfig = keyFunction->second;
                 sk_sp<SkFontMgr> mgr(SkFontMgr::RefDefault());
@@ -198,18 +196,14 @@ inline void OnScreenKeyboard::drawFont(SkPoint index,SkColor color,bool onHLTile
                 if (typeface) {
                     uniChar.appendUnichar(uniCharConfig.unicharValue);
                     font.setTypeface(typeface);
-                    if(onHLTile) 
+                    if(onHLTile)
                         font.setSize(oskLayout_.textHLFontSize* uniCharConfig.fontScaleFactor);
                     else
                         font.setSize(oskLayout_.textFontSize* uniCharConfig.fontScaleFactor);
                     keyName=(char *)uniChar.c_str();
-                } else {
-                /*To indicate unichar not supported*/
-                    keyName=(char *)DRAW_FONT_FAILURE_INDICATOR;
                 }
             }
-        } 
-        RNS_LOG_INFO("Drawing text"<<keyName);
+        }
         OSKcanvas_->drawSimpleText(keyName, strlen(keyName), SkTextEncoding::kUTF8,
                                    textX,textY,font, textPaint
                                   );
@@ -236,9 +230,9 @@ inline void OnScreenKeyboard::drawFont(SkPoint index,SkColor color,bool onHLTile
 }
 
 void OnScreenKeyboard::drawOSKPartition() {
-    if(oskLayout_.KBtype != OSK_NUMERIC_KB) {
+    if(oskConfig_.oskType != OSK_NUMERIC_KB) {
         SkPaint paint;
-        paint.setColor((oskTheme_ == OSK_LIGHT_THEME) ? LIGHT_THEME_PH_COLOR: DARK_THEME_PH_COLOR);
+        paint.setColor((oskConfig_.oskTheme == OSK_LIGHT_THEME) ? LIGHT_THEME_PH_COLOR: DARK_THEME_PH_COLOR);
         paint.setStrokeWidth(2);
         unsigned int startY,endY,xpos,rowCount=oskLayout_.keyInfo->size()-1;
         unsigned int KeyCount=oskLayout_.keyInfo->at(rowCount).size()-1;
@@ -258,8 +252,9 @@ void OnScreenKeyboard::drawOSKPartition() {
 void OnScreenKeyboard ::highlightFocussedKey(SkPoint index) {
     SkPaint paintObj;
     unsigned int rowIndex=index.y(),keyIndex=index.x();
-    unsigned int lastRowIndex=lastFocussedIndex_.y(),lastKeyIndex=lastFocussedIndex_.x();
+    unsigned int lastRowIndex=lastFocussedKey_.y(),lastKeyIndex=lastFocussedKey_.x();
 
+     RNS_PROFILE_START(HighlightOSKKey)
      //reset last focussed item
      paintObj.setColor(bgColor_);
      paintObj.setAntiAlias(true);
@@ -271,60 +266,79 @@ void OnScreenKeyboard ::highlightFocussedKey(SkPoint index) {
     OSKcanvas_->drawRect(oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile,paintObj);
     drawFont({keyIndex,rowIndex},HIGHLIGHT_FONT_COLOR,true);
     pushToDisplay();
+    RNS_PROFILE_END(" Highlight Completion : ",HighlightOSKKey)
     return;
 }
-
+void OnScreenKeyboard::onExposeHandler() {
+    if(exposeEventID_) {
+        NotificationCenter::OSKCenter().removeListener(exposeEventID_);
+        exposeEventID_=-1;
+    }
+    OSKwindow_->show();
+    OSKcanvas_->clear(bgColor_);
+    drawPlaceHolder();
+    drawOSK(oskConfig_.oskType);
+    // Registering Key Pressed event
+    std::function<void(rnsKey, rnsKeyAction)> handler = std::bind(&OnScreenKeyboard::onHWkeyHandler,this,
+                                                              std::placeholders::_1,
+                                                              std::placeholders::_2);
+    OSKeventId_ = NotificationCenter::OSKCenter().addListener("onHWKeyEvent", handler);
+}
 void OnScreenKeyboard::onHWkeyHandler(rnsKey keyValue, rnsKeyAction eventKeyAction){
     if(eventKeyAction != RNS_KEY_Press) return;
 
-    SkPoint siblingIndex;
-    siblingIndex=lastFocussedIndex_=focussedIndex_;
-    unsigned int rowIndex=focussedIndex_.y(),keyIndex=focussedIndex_.x();
+    SkPoint hlCandidate;
+    lastFocussedKey_=focussedKey_;
+    unsigned int rowIndex=focussedKey_.y(),keyIndex=focussedKey_.x();
+    RNS_LOG_INFO("KEY RECEIVED : "<<RNSKeyMap[keyValue]);
 
-    RNS_LOG_DEBUG("KEY RECEIVED : "<<RNSKeyMap[keyValue]);
     switch( keyValue ) {
     /*Case 1: handle Enter/selection key*/
         case RNS_KEY_Select:
             handleSelection();
+            lastFocussedKey_=hlCandidate=focussedKey_;
         break;
     /* Case  2: Process Navigation Keys*/
         case RNS_KEY_Right:
-            siblingIndex= oskLayout_.siblingInfo->at(rowIndex).at(keyIndex).siblingRight;
+            hlCandidate= oskLayout_.siblingInfo->at(rowIndex).at(keyIndex).siblingRight;
         break;
         case RNS_KEY_Left:
-            siblingIndex= oskLayout_.siblingInfo->at(rowIndex).at(keyIndex).siblingLeft;
+            hlCandidate= oskLayout_.siblingInfo->at(rowIndex).at(keyIndex).siblingLeft;
         break;
         case RNS_KEY_Up:
-            siblingIndex= oskLayout_.siblingInfo->at(rowIndex).at(keyIndex).siblingUp;
+            hlCandidate= oskLayout_.siblingInfo->at(rowIndex).at(keyIndex).siblingUp;
         break;
         case RNS_KEY_Down:
-            siblingIndex= oskLayout_.siblingInfo->at(rowIndex).at(keyIndex).siblingDown;
+            hlCandidate= oskLayout_.siblingInfo->at(rowIndex).at(keyIndex).siblingDown;
         break;
         default:
         {
+            bool keyFound=false;
+            hlCandidate=focussedKey_;
             if(keyValue !=RNS_KEY_UnKnown ) {
     /*Case 3: Emit back other known keys*/
                 NotificationCenter::OSKCenter().emit("onOSKKeyEvent", keyValue, eventKeyAction);
-                for (unsigned int rowIndex=0; rowIndex < oskLayout_.keyInfo->size();rowIndex++) {
+                for (unsigned int rowIndex=0; (rowIndex < oskLayout_.keyInfo->size()) && (!keyFound);rowIndex++) {
                     for (unsigned int index=0; index<oskLayout_.keyInfo->at(rowIndex).size();index++) {
                         if(oskLayout_.keyInfo->at(rowIndex).at(index).keyValue == keyValue) {
-                            siblingIndex.set(index,rowIndex);
+                            hlCandidate.set(index,rowIndex);
+                            keyFound=true;
                             break;
                         }
                     }
                 }
-            }
+            } 
         }
         break;
     }
-    focussedIndex_ = siblingIndex;
-    if(siblingIndex != lastFocussedIndex_) {
-        highlightFocussedKey(siblingIndex);
+    focussedKey_ = hlCandidate;
+    if(focussedKey_ != lastFocussedKey_) {
+        highlightFocussedKey(focussedKey_);
     }
 }
 
 void OnScreenKeyboard::handleSelection() {
-    unsigned int keyIndex=focussedIndex_.x(),rowIndex=focussedIndex_.y();
+    unsigned int keyIndex=focussedKey_.x(),rowIndex=focussedKey_.y();
     if(oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyValue == RNS_KEY_Select) {
        exit();
     } else if (oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyType == TOGGLE_KEY){
@@ -338,52 +352,59 @@ void OnScreenKeyboard::handleSelection() {
     }
 }
 
-void OnScreenKeyboard::createOSKLayout(OSKTypes KBtype) {
+void OnScreenKeyboard::createOSKLayout(OSKTypes oskType) {
 
-    if(oskLayout_.KBtype == OSK_NUMERIC_KB) {
+    if(oskType == OSK_NUMERIC_KB) {
+        RNS_LOG_DEBUG("DRAW call for Numeric KB");
         oskLayout_.keyInfo=&numericKBKeyKeyInfo;
         oskLayout_.keyPos=&numericKBKeyPos;
         oskLayout_.siblingInfo=&numericKBKeySiblingInfo;
         oskLayout_.KBGroupConfig=numericKBGroupConfig;
-
     } else {
         if(oskLayout_.KBLayoutType == SYMBOL_LAYOUT) {
+            RNS_LOG_DEBUG("DRAW call for AlphaNumeric-symbol KB");
             oskLayout_.keyInfo=&symbolKBKBKeyInfo;
             oskLayout_.keyPos=&symbolKBKBKeyPos;
             oskLayout_.siblingInfo=&symbolKBKBKeySiblingInfo;
             oskLayout_.KBGroupConfig=symbolKBGroupConfig;
         } else {
+            RNS_LOG_DEBUG("DRAW call for AlphaNumeric KB : "<<((oskLayout_.KBLayoutType == ALPHA_UPPERCASE_LAYOUT)? "UpperCase" : "LowerCase"));
             oskLayout_.keyInfo=&alphaNumericKBKeyInfo;
             oskLayout_.keyPos=&alphaNumericKBKeyPos;
             oskLayout_.siblingInfo=&alphaNumericKBKeySiblingInfo;
             oskLayout_.KBGroupConfig=alphaNumericKBGroupConfig;
         }
     }
+    unsigned int XscaleFactor = ScreenSize.width()/baseScreenSize.width();
+    unsigned int YscaleFactor =ScreenSize.height()/baseScreenSize.height();
+    oskLayout_.textFontSize= FONT_SIZE *XscaleFactor;
+    oskLayout_.textHLFontSize= HIGHLIGHT_FONT_SIZE *XscaleFactor;
+
     // Generate key Position info based on screen Size
     // Not needed, if screen Size is not changed & Layout already created
     if((!oskLayout_.keyPos->empty()) && (! generateOSKLayout )) return;
 
-     RNS_LOG_INFO(" CREATING OSK LAYOUT AGAIN for KB TYPEPE::"<<oskLayout_.KBLayoutType);
+    generateOSKLayout=false;//reset on creation
+    RNS_LOG_INFO("Creating new Layout info for KB type : "<<oskConfig_.oskType<< " and Key Type : "<<oskLayout_.KBLayoutType);
+    RNS_LOG_INFO("Create Layout request on resolution change : "<<generateOSKLayout <<" on Launch : "<<oskLayout_.keyPos->empty());
 
     if(oskLayout_.keyPos && oskLayout_.siblingInfo ) {
         oskLayout_.keyPos->clear();
         oskLayout_.siblingInfo->clear();
     }
 
-    unsigned int rowSize=oskLayout_.keyInfo->size(); 
-    unsigned int XscaleFactor = ScreenSize.width()/baseScreenSize.width();
-    unsigned int YscaleFactor =ScreenSize.height()/baseScreenSize.height();
     unsigned int groupKeyIndex{0},hlX,hlY,groupHLTileWidth,groupHLTileHeigth,groupID;
+    int fontHeightAdjustment=0;
     SkPoint groupOffset,groupKeySpacing;
     SkRect bounds,boundsCapsHL,boundsHL;
     SkFont font,fontHL;
     char * keyName;
     SkString uniChar;
 
+    unsigned int rowSize=oskLayout_.keyInfo->size();
     oskLayout_.keyPos->resize(rowSize);
     oskLayout_.siblingInfo->resize(rowSize);
-    oskLayout_.textFontSize= FONT_SIZE *XscaleFactor;
-    oskLayout_.textHLFontSize= HIGHLIGHT_FONT_SIZE *XscaleFactor;
+
     SkPoint oskStartpt{(START_OFFSET_OSK_X*ScreenSize.width()*XscaleFactor),
                        (START_OFFSET_OSK_Y*ScreenSize.height()*YscaleFactor)};
 
@@ -392,8 +413,8 @@ void OnScreenKeyboard::createOSKLayout(OSKTypes KBtype) {
         unsigned int columnSize=oskLayout_.keyInfo->at(rowIndex).size();
         oskLayout_.keyPos->at(rowIndex).resize(columnSize);
         oskLayout_.siblingInfo->at(rowIndex).resize(columnSize);
-        for (unsigned int columnIndex = 0; columnIndex < columnSize; columnIndex++) {
 
+        for (unsigned int columnIndex = 0; columnIndex < columnSize; columnIndex++) {
     //1.  Calculate Highlight Tile
             groupID=oskLayout_.keyInfo->at(rowIndex).at(columnIndex).KBPartitionId;
             groupKeyIndex=(columnIndex !=0) ?((groupID != oskLayout_.keyInfo->at(rowIndex).at(columnIndex-1).KBPartitionId) ? 0: (groupKeyIndex+1)): columnIndex;
@@ -415,7 +436,7 @@ void OnScreenKeyboard::createOSKLayout(OSKTypes KBtype) {
                 fontHL.setSize(oskLayout_.textHLFontSize * oskLayout_.KBGroupConfig[groupID].fontScaleFactor);
                 fontHL.setEdging(SkFont::Edging::kAntiAlias);
             }
-            /* Note Enchancement :To Handle Variable tile width on the same group: Need to add Tile width info in the  Layout
+            /* Enchancement Note:To Handle Variable tile width on the same group: Need to add Tile width info in the  Layout
                 and here on generating tile x,y co-ordinate, previous tiles spacing to be accumulated and considered as groupKeySpacing
              */
             hlX = oskStartpt.x()+groupOffset.x()+(( groupHLTileWidth + groupKeySpacing.x()) * groupKeyIndex);
@@ -426,6 +447,7 @@ void OnScreenKeyboard::createOSKLayout(OSKTypes KBtype) {
             /*Calculate Font dimenesion */
             if(oskLayout_.keyInfo->at(rowIndex).at(columnIndex).keyType == FUNCTION_KEY) {
                 FunctionKeymap :: iterator keyFunction =functionKeyMap.find(keyName);
+                keyName=(char*)DRAW_FONT_FAILURE_INDICATOR;
                 if(keyFunction != functionKeyMap.end()) {
                     UnicharFontConfig_t uniCharConfig = keyFunction->second;
                     sk_sp<SkFontMgr> mgr(SkFontMgr::RefDefault());
@@ -443,15 +465,12 @@ void OnScreenKeyboard::createOSKLayout(OSKTypes KBtype) {
                         typeface->getFamilyName(&familyName);
                         RNS_LOG_INFO("UniCahr Found in FAMILY :"<<familyName.c_str());
 #endif/*SHOW_UNICHAR_FAMILY_INFO*/
-                    } else {
-                        RNS_LOG_ERROR("UniChar not supported in any of the available font family");
-                        keyName=(char*)DRAW_FONT_FAILURE_INDICATOR;
-                    }
+                    } 
                 }
             } else {
                 if(( oskLayout_.keyInfo->at(rowIndex).at(columnIndex).keyType == TEXT_KEY ) && (isalpha(*keyName))) {
                     char upperCase=*keyName-LOWER_TO_UPPER_CASE_OFFSET;
-                    fontHL.measureText(&upperCase, strlen(keyName), SkTextEncoding::kUTF8, &boundsCapsHL);
+                    fontHL.measureText(&upperCase, 1, SkTextEncoding::kUTF8, &boundsCapsHL);
                     oskLayout_.keyPos->at(rowIndex).at(columnIndex).textCapsHLXY.set(
                                 (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.x() + (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.width() - boundsCapsHL.width() )/2),
                                 (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.y() + (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.height() + boundsCapsHL.height() )/2));
@@ -459,13 +478,20 @@ void OnScreenKeyboard::createOSKLayout(OSKTypes KBtype) {
             }
             font.measureText(keyName, strlen(keyName), SkTextEncoding::kUTF8, &bounds);
             fontHL.measureText(keyName, strlen(keyName), SkTextEncoding::kUTF8,&boundsHL);
-
+#if 0
+            /* Fix : to adjust the font inside Higlight tile. Need for symobol like (|  `), which has greater 
+               high decend or ascend
+            */
+            fontHeightAdjustment=0;
+            if(( oskLayout_.keyPos->at(rowIndex).at(columnIndex).textHLXY.y() +(boundsHL.height()/2) )> oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.fBottom) fontHeightAdjustment =-3;
+            if(( oskLayout_.keyPos->at(rowIndex).at(columnIndex).textHLXY.y() -(boundsHL.height()/2) )< oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.fTop) fontHeightAdjustment =3;
+#endif
             oskLayout_.keyPos->at(rowIndex).at(columnIndex).textXY.set(
                         (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.x() + (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.width() - bounds.width() )/2),
                         (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.y() + (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.height() + bounds.height() )/2));
             oskLayout_.keyPos->at(rowIndex).at(columnIndex).textHLXY.set(
                         (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.x() + (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.width() - boundsHL.width() )/2),
-                        (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.y() + (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.height() + boundsHL.height() )/2));
+                        (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.y() + (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.height() + boundsHL.height() )/2)+fontHeightAdjustment);
 
 #ifdef SHOW_FONT_BOUNDS
             SkPaint paint;
@@ -500,7 +526,7 @@ void OnScreenKeyboard::createOSKLayout(OSKTypes KBtype) {
                 index = (index  !=0 ) ? index -1 :rowCount-1;
                 for( unsigned int i=0; i< oskLayout_.keyPos->at(index).size();i++) {
                     if(groupID == oskLayout_.keyInfo->at(index).at(i).KBPartitionId) {
-                        if(( oskLayout_.keyPos->at(index).at(i).highlightTile.fLeft >= oskLayout_.keyPos->at(rowIndex ).at(columnIndex).highlightTile.x() ) || 
+                        if(( oskLayout_.keyPos->at(index).at(i).highlightTile.fLeft >= oskLayout_.keyPos->at(rowIndex ).at(columnIndex).highlightTile.x() ) ||
                             (  oskLayout_.keyPos->at(index).at(i).highlightTile.fRight >= oskLayout_.keyPos->at(rowIndex ).at(columnIndex).highlightTile.x())) {
                                oskLayout_.siblingInfo->at(rowIndex).at(columnIndex).siblingUp.set( i,index);
                                siblingFound=true;
@@ -510,14 +536,14 @@ void OnScreenKeyboard::createOSKLayout(OSKTypes KBtype) {
                 }
             }
 
-            //Predicting neighbour for down Navigation 
+            //Predicting neighbour for down Navigation
             index =rowIndex;
             siblingFound=false;
             for(unsigned int i=0;(i<rowCount) && (!siblingFound);i++ ) {
-                index = (index  != (rowCount-1) ) ? index +1 :0;
+                index = (index != (rowCount-1) ) ? index +1 :0;
                  for( unsigned int i=0; i< oskLayout_.keyPos->at(index).size();i++) {
                      if(groupID == oskLayout_.keyInfo->at(index).at(i).KBPartitionId) {
-                         if(( oskLayout_.keyPos->at(index).at(i).highlightTile.fLeft >= oskLayout_.keyPos->at(rowIndex ).at(columnIndex).highlightTile.x() ) || 
+                         if(( oskLayout_.keyPos->at(index).at(i).highlightTile.fLeft >= oskLayout_.keyPos->at(rowIndex ).at(columnIndex).highlightTile.x() ) ||
                              (  oskLayout_.keyPos->at(index).at(i).highlightTile.fRight >= oskLayout_.keyPos->at(rowIndex ).at(columnIndex).highlightTile.x())) {
                                 oskLayout_.siblingInfo->at(rowIndex).at(columnIndex).siblingDown.set( i,index);
                                 siblingFound=true;
@@ -534,7 +560,7 @@ void OnScreenKeyboard::createOSKLayout(OSKTypes KBtype) {
             unsigned int downRow=oskLayout_.siblingInfo->at(rowIndex).at(columnIndex).siblingDown.y();
             unsigned int downKey=oskLayout_.siblingInfo->at(rowIndex).at(columnIndex).siblingDown.x();
 
-            RNS_LOG_INFO(" Sibling key for key : "<<oskLayout_.keyInfo->at(rowIndex).at(columnIndex).keyName 
+            RNS_LOG_INFO(" Sibling key for key : "<<oskLayout_.keyInfo->at(rowIndex).at(columnIndex).keyName
                 <<" left Key :  "<< oskLayout_.keyInfo->at(rowIndex).at(indexL).keyName
                 <<"  rigt Key :  "<< oskLayout_.keyInfo->at(rowIndex).at(indexR).keyName
                 <<"  Up Key :  "<< oskLayout_.keyInfo->at(upRow).at(upKey).keyName

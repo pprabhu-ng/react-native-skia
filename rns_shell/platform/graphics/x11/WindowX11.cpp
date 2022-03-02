@@ -105,8 +105,8 @@ void Window::createEventLoop(Application* app) {
                         }
                         break;
                     case UnmapNotify:
-                        break;
-                    }
+           		RNS_LOG_INFO("DO Nothing on UnmapNotify: Happens on window closure");
+                    break;
                     default:
                         if (win && win->handleEvent(event)) {
                             done = true;
@@ -328,7 +328,9 @@ bool WindowX11::handleEvent(const XEvent& event) {
         case ButtonPress:
             RNS_LOG_NOT_IMPL;
             break;
-
+        case Expose:
+	    onExpose();
+	break;
         default:
             // these events should be handled in the main event loop
             RNS_LOG_ASSERT(event.type != ConfigureNotify, "Should handle this is main loop ??");
@@ -351,7 +353,10 @@ void WindowX11::setRequestedDisplayParams(const DisplayParams& params, bool allo
     RNS_LOG_NOT_IMPL;
     //INHERITED::setRequestedDisplayParams(params, allowReattach);
 }
-
+void WindowX11::onExpose() {
+    if(winType == SubWindow)
+       NotificationCenter::OSKCenter().emit("OSkWindowExposed");
+}
 void WindowX11::onKey(rnsKey eventKeyType, rnsKeyAction eventKeyAction){
 
     if(winType == SubWindow) {

@@ -100,7 +100,7 @@ keyPlacementConfig_t alphaNumericKBGroupConfig[ALPHA_NUMERIC_KB_PARTITION_COUNT]
     //GROUP3-Alpha & SYmbol key
     {{320,40},{15,15},1.25,1,1},
     //GROUP4-Function key
-    {{820,60},{15,15},1.5,1,1}
+    {{820,50},{15,15},1.5,1,1}
 };
 
 
@@ -116,10 +116,10 @@ KBLayoutKeyInfoContainer symbolKBKBKeyInfo={
         {"@",RNS_KEY_At,TEXT_KEY,GROUP2},
         {"#",RNS_KEY_Numbersign,TEXT_KEY,GROUP2},
         {"$",RNS_KEY_Dollar,TEXT_KEY,GROUP2},
-        {"%",RNS_KEY_Percent,TEXT_KEY,GROUP2},
         {"^",RNS_KEY_Asciicircum,TEXT_KEY,GROUP2},
         {"&",RNS_KEY_Ampersand,TEXT_KEY,GROUP2},
         {"*",RNS_KEY_Asterisk,TEXT_KEY,GROUP2},
+        {"~",RNS_KEY_Asciitilde,TEXT_KEY,GROUP2},
         {"space",RNS_KEY_Space,FUNCTION_KEY,GROUP3}
     },
     {
@@ -130,7 +130,7 @@ KBLayoutKeyInfoContainer symbolKBKBKeyInfo={
         {",",RNS_KEY_Comma,TEXT_KEY,GROUP2},
         {".",RNS_KEY_Period,TEXT_KEY,GROUP2},
         {"?",RNS_KEY_Question,TEXT_KEY,GROUP2},
-        {",",RNS_KEY_Comma,TEXT_KEY,GROUP2},
+        {"\"",RNS_KEY_Quotedbl,TEXT_KEY,GROUP2},
         {";",RNS_KEY_Semicolon,TEXT_KEY,GROUP2},
         {":",RNS_KEY_Colon,TEXT_KEY,GROUP2},
         {"delete",RNS_KEY_Delete,FUNCTION_KEY,GROUP3}
@@ -145,12 +145,12 @@ KBLayoutKeyInfoContainer symbolKBKBKeyInfo={
         {"}",RNS_KEY_BraceRight,TEXT_KEY,GROUP2},
         {"[",RNS_KEY_BracketLeft,TEXT_KEY,GROUP2},
         {"]",RNS_KEY_BracketRight,TEXT_KEY,GROUP2},
-        {"~",RNS_KEY_Asciitilde,TEXT_KEY,GROUP2},
+        {"`",RNS_KEY_Grave,TEXT_KEY,GROUP2},
         {"done",RNS_KEY_Select,FUNCTION_KEY,GROUP3}
     },
     {
       //row 4
-        {"`",RNS_KEY_Grave,TEXT_KEY,GROUP2},
+        {"'",RNS_KEY_Apostrophe,TEXT_KEY,GROUP2},
         {"=",RNS_KEY_Equal,TEXT_KEY,GROUP2},
         {"+",RNS_KEY_Plus,TEXT_KEY,GROUP2},
         {"-",RNS_KEY_Minus,TEXT_KEY,GROUP2},
@@ -167,7 +167,7 @@ keyPlacementConfig_t symbolKBGroupConfig[SYMBOL_KB_PARTITION_COUNT]={
     //GROUP2-Symbol key
     {{150,40},{15,15},1.25,1,1},
     //GROUP3-Function key
-    {{590,60},{15,15},1.5,1,1}
+    {{590,50},{15,15},1.5,1,1}
 };
 
 
@@ -187,7 +187,7 @@ KBLayoutKeyInfoContainer numericKBKeyKeyInfo={
         {"4",RNS_KEY_4,TEXT_KEY,GROUP1},
         {"5",RNS_KEY_5,TEXT_KEY,GROUP1},
         {"6",RNS_KEY_6,TEXT_KEY,GROUP1},
-        {"backspace",RNS_KEY_Space,FUNCTION_KEY,GROUP1}
+        {"space",RNS_KEY_Space,FUNCTION_KEY,GROUP1}
     },
     {
         //row 3
@@ -206,7 +206,7 @@ KBLayoutKeyInfoContainer numericKBKeyKeyInfo={
 };
 
 keyPlacementConfig_t numericKBGroupConfig[NUMERIC_KB_PARTITION_COUNT] = {
-    {{60,60},{15,15},0.25,1.5,0}
+    {{250,30},{40,40},1.3,1.5,1}
 };
 
 

@@ -75,6 +75,7 @@ public:
 private:
     
     void onKey(rnsKey eventKeyType, rnsKeyAction eventKeyAction);
+    void onExpose();
     rnsKey  keyIdentifierForX11KeyCode(KeySym keycode);
 
     Display*     display_;
