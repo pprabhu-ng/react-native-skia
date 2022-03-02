@@ -33,7 +33,8 @@ enum OSKThemes {
 enum KBLayoutType {
     ALPHA_LOWERCASE_LAYOUT,
     ALPHA_UPPERCASE_LAYOUT,
-    SYMBOL_LAYOUT
+    SYMBOL_LAYOUT,
+    NUMERIC_LAYOUT
 };
 
 enum keyType {
@@ -88,19 +89,18 @@ typedef std::vector<std::vector<keySiblingInfo_t>> KBLayoutSibblingInfoContainer
 
 
 struct OSKLayout {
+    KBLayoutType      KBLayoutType;
+    unsigned int      textFontSize;
+    unsigned int      textHLFontSize;
     KBLayoutKeyInfoContainer*  keyInfo;
     KBLayoutKeyPosContainer*    keyPos;
     KBLayoutSibblingInfoContainer*    siblingInfo;
     keyPlacementConfig_t*          KBGroupConfig;
-    OSKTypes          KBtype;
-    KBLayoutType      KBLayoutType;
-    unsigned int      textFontSize;
-    unsigned int      textHLFontSize;
 };
 
 class OnScreenKeyboard {
     public:
-        OnScreenKeyboard();
+        OnScreenKeyboard(OSKConfig oskConfig);
         static void launch(OSKConfig oskConfig);// Interface to launch OSK
         static void exit(); //Interface to quit OSK
     private:
@@ -111,6 +111,7 @@ class OnScreenKeyboard {
 
         void createOSKLayout(OSKTypes KBtype );
         void onHWkeyHandler(rnsKey key, rnsKeyAction eventKeyAction);
+        void onExposeHandler();
         void highlightFocussedKey(SkPoint index);
         void handleSelection();
         void drawOSK(OSKTypes oskType);
@@ -121,15 +122,12 @@ class OnScreenKeyboard {
         void configureScreenSize();
 
 // State Maintainence
-        const char *  placeHolderName{nullptr};
-        const char*   returnKeyLabel_{nullptr};
-        SkPoint       focussedIndex_{0};
-        SkPoint       lastFocussedIndex_{0};
-        OSKLayout     oskLayout_{0};
-        OSKThemes     oskTheme_{OSK_DEFAULT_THEME};
+        OSKConfig    oskConfig_;
+        SkPoint       focussedKey_{0};
+        SkPoint       lastFocussedKey_{0};
+        OSKLayout     oskLayout_;
         SkColor       bgColor_{SK_ColorWHITE};
         SkColor       fontColor_{SK_ColorWHITE};
-        bool          ctrlReturnKey_{false};
 };
 
 #endif //OSK_H

@@ -105,10 +105,14 @@ void Window::createEventLoop(Application* app) {
                         }
                         break;
                     case UnmapNotify:
+<<<<<<< HEAD
                         break;
                     }
                     case UnmapNotify:
                         RNS_LOG_DEBUG("Nothing to be done for UnmapNotify: Happens on window closure");
+=======
+           		RNS_LOG_INFO("DO Nothing on UnmapNotify: Happens on window closure");
+>>>>>>> Changes for random blank screen on launch in ubuntu
                     break;
                     default:
                         WindowX11* win = WindowX11::gWindowMap.find(event.xany.window);
