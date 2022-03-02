@@ -23,7 +23,6 @@
 namespace RnsShell {
 
 static PlatformDisplay* s_sharedDisplayForCompositing;
-SkSize PlatformDisplay::currentScreenSize = {-1,-1};
 
 PlatformDisplay::PlatformDisplay(bool displayOwned)
     : nativeDisplayOwned_(displayOwned)
