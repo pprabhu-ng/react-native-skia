@@ -10,11 +10,8 @@
 #include "ReactSkia/components/RSkComponent.h"
 #include "ReactSkia/core_modules/RSkSpatialNavigator.h"
 #include "ReactSkia/sdk/RNSKeyCodeMapping.h"
-
-
 #include "ReactSkia/sdk/OnScreenKeyBoard.h"
 #include "ReactSkia/textlayoutmanager/RSkTextLayoutManager.h"
-
 #include "ReactSkia/views/common/RSkDrawUtils.h"
 #include "ReactSkia/views/common/RSkConversion.h"
 #include "rns_shell/compositor/layers/PictureLayer.h"
@@ -43,6 +40,12 @@ std::mutex privateVarProtectorMutex;
 std::mutex inputQueueMutex;
 static bool isKeyRepeateOn;
 unsigned int keyRepeateStartIndex;
+<<<<<<< HEAD
+=======
+
+static OnScreenKeyboard *OSKHandle{nullptr};
+
+>>>>>>> changes to make darw on expose handling common for both x11 & wpe backend
 RSkComponentTextInput::RSkComponentTextInput(const ShadowView &shadowView)
     : RSkComponent(shadowView)
     ,isInEditingMode_(false)
@@ -198,7 +201,7 @@ void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool keyRepeat, boo
       privateVarProtectorMutex.unlock();
       drawAndSubmit();
     }
-    OnScreenKeyboard::launch();
+    OSKHandle=OnScreenKeyboard::launch();
   } else if (isInEditingMode_) {
     // Logic to update the textinput string.
     // Requirement: Textinput is in Editing mode.
@@ -334,7 +337,7 @@ void RSkComponentTextInput::processEventKey (rnsKey eventKeyType,bool* stopPropa
           if (!caretHidden_) {
             drawAndSubmit();
           }
-          OnScreenKeyboard::exit();
+          OSKHandle->exit();
           return;
         case RNS_KEY_Caps_Lock:
         case RNS_KEY_Shift_L:
@@ -530,6 +533,7 @@ void RSkComponentTextInput::requestForEditingMode(bool isFlushDisplay){
        drawAndSubmit(isFlushDisplay);
     }
   }
+  OSKHandle=OnScreenKeyboard::launch();
   RNS_LOG_DEBUG("[requestForEditingMode] END");
 }
 
@@ -556,6 +560,7 @@ void RSkComponentTextInput::resignFromEditingMode(bool isFlushDisplay) {
   textInputEventEmitter->onBlur(textInputMetrics);
   if (!caretHidden_) {
     drawAndSubmit(isFlushDisplay);
+    OSKHandle->exit();
   }
   RNS_LOG_DEBUG("[requestForEditingMode] *** END ***");
 }

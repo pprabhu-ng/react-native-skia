@@ -33,7 +33,6 @@ Compositor::Compositor(Client& client, PlatformDisplayID displayID, SkSize& view
 
     nativeWindowHandle_ = client_.nativeSurfaceHandle();
     if(nativeWindowHandle_) {
-        RNS_LOG_INFO("Calling createWindowContext");
        createWindowContext();
     }
     if(windowContext_) {
@@ -65,7 +64,6 @@ Compositor::~Compositor() {
 
 void Compositor::createWindowContext() {
     RNS_LOG_ASSERT((nativeWindowHandle_), "Invalid Native Window Handle");
-
     windowContext_ = WCF::createContextForWindow(reinterpret_cast<GLNativeWindowType>(nativeWindowHandle_),
                         &PlatformDisplay::sharedDisplayForCompositing(), DisplayParams());
 

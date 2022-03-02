@@ -82,7 +82,7 @@ void Window::createEventLoop(Application* app) {
                                 RNS_LOG_INFO("Resize Request with (Width x Height) : (" << event.xconfigurerequest.width <<
                                     " x " << event.xconfigurerequest.height << ")");
                                 WindowX11* win = WindowX11::gWindowMap.find(event.xconfigurerequest.window);
-                                if(win && (win->winType == MainWindow )) { // Only for main window
+                                if(win && (win->winType == MainWindow )){
                                     auto windowDimension = win->getWindowDimension();
 
                                     if((windowDimension.width()!=event.xconfigurerequest.width) ||
@@ -93,26 +93,11 @@ void Window::createEventLoop(Application* app) {
                                         NotificationCenter::defaultCenter().emit("dimensionEventNotification");
                                     }
                                 }
-                        }
-                WindowX11* win = WindowX11::gWindowMap.find(event.xany.window);
-                switch (event.type) {
-                    case ConfigureNotify:
-                        RNS_LOG_INFO("Resize Request with (Width x Height) : (" << event.xconfigurerequest.width <<
-                                    " x " << event.xconfigurerequest.height << ")" << "for window"<<event.xany.window);
-                        
-                        if((win->winType == MainWindow ) && app) {
-                          app->sizeChanged(event.xconfigurerequest.width, event.xconfigurerequest.height);
-                        }
-                        break;
-                    case UnmapNotify:
-<<<<<<< HEAD
-                        break;
+                            }
+                            break;
                     }
                     case UnmapNotify:
                         RNS_LOG_DEBUG("Nothing to be done for UnmapNotify: Happens on window closure");
-=======
-           		RNS_LOG_INFO("DO Nothing on UnmapNotify: Happens on window closure");
->>>>>>> Changes for random blank screen on launch in ubuntu
                     break;
                     default:
                         WindowX11* win = WindowX11::gWindowMap.find(event.xany.window);
@@ -312,8 +297,7 @@ bool WindowX11::handleEvent(const XEvent& event) {
     }
 
     KeySym keysym = XkbKeycodeToKeysym(display_, event.xkey.keycode,0,(shiftLevel^capsLock));
-
-      switch (event.type) {
+    switch (event.type) {
         case MapNotify:
             break;
 
@@ -364,14 +348,10 @@ void WindowX11::onExpose() {
 
 void WindowX11::onKey(rnsKey eventKeyType, rnsKeyAction eventKeyAction){
 
-    if(winType == SubWindow) {
-       RNS_LOG_DEBUG("!!!! EMITTING onHWKeyEvent to OSKCenter!!!!!");
+    if(winType == SubWindow)
        NotificationCenter::OSKCenter().emit("onHWKeyEvent", eventKeyType, eventKeyAction);
-
-    } else {
-       RNS_LOG_DEBUG("!!!! EMITTING ONHW KeyEvent to defaultCenter!!!!!");
+    else
        NotificationCenter::defaultCenter().emit("onHWKeyEvent", eventKeyType, eventKeyAction);
-    }
     return;
 }
 

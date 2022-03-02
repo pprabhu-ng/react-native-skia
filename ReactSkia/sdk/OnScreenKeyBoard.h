@@ -7,6 +7,8 @@
 #ifndef OSK_H
 #define OSK_H
 
+#include <semaphore.h>
+
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColor.h"
 
@@ -17,6 +19,7 @@
 
 #include "NotificationCenter.h"
 #include "RNSKeyCodeMapping.h"
+
 //Types of Suported KeyBoard
 enum OSKTypes {
     OSK_DEFAULT_TYPE,
@@ -44,15 +47,17 @@ enum keyType {
     KEY_TYPE_COUNT
 };
 
-
 //Configuration to be specified while OSK Launch
 struct OSKConfig {
-    OSKTypes  oskType;
-    OSKThemes oskTheme;
+    OSKTypes        oskType;
+    OSKThemes       oskTheme;
     const char *    placeHolderName;
     const char *    returnKeyLabel;
     bool      enablesReturnKeyAutomatically;
 };
+
+// Default OSKConfig
+static OSKConfig defaultOSKConfig={ OSK_DEFAULT_TYPE, OSK_DEFAULT_THEME, nullptr, "done", false };
 
 typedef struct keyPosition {
     SkPoint        textXY{}; // text X,Y to draw
@@ -78,8 +83,8 @@ typedef struct KeySiblingInfo {
 typedef struct keyPlacementConfig {
     SkPoint groupOffset;
     SkPoint groupKeySpacing;
-    float hlTileFontSizeMultiplier;
-    float fontScaleFactor;
+    float   hlTileFontSizeMultiplier;
+    float   fontScaleFactor;
     unsigned int maxTextLength;
 }keyPlacementConfig_t;
 
@@ -89,29 +94,25 @@ typedef std::vector<std::vector<keySiblingInfo_t>> KBLayoutSibblingInfoContainer
 
 
 struct OSKLayout {
-    KBLayoutType      KBLayoutType;
-    unsigned int      textFontSize;
-    unsigned int      textHLFontSize;
     KBLayoutKeyInfoContainer*  keyInfo;
     KBLayoutKeyPosContainer*    keyPos;
     KBLayoutSibblingInfoContainer*    siblingInfo;
     keyPlacementConfig_t*          KBGroupConfig;
+    KBLayoutType      KBLayoutType;
+    unsigned int      textFontSize;
+    unsigned int      textHLFontSize;
+    SkPoint           defaultFocussIndex;
 };
 
 class OnScreenKeyboard {
     public:
-        OnScreenKeyboard(OSKConfig oskConfig);
-        static void launch(OSKConfig oskConfig);// Interface to launch OSK
-        static void exit(); //Interface to quit OSK
+        OnScreenKeyboard(OSKConfig oskConfig,SkSize ScreenSize);
+        static OnScreenKeyboard* launch(OSKConfig oskConfig=defaultOSKConfig);// Interface to launch OSK
+        void exit(); //Interface to quit OSK
     private:
-        std::unique_ptr<RnsShell::Window> OSKwindow_;
-        std::unique_ptr<RnsShell::WindowContext> OSKwindowContext_;
-        sk_sp<SkSurface> backBuffer_;
-        SkCanvas *OSKcanvas_=nullptr;
-
         void createOSKLayout(OSKTypes KBtype );
         void onHWkeyHandler(rnsKey key, rnsKeyAction eventKeyAction);
-        void onExposeHandler();
+        void onExposeHandler(RnsShell::Window* window);
         void highlightFocussedKey(SkPoint index);
         void handleSelection();
         void drawOSK(OSKTypes oskType);
@@ -119,15 +120,22 @@ class OnScreenKeyboard {
         void drawFont(SkPoint index,SkColor color,bool onHLTile=false);
         void drawOSKPartition();
         void pushToDisplay();
-        void configureScreenSize();
-
-// State Maintainence
-        OSKConfig    oskConfig_;
+// Maintainables
+        unsigned int exposeEventID_{-1};
+        OSKConfig     oskConfig_;
+        std::unique_ptr<RnsShell::Window> OSKwindow_;
+        std::unique_ptr<RnsShell::WindowContext> OSKwindowContext_;
+        sem_t semReadyToDraw;
+        sk_sp<SkSurface> backBuffer_;
+        SkCanvas *OSKcanvas_=nullptr;
+        unsigned int OSKeventId_{-1};
+        SkSize        ScreenSize{0,0};
+        bool          generateOSKLayout{true};
         SkPoint       focussedKey_{0};
         SkPoint       lastFocussedKey_{0};
         OSKLayout     oskLayout_;
         SkColor       bgColor_{SK_ColorWHITE};
         SkColor       fontColor_{SK_ColorWHITE};
 };
-
 #endif //OSK_H
+

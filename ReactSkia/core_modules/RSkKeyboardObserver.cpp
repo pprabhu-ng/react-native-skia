@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 1994-2021 OpenTV, Inc. and Nagravision S.A.
+* Copyright (C) 1994-2022 OpenTV, Inc. and Nagravision S.A.
 *
 * Use of this source code is governed by a BSD-style license that can be
 * found in the LICENSE file.
@@ -20,18 +20,11 @@ RSkKeyboardObserver::RSkKeyboardObserver(
     : RSkEventEmitter(name, jsInvoker, bridgeInstance){}
 
 void RSkKeyboardObserver::KeyBoardEventHandler(std::string eventName) {
-RNS_LOG_INFO("OSKkeyHandler Received event: " << eventName);
-#if !defined(GOOGLE_STRIP_LOG) || (GOOGLE_STRIP_LOG <= INFO)
-   // for (auto& pair : paramObject.items()) {
-   //   RNS_LOG_INFO("Notify RCTOSKEventNotification : { " << pair.first << " : " << pair.second << " }");
-   // }
-#endif
-     sendEventWithName(eventName, nullptr);
+    RNS_LOG_NOT_IMPL;
 }
 
 void RSkKeyboardObserver::startObserving() {
-    // Start observing RCTTVNavigationEventNotification using default NotificationManager
-    RNS_LOG_INFO("Start observing RCTOSKEventNotification using default notification center");
+    // Start observing OnScreenKeyBoard Notifications from OSK NotificationManager
     std::function<void(std::string)> KeyBoardEventHandler = std::bind(&RSkKeyboardObserver::KeyBoardEventHandler, this,
                                                                          std::placeholders::_1);  // folly::dynamic
     for(vector<string>::iterator events=events_.begin(); events!=events_.end(); ++events) {

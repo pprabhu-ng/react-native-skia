@@ -20,8 +20,6 @@
 #define LIGHT_THEME_PH_COLOR         SK_ColorLTGRAY
 #define LIGHT_THEME_INACTIVE_FONT_COLOR  SK_ColorDKGRAY
 //Highlight configuration
-#define HIGHLIGHT_AREA_WIDTH          40
-#define HIGHLIGHT_AREA_HEIGTH         40
 #define HIGHLIGHT_FONT_SIZE           32
 #define HIGHLIGHT_BG_COLOR           SK_ColorWHITE
 #define HIGHLIGHT_FONT_COLOR         SK_ColorBLACK
@@ -39,15 +37,6 @@
 #define PLACEHOLDER_FONT_SIZE         20
 #define START_OFFSET_OSK_X            0.1
 #define START_OFFSET_OSK_Y            0.3
-#define KEY_HORIZONTAL_GAP            45
-#define KEY_VERTICAL_GAP              55
-//Numeric KB COnfiguration
-#define NUM_KB_HORIZONTAL_GAP         (KEY_HORIZONTAL_GAP*2)
-#define NUM_KB_VERTICAL_GAP           (KEY_VERTICAL_GAP*2)
-// Defaults 
-#define DEFAULT_THEME_BG_COLOR       DARK_THEME_BG_COLOR // default as Dark Theme
-#define DEFAULT_THEME_FONT_COLOR     DARK_THEME_FONT_COLOR  // default as Dark Theme
-#define DEFAULT_RETURN_KEY_LABEL     "done"
 //Fail Safe Configurations
 #define DRAW_FONT_FAILURE_INDICATOR  "??"
 #endif //OSK_CONFIG_H

@@ -59,8 +59,6 @@ public:
     void setTitle(const char*) override;
     void show() override;
 
-    WindowType  winType=Deafult_Window_Type;
-    
     static const XWindow& GetKey(const WindowX11& w) {
         return w.window_;
     }
