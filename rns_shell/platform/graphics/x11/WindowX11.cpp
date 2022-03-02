@@ -82,7 +82,7 @@ void Window::createEventLoop(Application* app) {
                                 RNS_LOG_INFO("Resize Request with (Width x Height) : (" << event.xconfigurerequest.width <<
                                     " x " << event.xconfigurerequest.height << ")");
                                 WindowX11* win = WindowX11::gWindowMap.find(event.xconfigurerequest.window);
-                                if(win){
+                                if(win && (win->winType == MainWindow )){
                                     auto windowDimension = win->getWindowDimension();
 
                                     if((windowDimension.width()!=event.xconfigurerequest.width) ||
@@ -93,25 +93,18 @@ void Window::createEventLoop(Application* app) {
                                         NotificationCenter::defaultCenter().emit("dimensionEventNotification");
                                     }
                                 }
-                        }
-                WindowX11* win = WindowX11::gWindowMap.find(event.xany.window);
-                switch (event.type) {
-                    case ConfigureNotify:
-                        RNS_LOG_INFO("Resize Request with (Width x Height) : (" << event.xconfigurerequest.width <<
-                                    " x " << event.xconfigurerequest.height << ")" << "for window"<<event.xany.window);
-                        
-                        if((win->winType == MainWindow ) && app) {
-                          app->sizeChanged(event.xconfigurerequest.width, event.xconfigurerequest.height);
-                        }
-                        break;
+                            }
+                            break;
+                    }
                     case UnmapNotify:
-           		RNS_LOG_INFO("DO Nothing on UnmapNotify: Happens on window closure");
+                        RNS_LOG_INFO("DO Nothing on UnmapNotify: Happens on window closure");
                     break;
                     default:
-                        if (win && win->handleEvent(event)) {
+                        WindowX11* win = WindowX11::gWindowMap.find(event.xany.window);
+                        if (win && (win->handleEvent(event))) {
                             done = true;
                         }
-                        break;
+                    break;
                 } // switch
             }// while
         }// if(XPending)
@@ -308,8 +301,7 @@ bool WindowX11::handleEvent(const XEvent& event) {
 
 >>>>>>> Changes Done for POC includes:
     KeySym keysym = XkbKeycodeToKeysym(display_, event.xkey.keycode,0,(shiftLevel^capsLock));
-
-      switch (event.type) {
+    switch (event.type) {
         case MapNotify:
             break;
 
@@ -329,8 +321,8 @@ bool WindowX11::handleEvent(const XEvent& event) {
             RNS_LOG_NOT_IMPL;
             break;
         case Expose:
-	    onExpose();
-	break;
+            onExpose();
+        break;
         default:
             // these events should be handled in the main event loop
             RNS_LOG_ASSERT(event.type != ConfigureNotify, "Should handle this is main loop ??");
@@ -354,19 +346,14 @@ void WindowX11::setRequestedDisplayParams(const DisplayParams& params, bool allo
     //INHERITED::setRequestedDisplayParams(params, allowReattach);
 }
 void WindowX11::onExpose() {
-    if(winType == SubWindow)
-       NotificationCenter::OSKCenter().emit("OSkWindowExposed");
+    NotificationCenter::defaultCenter().emit("windowExposed",(Window*)this);
 }
 void WindowX11::onKey(rnsKey eventKeyType, rnsKeyAction eventKeyAction){
 
-    if(winType == SubWindow) {
-       RNS_LOG_DEBUG("!!!! EMITTING onHWKeyEvent to OSKCenter!!!!!");
+    if(winType == SubWindow)
        NotificationCenter::OSKCenter().emit("onHWKeyEvent", eventKeyType, eventKeyAction);
-
-    } else {
-       RNS_LOG_DEBUG("!!!! EMITTING ONHW KeyEvent to defaultCenter!!!!!");
+    else
        NotificationCenter::defaultCenter().emit("onHWKeyEvent", eventKeyType, eventKeyAction);
-    }
     return;
 }
 

@@ -25,7 +25,7 @@ namespace RnsShell {
 enum WindowType{
     MainWindow,
     SubWindow,
-    Deafult_Window_Type=MainWindow
+    DefaultWindow=MainWindow
 };
 class WindowContext;
 
@@ -33,7 +33,7 @@ class Window {
 public:
     static Window* createNativeWindow(void* platformData,
                                       SkSize dimension=SkSize::MakeEmpty(),
-                                      WindowType type=Deafult_Window_Type);
+                                      WindowType type=DefaultWindow);
     static void createEventLoop(Application* app);
     static Window* getMainWindow() { return mainWindow_; }
     static SkSize getMainWindowSize() {
@@ -53,7 +53,6 @@ public:
     enum BackendType {
         kNativeGL_BackendType,
         kRaster_BackendType,
-
         kLast_BackendType = kRaster_BackendType
     };
     enum {
@@ -83,7 +82,7 @@ private:
 protected:
     Window();
     static Window *mainWindow_;
-
+    WindowType     winType{DefaultWindow};
     DisplayParams          requestedDisplayParams_;
 };
 

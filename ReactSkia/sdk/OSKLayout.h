@@ -10,7 +10,7 @@
 
 #include "RNSKeyCodeMapping.h"
 
-/* KeyBoard Layout for Alpha Numeric KeyBoard */
+static SkSize baseScreenSize{1280,720};
 
 enum partitionID {
     GROUP1,
@@ -19,7 +19,11 @@ enum partitionID {
     GROUP4,
     MAX_GROUP=GROUP4
 };
+
 #define LOWER_TO_UPPER_CASE_OFFSET 32
+
+/* KeyBoard Layout for Alpha Numeric KeyBoard */
+
 #define ALPHA_NUMERIC_KB_PARTITION_COUNT   4
 KBLayoutKeyPosContainer alphaNumericKBKeyPos;
 KBLayoutSibblingInfoContainer alphaNumericKBKeySiblingInfo;
@@ -157,7 +161,7 @@ KBLayoutKeyInfoContainer symbolKBKBKeyInfo={
         {"_",RNS_KEY_Underscore,TEXT_KEY,GROUP2},
         {"%",RNS_KEY_Percent,TEXT_KEY,GROUP2},
         {">",RNS_KEY_Greater,TEXT_KEY,GROUP2},
-        {"<",RNS_KEY_Lesser,TEXT_KEY,GROUP2}
+        {"<",RNS_KEY_Less,TEXT_KEY,GROUP2}
     }
 };
 
@@ -165,9 +169,9 @@ keyPlacementConfig_t symbolKBGroupConfig[SYMBOL_KB_PARTITION_COUNT]={
     //GROUP1-Toggle key
     {{20,60},{15,30},1.3,0.7,4},
     //GROUP2-Symbol key
-    {{150,40},{15,15},1.25,1,1},
+    {{150,40},{15,15},1.3,1,1},
     //GROUP3-Function key
-    {{590,50},{15,15},1.5,1,1}
+    {{600,50},{30,15},1.5,1,1}
 };
 
 
