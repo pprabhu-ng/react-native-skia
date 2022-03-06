@@ -39,9 +39,9 @@ std::unique_ptr<PlatformDisplay> PlatformDisplayX11::create(Display* display) {
 PlatformDisplayX11::PlatformDisplayX11(Display* display, bool displayOwned)
     : PlatformDisplay(displayOwned)
     , display_(display) {
-  auto screenDimension = screenSize();
+    SkSize screenDimension = screenSize();
 
-  setCurrentScreenSize(screenDimension.width(),screenDimension.height());
+    setCurrentScreenSize(screenDimension.width(),screenDimension.height());
 }
 
 PlatformDisplayX11::~PlatformDisplayX11() {

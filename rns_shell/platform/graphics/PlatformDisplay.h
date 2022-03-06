@@ -69,7 +69,7 @@ protected:
 
 private:
     static std::unique_ptr<PlatformDisplay> createPlatformDisplay();
-    SkSize currentScreenSize;
+    SkSize currentScreenSize_;
 
 #if USE(EGL)
     void terminateEGLDisplay();

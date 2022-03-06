@@ -13,11 +13,9 @@ const screen = Dimensions.get("screen");
     this.setState({ dimensions: { window, screen } });
   };
   componentDidMount() {
-    console.log("timestamp");
     Dimensions.addEventListener("change", this.onChange);
   }
   componentWillUnmount() {
-    console.log("remove timestamp");
     Dimensions.removeEventListener("change", this.onChange);
   }
   render() {
