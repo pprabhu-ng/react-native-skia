@@ -171,10 +171,10 @@ void RNInstance::InitializeJSCore() {
     RNS_LOG_ERROR("SYSTEM ERROR : " << exc);
   }
 
-
+  RNS_LOG_INFO("Setup HMR Client");
   instance_->callJSFunction(
             "HMRClient","setup",
-            folly::dynamic::array("ios","SimpleViewApp.bundle","192.168.0.106","8081",true));
+            folly::dynamic::array("ios","/home/reactor/Projects/react-native-skia/src/out/Debug/SimpleViewApp.bundle","192.168.0.106","8081",true));
 }
 
 void RNInstance::InitializeFabric(RendererDelegate &rendererDelegate) {
