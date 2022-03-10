@@ -11,6 +11,7 @@
 #include "react/renderer/components/textinput/TextInputShadowNode.h"
 #include "react/renderer/components/textinput/TextInputEventEmitter.h"
 #include "ReactSkia/components/RSkComponent.h"
+#include "ReactSkia/sdk/OnScreenKeyBoard.h"
 #include "ReactSkia/textlayoutmanager/RSkTextLayoutManager.h"
 
 
@@ -48,6 +49,7 @@ class RSkComponentTextInput final : public RSkComponent {
   SharedColor selectionColor_;
   struct cursor cursor_;
   SkPaint cursorPaint_;
+  SharedOSKHandle OSKHandle_;
   std::shared_ptr<skia::textlayout::Paragraph> paragraph_;
   void drawAndSubmit(bool isFlushDisplay=true);
   void drawTextInput(
