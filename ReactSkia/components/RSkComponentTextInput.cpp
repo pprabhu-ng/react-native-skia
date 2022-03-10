@@ -264,7 +264,7 @@ void RSkComponentTextInput::processEventKey (rnsKey eventKeyType,bool* stopPropa
       switch(eventKeyType){
         case RNS_KEY_Left:
           if(cursor_.locationFromEnd < cursor_.end ){
-            RNS_LOG_DEBUG("[RSkComponentTextInput][processEventKey]Right key pressed cursor_.locationFromEnd = "<<cursor_.locationFromEnd);
+            RNS_LOG_DEBUG("[RSkComponentTextInput][processEventKey]Left key pressed cursor_.locationFromEnd = "<<cursor_.locationFromEnd);
             cursor_.locationFromEnd++; // locationFromEnd
           }
           *stopPropagation = true;
