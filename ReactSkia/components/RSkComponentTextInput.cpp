@@ -10,7 +10,6 @@
 #include "ReactSkia/components/RSkComponent.h"
 #include "ReactSkia/core_modules/RSkSpatialNavigator.h"
 #include "ReactSkia/sdk/RNSKeyCodeMapping.h"
-#include "ReactSkia/sdk/OnScreenKeyBoard.h"
 #include "ReactSkia/textlayoutmanager/RSkTextLayoutManager.h"
 #include "ReactSkia/views/common/RSkDrawUtils.h"
 #include "ReactSkia/views/common/RSkConversion.h"
@@ -201,7 +200,8 @@ void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool keyRepeat, boo
       privateVarProtectorMutex.unlock();
       drawAndSubmit();
     }
-    OSKHandle=OnScreenKeyboard::launch();
+    OSKHandle_=nullptr;//cleanup:release old instance before launch
+    OSKHandle_=OnScreenKeyboard::launch();
   } else if (isInEditingMode_) {
     // Logic to update the textinput string.
     // Requirement: Textinput is in Editing mode.
@@ -337,7 +337,12 @@ void RSkComponentTextInput::processEventKey (rnsKey eventKeyType,bool* stopPropa
           if (!caretHidden_) {
             drawAndSubmit();
           }
-          OSKHandle->exit();
+          if((OSKHandle_.get()) && !(OSKHandle_.unique())) {
+            OSKHandle_->exit();
+            OSKHandle_.reset();
+          } else {
+            RNS_LOG_DEBUG("!! OSK window is not active to exit !!");
+          }
           return;
         case RNS_KEY_Caps_Lock:
         case RNS_KEY_Shift_L:
@@ -533,7 +538,8 @@ void RSkComponentTextInput::requestForEditingMode(bool isFlushDisplay){
        drawAndSubmit(isFlushDisplay);
     }
   }
-  OSKHandle=OnScreenKeyboard::launch();
+  OSKHandle_=nullptr;//cleanup:release old instance before launch
+  OSKHandle_=OnScreenKeyboard::launch();
   RNS_LOG_DEBUG("[requestForEditingMode] END");
 }
 
@@ -561,6 +567,13 @@ void RSkComponentTextInput::resignFromEditingMode(bool isFlushDisplay) {
   if (!caretHidden_) {
     drawAndSubmit(isFlushDisplay);
     OSKHandle->exit();
+    if( (OSKHandle_.get()) &&  !(OSKHandle_.unique())) {
+      OSKHandle_->exit();
+      OSKHandle_.reset();
+    } else {
+      RNS_LOG_DEBUG("!! OSK window is not active to exit !!");
+    }
+
   }
   RNS_LOG_DEBUG("[requestForEditingMode] *** END ***");
 }

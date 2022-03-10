@@ -14,7 +14,6 @@
 #include "OSKConfig.h"
 #include "OSKLayout.h"
 
-
 OnScreenKeyboard::OnScreenKeyboard(OSKConfig oskConfig,SkSize ScreenSize) :
     exposeEventID_(NotificationCenter::defaultCenter().addListener("windowExposed", std::function<void(RnsShell::Window*)>(std::bind(&OnScreenKeyboard::onExposeHandler,this,
                                                      std::placeholders::_1)))),
@@ -40,10 +39,13 @@ OnScreenKeyboard::OnScreenKeyboard(OSKConfig oskConfig,SkSize ScreenSize) :
     sem_post(&semReadyToDraw);
 }
 
-OnScreenKeyboard* OnScreenKeyboard::launch(OSKConfig oskConfig) {
+SharedOSKHandle OnScreenKeyboard::launch(OSKConfig oskConfig) {
     RNS_LOG_TODO("Need to do emit , keyboardWillShow Event to APP");
     SkSize mainScreenSize=RnsShell::PlatformDisplay::sharedDisplay().screenSize();
-    return new OnScreenKeyboard(oskConfig,mainScreenSize);
+    SharedOSKHandle oskHandle;
+    oskHandle = std::make_shared<OnScreenKeyboard>(oskConfig,mainScreenSize);
+    oskHandle->oskHandle_=oskHandle;
+    return oskHandle;
 }
 
 void OnScreenKeyboard::exit() {
@@ -59,7 +61,7 @@ void OnScreenKeyboard::exit() {
     sem_destroy(&semReadyToDraw);
     if(OSKwindow_)
         OSKwindow_->closeWindow();
-    delete this;
+    oskHandle_.reset();
 }
 
 void OnScreenKeyboard::drawOSK(OSKTypes oskType) {
@@ -237,9 +239,8 @@ void OnScreenKeyboard ::highlightFocussedKey(SkPoint index) {
     return;
 }
 void OnScreenKeyboard::onExposeHandler(RnsShell::Window* window) {
-
-    if(window  == this->OSKwindow_.get()) {
-        sem_wait(&this->semReadyToDraw);
+    if(window  == OSKwindow_.get()) {
+        sem_wait(&semReadyToDraw);
         if(exposeEventID_) {
             NotificationCenter::OSKCenter().removeListener(exposeEventID_);
             exposeEventID_=-1;

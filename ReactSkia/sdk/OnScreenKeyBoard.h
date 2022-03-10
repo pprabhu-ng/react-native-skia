@@ -20,6 +20,10 @@
 #include "NotificationCenter.h"
 #include "RNSKeyCodeMapping.h"
 
+/*TODO : temp arrangemnet to sync OSk with it's client */
+class OnScreenKeyboard;
+using SharedOSKHandle = std::shared_ptr<OnScreenKeyboard>;
+
 //Types of Suported KeyBoard
 enum OSKTypes {
     OSK_DEFAULT_TYPE,
@@ -107,7 +111,7 @@ struct OSKLayout {
 class OnScreenKeyboard {
     public:
         OnScreenKeyboard(OSKConfig oskConfig,SkSize ScreenSize);
-        static OnScreenKeyboard* launch(OSKConfig oskConfig=defaultOSKConfig);// Interface to launch OSK
+        static SharedOSKHandle launch(OSKConfig oskConfig=defaultOSKConfig);// Interface to launch OSK
         void exit(); //Interface to quit OSK
     private:
         void createOSKLayout(OSKTypes KBtype );
@@ -125,7 +129,7 @@ class OnScreenKeyboard {
         OSKConfig     oskConfig_;
         std::unique_ptr<RnsShell::Window> OSKwindow_;
         std::unique_ptr<RnsShell::WindowContext> OSKwindowContext_;
-        sem_t semReadyToDraw;
+        sem_t semReadyToDraw;/* To sync expose event & window creation*/
         sk_sp<SkSurface> backBuffer_;
         SkCanvas *OSKcanvas_=nullptr;
         unsigned int OSKeventId_{-1};
@@ -136,6 +140,7 @@ class OnScreenKeyboard {
         OSKLayout     oskLayout_;
         SkColor       bgColor_{SK_ColorWHITE};
         SkColor       fontColor_{SK_ColorWHITE};
+        SharedOSKHandle oskHandle_;/* temp arrangemnet to sync OSk with it's client*/
 };
 #endif //OSK_H
 
