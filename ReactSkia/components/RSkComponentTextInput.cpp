@@ -200,8 +200,7 @@ void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool keyRepeat, boo
       privateVarProtectorMutex.unlock();
       drawAndSubmit();
     }
-    OSKHandle_=nullptr;//cleanup:release old instance before launch
-    OSKHandle_=OnScreenKeyboard::launch();
+    OnScreenKeyboard::launch();
   } else if (isInEditingMode_) {
     // Logic to update the textinput string.
     // Requirement: Textinput is in Editing mode.
@@ -337,12 +336,8 @@ void RSkComponentTextInput::processEventKey (rnsKey eventKeyType,bool* stopPropa
           if (!caretHidden_) {
             drawAndSubmit();
           }
-          if((OSKHandle_.get()) && !(OSKHandle_.unique())) {
-            OSKHandle_->exit();
-            OSKHandle_.reset();
-          } else {
-            RNS_LOG_DEBUG("!! OSK window is not active to exit !!");
-          }
+          if(OnScreenKeyboard::IsKBActive()) // Ensure OSK is not exited by user
+            OnScreenKeyboard::exit();
           return;
         case RNS_KEY_Caps_Lock:
         case RNS_KEY_Shift_L:
@@ -538,8 +533,7 @@ void RSkComponentTextInput::requestForEditingMode(bool isFlushDisplay){
        drawAndSubmit(isFlushDisplay);
     }
   }
-  OSKHandle_=nullptr;//cleanup:release old instance before launch
-  OSKHandle_=OnScreenKeyboard::launch();
+  OnScreenKeyboard::launch();
   RNS_LOG_DEBUG("[requestForEditingMode] END");
 }
 

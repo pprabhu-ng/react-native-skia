@@ -49,7 +49,6 @@ class RSkComponentTextInput final : public RSkComponent {
   SharedColor selectionColor_;
   struct cursor cursor_;
   SkPaint cursorPaint_;
-  SharedOSKHandle OSKHandle_;
   std::shared_ptr<skia::textlayout::Paragraph> paragraph_;
   void drawAndSubmit(bool isFlushDisplay=true);
   void drawTextInput(
