@@ -33,10 +33,11 @@ using namespace skia::textlayout;
 #define CURSOR_WIDTH 2
 
 std::queue<rnsKey> inputQueue;
-sem_t jsUpdateMutex;
+sem_t jsUpdateSem;
 std::mutex privateVarProtectorMutex;
-static bool previousKeyRepeat;
-unsigned int queueIndex;
+std::mutex inputQueueMutex;
+static bool isKeyRepeateOn;
+unsigned int keyRepeateStartIndex;
 
 RSkComponentTextInput::RSkComponentTextInput(const ShadowView &shadowView)
     : RSkComponent(shadowView)
@@ -50,8 +51,8 @@ RSkComponentTextInput::RSkComponentTextInput(const ShadowView &shadowView)
   cursorPaint_.setAntiAlias(true);
   cursorPaint_.setStyle(SkPaint::kStroke_Style);
   cursorPaint_.setStrokeWidth(CURSOR_WIDTH);
-  sem_init(&jsUpdateMutex,0,0);
-  previousKeyRepeat=false;
+  sem_init(&jsUpdateSem,0,0);
+  isKeyRepeateOn=false;
 }
 
 void RSkComponentTextInput::drawAndSubmit(){
@@ -150,7 +151,7 @@ void RSkComponentTextInput::OnPaint(SkCanvas *canvas) {
 * @return      True if key is handled else false
 */
 
-void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool *stopPropagation, bool keyRepeat) {
+void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool keyRepeat, bool *stopPropagation) {
   *stopPropagation = false;
   if (!editable_) {
     return;
@@ -195,30 +196,34 @@ void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool *stopPropagati
         std::thread t(&RSkComponentTextInput::keyEventProcessingThread,this);
         t.detach();
         isTextInputInFocus_ = true;
+        isKeyRepeateOn = false;
       }
-      if(keyRepeat && !previousKeyRepeat)
-        queueIndex = inputQueue.size();
-      if(!keyRepeat && previousKeyRepeat){
+      inputQueueMutex.lock();
+      if(keyRepeat && !isKeyRepeateOn)
+        keyRepeateStartIndex = inputQueue.size();
+      if(isKeyRepeateOn && !keyRepeat ){
         std::queue<rnsKey> temp;
-        previousKeyRepeat = false;
-        privateVarProtectorMutex.lock();
+        isKeyRepeateOn = false;
         RNS_LOG_DEBUG("[RSkComponentTextInput][onHandleKey] Flushing the queue... ");
-        while( queueIndex > 0 ){
+        while( keyRepeateStartIndex > 0 ){
           temp.push(inputQueue.front());
-          queueIndex--;
+          keyRepeateStartIndex--;
           inputQueue.pop();
         }
+        RNS_LOG_INFO("[RSkComponentTextInput][onHandleKey] temp.size " << temp.size()<< " inputQueue.size "<< inputQueue.size());
         std::swap( inputQueue, temp );
-        RNS_LOG_INFO("[RSkComponentTextInput][onHandleKey] temp.size " << temp.size());
-        privateVarProtectorMutex.unlock();
+        RNS_LOG_INFO("[RSkComponentTextInput][onHandleKey] temp.size " << temp.size()<< " inputQueue.size "<< inputQueue.size());
+        inputQueueMutex.unlock();
         return;
       }
-      previousKeyRepeat = keyRepeat;
-
+      isKeyRepeateOn = keyRepeat;
+      inputQueueMutex.unlock();
       //We need to Handle the StopPrpagation & select in the onHandle.
       if ((eventKeyType >= RNS_KEY_Up && eventKeyType <= RNS_KEY_Back)) {
         *stopPropagation = true;
+        inputQueueMutex.lock();
         inputQueue.push(eventKeyType);
+        inputQueueMutex.unlock();
       } else if (eventKeyType ==  RNS_KEY_Select) {
         *stopPropagation = true;
         isTextInputInFocus_ = false;
@@ -226,10 +231,10 @@ void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool *stopPropagati
         if (!caretHidden_) {
           drawAndSubmit();
         }
-        privateVarProtectorMutex.lock();
         std::queue<rnsKey> empty;
+        inputQueueMutex.lock();
         std::swap( inputQueue, empty );
-        privateVarProtectorMutex.unlock();
+        inputQueueMutex.unlock();
         eventCount_++;
         textInputMetrics.text = textString;
         textInputMetrics.eventCount = eventCount_;
@@ -363,14 +368,16 @@ void RSkComponentTextInput::keyEventProcessingThread(){
     if(!inputQueue.empty()) {
       privateVarProtectorMutex.lock();
       textString = displayString_;
+      privateVarProtectorMutex.unlock();
+      inputQueueMutex.lock();
       auto eventKeyType = inputQueue.front();
       inputQueue.pop();
-      if ( queueIndex >0 )
-        queueIndex-- ;
-      privateVarProtectorMutex.unlock();
+      if ( keyRepeateStartIndex >0 )
+        keyRepeateStartIndex-- ;
+      inputQueueMutex.unlock();
       processEventKey(eventKeyType,&stopPropagation,&waitForupdateProps, false);
       if (waitForupdateProps)
-        sem_wait(&jsUpdateMutex);
+        sem_wait(&jsUpdateSem);
     }
     else{
       RNS_LOG_DEBUG("[RSkComponentTextInput][keyEventProcessingThread] ThreadAlive ");
@@ -393,7 +400,7 @@ RnsShell::LayerInvalidateMask  RSkComponentTextInput::updateComponentProps(const
     cursor_.end = textString.length();
     privateVarProtectorMutex.unlock();
     if (isTextInputInFocus_)
-      sem_post(&jsUpdateMutex);
+      sem_post(&jsUpdateSem);
     mask |= LayerPaintInvalidate;
   }
   if ((textInputProps.placeholder.size())
@@ -448,7 +455,7 @@ void RSkComponentTextInput::handleCommand(std::string commandName,folly::dynamic
     privateVarProtectorMutex.unlock();
     drawAndSubmit();
     if(isTextInputInFocus_)
-      sem_post(&jsUpdateMutex);
+      sem_post(&jsUpdateSem);
   }else if (commandName == "focus") {
     requestForEditingMode();
   }else if (commandName == "blur") {

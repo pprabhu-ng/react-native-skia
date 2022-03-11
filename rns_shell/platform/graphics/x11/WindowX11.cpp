@@ -283,7 +283,7 @@ bool WindowX11::handleEvent(const XEvent& event) {
         XPeekEvent(display_, &nev);
         if (nev.type == KeyPress && nev.xkey.time == event.xkey.time &&
             nev.xkey.keycode == event.xkey.keycode){
-            RNS_LOG_DEBUG("[WindowX11][handleEvent] Not Actual KeyRelease");
+            RNS_LOG_DEBUG("[WindowX11][handleEvent] Key repeate KeyRelease");
             return false;
         }
     }

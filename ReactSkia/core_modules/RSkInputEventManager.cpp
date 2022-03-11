@@ -40,7 +40,7 @@ void RSkInputEventManager::keyHandler(rnsKey eventKeyType, rnsKeyAction eventKey
   RNS_LOG_INFO("[RSkInputEventManager] [keyHandler] Key Repeat" << keyRepeat);
   auto currentFocused = spatialNavigator_->getCurrentFocusElement();
   if(currentFocused){ // send key to Focused component.
-    currentFocused->onHandleKey(eventKeyType, &stopPropagate, keyRepeat);
+    currentFocused->onHandleKey(eventKeyType, keyRepeat, &stopPropagate);
     if(stopPropagate){
       return;//don't propagate key further
     }
