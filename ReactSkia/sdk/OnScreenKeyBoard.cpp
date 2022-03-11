@@ -14,15 +14,78 @@
 #include "OSKConfig.h"
 #include "OSKLayout.h"
 
-OnScreenKeyboard::OnScreenKeyboard(OSKConfig oskConfig,SkSize ScreenSize) :
-    exposeEventID_(NotificationCenter::defaultCenter().addListener("windowExposed", std::function<void(RnsShell::Window*)>(std::bind(&OnScreenKeyboard::onExposeHandler,this,
-                                                     std::placeholders::_1)))),
-    oskConfig_(oskConfig),
-    OSKwindow_(RnsShell::Window::createNativeWindow(&RnsShell::PlatformDisplay::sharedDisplayForCompositing(),
-               SkSize::Make(ScreenSize.width(),ScreenSize.height()),
-               RnsShell::SubWindow))
-{
-    sem_init(&semReadyToDraw,0,0);
+OnScreenKeyboard& OnScreenKeyboard::getInstance() {
+    static OnScreenKeyboard oskHandle;
+    return oskHandle;
+}
+
+OSKErrorCode OnScreenKeyboard::launch(OSKConfig oskConfig) {
+    RNS_LOG_TODO("Need to do emit , keyboardWillShow Event to APP");
+
+    OnScreenKeyboard &oskHandle=OnScreenKeyboard::getInstance();
+
+    if(oskHandle.isOSKActive) return OSK_ERROR_ANOTHER_INSTANCE_ACTIVE;
+
+    sem_wait(&oskHandle.semPermitToLaunch);
+    oskHandle.isOSKActive=true;
+
+    if(oskHandle.OSKwindow_)
+        oskHandle.cleanUpOSKInstance();
+
+    memcpy(&oskHandle.oskConfig_,&oskConfig,sizeof(oskConfig));
+    oskHandle.prepareToLaunch();
+
+    if(oskHandle.platformType == RnsShell::PlatformDisplay::Type::X11) {
+        sem_post(&oskHandle.semReadyToDraw);
+    } else {
+        oskHandle.showOSKWindow();
+    }
+    sem_post(&oskHandle.semPermitToExit);
+    return OSK_ERROR_NONE;
+}
+
+void OnScreenKeyboard::exit() {
+    RNS_LOG_TODO("Need to emitkeyboardWillHide Event  to APP");
+
+    OnScreenKeyboard &oskHandle=OnScreenKeyboard::getInstance();
+    if(oskHandle.isOSKActive) {
+        oskHandle.isOSKActive=false;
+        sem_wait(&oskHandle.semPermitToExit);
+        oskHandle.cleanUpOSKInstance();
+        sem_post(&oskHandle.semPermitToLaunch);
+    }
+}
+
+void OnScreenKeyboard::prepareToLaunch() {
+
+    platformType=RnsShell::PlatformDisplay::sharedDisplayForCompositing().type();
+    SkSize mainScreenSize=RnsShell::PlatformDisplay::sharedDisplay().screenSize();
+    if(ScreenSize != mainScreenSize) {
+        generateOSKLayout=true;
+        ScreenSize=mainScreenSize;
+    } else {
+        generateOSKLayout=false;
+    }
+    //Set up OSk configuration
+    if(oskConfig_.oskTheme == OSK_LIGHT_THEME) {
+        bgColor_ = LIGHT_THEME_BG_COLOR ;
+        fontColor_ = LIGHT_THEME_FONT_COLOR;
+    } else {
+        bgColor_ = DARK_THEME_BG_COLOR ;
+        fontColor_ =DARK_THEME_FONT_COLOR;
+    }
+    if(oskConfig_.oskType == OSK_ALPHA_NUMERIC_KB)
+        oskLayout_.KBLayoutType = ALPHA_LOWERCASE_LAYOUT;
+    oskLayout_.textFontSize= FONT_SIZE *(ScreenSize.width()/baseScreenSize.width());
+    oskLayout_.textHLFontSize= HIGHLIGHT_FONT_SIZE *(ScreenSize.width()/baseScreenSize.width());
+
+    createOSkWindow();
+}
+
+void OnScreenKeyboard::createOSkWindow() {
+    OSKwindow_ = RnsShell::Window::createNativeWindow(&RnsShell::PlatformDisplay::sharedDisplayForCompositing(),
+                                                   SkSize::Make(ScreenSize.width(),ScreenSize.height()),
+                                                   RnsShell::SubWindow);
     if(OSKwindow_) {
         OSKwindow_->setTitle("OSK Window");
         OSKwindowContext_ = RnsShell::WCF::createContextForWindow(reinterpret_cast<GLNativeWindowType>(OSKwindow_->nativeWindowHandle()),
@@ -31,40 +94,54 @@ OnScreenKeyboard::OnScreenKeyboard(OSKConfig oskConfig,SkSize ScreenSize) :
             OSKwindowContext_->makeContextCurrent();
             backBuffer_ = OSKwindowContext_->getBackbufferSurface();
             OSKcanvas_ = backBuffer_->getCanvas();
-            RNS_LOG_DEBUG("Native Window Handle : " << OSKwindow_->nativeWindowHandle() << " Window Context : " << OSKwindowContext_.get() << "Back Buffer : " << backBuffer_.get());
+            if(platformType == RnsShell::PlatformDisplay::Type::X11) {
+                /*For X11 draw should be done after expose event received*/
+                sem_init(&semReadyToDraw,0,0);
+               // Registering expose event
+                std::function<void(RnsShell::Window*)> handler = std::bind(&OnScreenKeyboard::onExposeHandler,this,
+                                                                          std::placeholders::_1);
+                exposeEventID_ = NotificationCenter::defaultCenter().addListener("windowExposed",handler);
+            }
         } else {
             RNS_LOG_ERROR("Invalid windowContext for nativeWindowHandle : " << OSKwindow_->nativeWindowHandle());
         }
     }
-    sem_post(&semReadyToDraw);
 }
 
-SharedOSKHandle OnScreenKeyboard::launch(OSKConfig oskConfig) {
-    RNS_LOG_TODO("Need to do emit , keyboardWillShow Event to APP");
-    SkSize mainScreenSize=RnsShell::PlatformDisplay::sharedDisplay().screenSize();
-    SharedOSKHandle oskHandle;
-    oskHandle = std::make_shared<OnScreenKeyboard>(oskConfig,mainScreenSize);
-    oskHandle->oskHandle_=oskHandle;
-    return oskHandle;
-}
-
-void OnScreenKeyboard::exit() {
-    RNS_LOG_TODO("Need to emitkeyboardWillHide Event  to APP");
+void OnScreenKeyboard::cleanUpOSKInstance() {
     if( OSKeventId_ )  {
         NotificationCenter::OSKCenter().removeListener(OSKeventId_);
         OSKeventId_= -1;
     }
     if(exposeEventID_) {
-        NotificationCenter::OSKCenter().removeListener(exposeEventID_);
+        NotificationCenter::defaultCenter().removeListener(exposeEventID_);
         exposeEventID_=-1;
     }
+
     sem_destroy(&semReadyToDraw);
-    if(OSKwindow_)
+
+    if(OSKwindow_) {
         OSKwindow_->closeWindow();
-    oskHandle_.reset();
+        delete OSKwindow_;
+        OSKwindow_=nullptr;
+    }
+}
+
+void OnScreenKeyboard::showOSKWindow() {
+
+    OSKwindow_->show();
+    OSKcanvas_->clear(bgColor_);
+    drawPlaceHolder();
+    drawOSK(oskConfig_.oskType);
+    // Registering Key Pressed event
+    std::function<void(rnsKey, rnsKeyAction)> handler = std::bind(&OnScreenKeyboard::onHWkeyHandler,this,
+                                                                    std::placeholders::_1,
+                                                                    std::placeholders::_2);
+    OSKeventId_ = NotificationCenter::OSKCenter().addListener("onHWKeyEvent", handler);
 }
 
 void OnScreenKeyboard::drawOSK(OSKTypes oskType) {
+
     RNS_PROFILE_START(OSKLayoutCreate)
     createOSKLayout(oskType);
     RNS_PROFILE_START(OSKDraw)
@@ -84,7 +161,7 @@ void OnScreenKeyboard::drawOSK(OSKTypes oskType) {
                 drawFont({keyIndex,rowIndex},fontColor_);
             }
         }
-        /*2. Draw Kb partition*/
+        /*2. Draw KB partition*/
         drawOSKPartition();
         /*3. Highlighlight default focussed key*/
         highlightFocussedKey(oskLayout_.defaultFocussIndex);
@@ -239,44 +316,13 @@ void OnScreenKeyboard ::highlightFocussedKey(SkPoint index) {
     return;
 }
 void OnScreenKeyboard::onExposeHandler(RnsShell::Window* window) {
-    if(window  == OSKwindow_.get()) {
+    if(window  == OSKwindow_) {
         sem_wait(&semReadyToDraw);
         if(exposeEventID_) {
-            NotificationCenter::OSKCenter().removeListener(exposeEventID_);
+            NotificationCenter::defaultCenter().removeListener(exposeEventID_);
             exposeEventID_=-1;
         }
-        //Set up OSk configuration
-        switch(oskConfig_.oskTheme) {
-            case OSK_LIGHT_THEME:
-                bgColor_ = LIGHT_THEME_BG_COLOR ;
-                fontColor_ = LIGHT_THEME_FONT_COLOR;
-            break;
-            case OSK_DARK_THEME:
-            default:
-                bgColor_ = DARK_THEME_BG_COLOR ;
-                fontColor_ =DARK_THEME_FONT_COLOR;
-            break;
-        }
-        //Setup Screen dimension 
-        SkSize mainScreenSize=RnsShell::PlatformDisplay::sharedDisplay().screenSize();
-        if(ScreenSize != mainScreenSize) {
-            generateOSKLayout=true;
-            ScreenSize=mainScreenSize;
-        } else {
-            generateOSKLayout=false;
-        }
-        oskLayout_.textFontSize= FONT_SIZE *(ScreenSize.width()/baseScreenSize.width());
-        oskLayout_.textHLFontSize= HIGHLIGHT_FONT_SIZE *(ScreenSize.width()/baseScreenSize.width());
-        // Draw OSK
-        OSKwindow_->show();
-        OSKcanvas_->clear(bgColor_);
-        drawPlaceHolder();
-        drawOSK(oskConfig_.oskType);
-        // Registering Key Pressed event
-        std::function<void(rnsKey, rnsKeyAction)> handler = std::bind(&OnScreenKeyboard::onHWkeyHandler,this,
-                                                                  std::placeholders::_1,
-                                                                  std::placeholders::_2);
-        OSKeventId_ = NotificationCenter::OSKCenter().addListener("onHWKeyEvent", handler);
+        showOSKWindow();
     }
  }
 
@@ -328,9 +374,8 @@ void OnScreenKeyboard::onHWkeyHandler(rnsKey keyValue, rnsKeyAction eventKeyActi
         break;
     }
     focussedKey_ = hlCandidate;
-    if(focussedKey_ != lastFocussedKey_) {
+    if(focussedKey_ != lastFocussedKey_)
         highlightFocussedKey(focussedKey_);
-    }
 }
 
 void OnScreenKeyboard::handleSelection() {
@@ -501,13 +546,13 @@ void OnScreenKeyboard::createOSKLayout(OSKTypes oskType) {
     }
 
 //3.  Calculation Navigation index
-     for (unsigned int rowIndex = 0; rowIndex < oskLayout_.keyInfo->size(); rowIndex++) {
-         for (unsigned int columnIndex = 0; columnIndex < oskLayout_.keyInfo->at(rowIndex).size(); columnIndex++) {
-             groupID=oskLayout_.keyInfo->at(rowIndex).at(columnIndex).KBPartitionId;
-             unsigned int keyCount=oskLayout_.keyInfo->at(rowIndex).size(),index;
-             unsigned int rowCount=oskLayout_.keyInfo->size();
+    for (unsigned int rowIndex = 0; rowIndex < oskLayout_.keyInfo->size(); rowIndex++) {
+        for (unsigned int columnIndex = 0; columnIndex < oskLayout_.keyInfo->at(rowIndex).size(); columnIndex++) {
+            groupID=oskLayout_.keyInfo->at(rowIndex).at(columnIndex).KBPartitionId;
+            unsigned int keyCount=oskLayout_.keyInfo->at(rowIndex).size(),index;
+            unsigned int rowCount=oskLayout_.keyInfo->size();
 
-             //Predicting sibling on Left
+            //Predicting sibling on Left
             index =(columnIndex) ? (columnIndex-1): keyCount-1;
             oskLayout_.siblingInfo->at(rowIndex).at(columnIndex).siblingLeft.set( index,rowIndex);
 
@@ -518,7 +563,7 @@ void OnScreenKeyboard::createOSKLayout(OSKTypes oskType) {
             //Predicting neighbour for Up Navigation 
             index =rowIndex;
             bool siblingFound{false};
-           for(unsigned int i=0;(i<rowCount) && (!siblingFound);i++ ) {
+            for(unsigned int i=0;(i<rowCount) && (!siblingFound);i++ ) {
                 index = (index  !=0 ) ? index -1 :rowCount-1;
                 for( unsigned int i=0; i< oskLayout_.keyPos->at(index).size();i++) {
                     if(groupID == oskLayout_.keyInfo->at(index).at(i).KBPartitionId) {

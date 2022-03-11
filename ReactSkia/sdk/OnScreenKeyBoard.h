@@ -20,11 +20,7 @@
 #include "NotificationCenter.h"
 #include "RNSKeyCodeMapping.h"
 
-/*TODO : temp arrangemnet to sync OSk with it's client */
-class OnScreenKeyboard;
-using SharedOSKHandle = std::shared_ptr<OnScreenKeyboard>;
-
-//Types of Suported KeyBoard
+//Suported KeyBoards
 enum OSKTypes {
     OSK_DEFAULT_TYPE,
     OSK_ALPHA_NUMERIC_KB=OSK_DEFAULT_TYPE,
@@ -36,6 +32,12 @@ enum OSKThemes {
     OSK_DEFAULT_THEME,
     OSK_DARK_THEME=OSK_DEFAULT_THEME,
     OSK_LIGHT_THEME
+};
+// OSK Error Code
+enum OSKErrorCode {
+    OSK_ERROR_NONE,
+    OSK_ERROR_ANOTHER_INSTANCE_ACTIVE,
+    OSK_ERROR_LAUNCH_FAILED
 };
 enum KBLayoutType {
     ALPHA_LOWERCASE_LAYOUT,
@@ -60,14 +62,14 @@ struct OSKConfig {
     bool      enablesReturnKeyAutomatically;
 };
 
-// Default OSKConfig
+// Default OSK Configuration
 static OSKConfig defaultOSKConfig={ OSK_DEFAULT_TYPE, OSK_DEFAULT_THEME, nullptr, "done", false };
 
 typedef struct keyPosition {
     SkPoint        textXY{}; // text X,Y to draw
-    SkPoint        textHLXY{}; // font's X,Y to draw
-    SkPoint        textCapsHLXY{}; // font's X,Y to draw
-    SkRect         highlightTile; // Area to highlight on Key Focus
+    SkPoint        textHLXY{}; // Text X,Y to draw on Highlight Tile
+    SkPoint        textCapsHLXY{}; // Text X,Y for Upper Case Alphabets
+    SkRect         highlightTile; // Highlight Tile coverage
 }keyPosition_t;
 
 typedef struct KeyInfo {
@@ -109,38 +111,64 @@ struct OSKLayout {
 };
 
 class OnScreenKeyboard {
+
     public:
-        OnScreenKeyboard(OSKConfig oskConfig,SkSize ScreenSize);
-        static SharedOSKHandle launch(OSKConfig oskConfig=defaultOSKConfig);// Interface to launch OSK
-        void exit(); //Interface to quit OSK
+        static OnScreenKeyboard& getInstance(); // Interface to get OSK singleton object
+        static OSKErrorCode launch(OSKConfig oskConfig=defaultOSKConfig);// Interface to launch OSK
+        static void exit(); //Interface to quit OSK
+        static bool IsKBActive() {
+             OnScreenKeyboard &oskHandle=OnScreenKeyboard::getInstance();
+             return oskHandle.isOSKActive;
+        } // Interface to get whether is in launch or exit state
+
     private:
-        void createOSKLayout(OSKTypes KBtype );
+        OnScreenKeyboard() {
+            sem_init(&semPermitToLaunch,0,1);//Allow by default. Next signal to be done on exit call
+            sem_init(&semPermitToExit,0,0);//Block by default. signal to be done on launch Call
+        };
+        ~OnScreenKeyboard() {
+            sem_destroy(&semPermitToLaunch);
+            sem_destroy(&semPermitToExit);
+        };
+
+        void cleanUpOSKInstance();
+        void prepareToLaunch();
+        void createOSkWindow();
+        void showOSKWindow();
+        void pushToDisplay();
+
         void onHWkeyHandler(rnsKey key, rnsKeyAction eventKeyAction);
         void onExposeHandler(RnsShell::Window* window);
+
+        void createOSKLayout(OSKTypes KBtype );
         void highlightFocussedKey(SkPoint index);
         void handleSelection();
         void drawOSK(OSKTypes oskType);
         void drawPlaceHolder();
         void drawFont(SkPoint index,SkColor color,bool onHLTile=false);
         void drawOSKPartition();
-        void pushToDisplay();
+
 // Maintainables
-        unsigned int exposeEventID_{-1};
-        OSKConfig     oskConfig_;
-        std::unique_ptr<RnsShell::Window> OSKwindow_;
+        RnsShell::PlatformDisplay::Type platformType;
+        RnsShell::Window* OSKwindow_;
         std::unique_ptr<RnsShell::WindowContext> OSKwindowContext_;
-        sem_t semReadyToDraw;/* To sync expose event & window creation*/
         sk_sp<SkSurface> backBuffer_;
         SkCanvas *OSKcanvas_=nullptr;
-        unsigned int OSKeventId_{-1};
-        SkSize        ScreenSize{0,0};
+        int exposeEventID_{-1};
+        int OSKeventId_{-1};
+        sem_t semPermitToLaunch;
+        sem_t semPermitToExit;
+		sem_t semReadyToDraw;/* To sync expose event & window creation for x11 backend*/
+		bool  isOSKActive{false};
+
+        OSKConfig     oskConfig_;
+        OSKLayout     oskLayout_;
         bool          generateOSKLayout{true};
+        SkSize        ScreenSize{0,0};
         SkPoint       focussedKey_{0};
         SkPoint       lastFocussedKey_{0};
-        OSKLayout     oskLayout_;
         SkColor       bgColor_{SK_ColorWHITE};
         SkColor       fontColor_{SK_ColorWHITE};
-        SharedOSKHandle oskHandle_;/* temp arrangemnet to sync OSk with it's client*/
 };
 #endif //OSK_H
 

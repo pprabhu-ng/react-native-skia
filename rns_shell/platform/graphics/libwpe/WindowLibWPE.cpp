@@ -206,8 +206,6 @@ bool WindowLibWPE::initWindow(PlatformDisplay *platformDisplay,SkSize dimension,
 
     if((this->winType == MainWindow ) && (WindowLibWPE::mainApp_))
         WindowLibWPE::mainApp_->sizeChanged(viewWidth_, viewHeight_);
-    if(winType != MainWindow)
-        NotificationCenter::defaultCenter().emit("windowExposed",(Window *)this);
     return true;
 }
 
