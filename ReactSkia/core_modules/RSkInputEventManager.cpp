@@ -9,6 +9,7 @@
 
 static bool keyRepeat;
 static rnsKey previousKeyType;
+static rnsKeyAction previousKeyAction;
 
 namespace facebook{
 namespace react {
@@ -26,18 +27,20 @@ RSkInputEventManager::RSkInputEventManager(){
 
 void RSkInputEventManager::keyHandler(rnsKey eventKeyType, rnsKeyAction eventKeyAction){
   bool stopPropagate = false;
-  if(previousKeyType == eventKeyType && !keyRepeat && eventKeyAction == RNS_KEY_Press){
+  RNS_LOG_DEBUG("[RSkInputEventManager] [keyHandler] Key Repeat" << keyRepeat<<"  eventKeyType  " <<eventKeyType << " previousKeyType " <<previousKeyType <<"  eventKeyAction  " << eventKeyAction);
+  
+  if(previousKeyType == eventKeyType  && eventKeyAction == previousKeyAction && !keyRepeat){
     keyRepeat = true;
-  }
+  }else 
   if(eventKeyAction == RNS_KEY_Release ){
-    if(keyRepeat == true){
+    if(keyRepeat == true)
       keyRepeat = false;
-    }
     else
       return;// ignore key release 
   }
   previousKeyType = eventKeyType;
-  RNS_LOG_INFO("[RSkInputEventManager] [keyHandler] Key Repeat" << keyRepeat);
+  previousKeyAction = eventKeyAction;
+  RNS_LOG_DEBUG("[RSkInputEventManager] [keyHandler] Key Repeat" << keyRepeat<<"  eventKeyType  " <<eventKeyType << " previousKeyType " <<previousKeyType);
   auto currentFocused = spatialNavigator_->getCurrentFocusElement();
   if(currentFocused){ // send key to Focused component.
     currentFocused->onHandleKey(eventKeyType, keyRepeat, &stopPropagate);
