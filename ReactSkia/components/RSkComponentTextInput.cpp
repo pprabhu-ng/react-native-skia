@@ -521,5 +521,9 @@ void RSkComponentTextInput::resignFromEditingMode() {
   RNS_LOG_DEBUG("[RSkComponentTextInput][requestForEditingMode] *** END ***");
 }
 
+RSkComponentTextInput::~RSkComponentTextInput(){
+  sem_destroy(&jsUpdateSem);
+}
+
 } // namespace react
 } // namespace facebook

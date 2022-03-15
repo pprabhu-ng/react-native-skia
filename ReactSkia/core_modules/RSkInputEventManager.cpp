@@ -35,8 +35,10 @@ void RSkInputEventManager::keyHandler(rnsKey eventKeyType, rnsKeyAction eventKey
   if(eventKeyAction == RNS_KEY_Release ){
     if(keyRepeat == true)
       keyRepeat = false;
-    else
+    else{
+      previousKeyAction = eventKeyAction;
       return;// ignore key release 
+    }
   }
   previousKeyType = eventKeyType;
   previousKeyAction = eventKeyAction;

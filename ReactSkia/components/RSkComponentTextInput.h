@@ -23,6 +23,7 @@ struct cursor{
 class RSkComponentTextInput final : public RSkComponent {
  public:
   RSkComponentTextInput(const ShadowView &shadowView);
+  ~RSkComponentTextInput();
   void onHandleKey(rnsKey eventKeyType, bool keyRepeat, bool *stopPropagation)override;
   RnsShell::LayerInvalidateMask updateComponentProps(const ShadowView &newShadowView,bool forceUpdate) override;
   /*
