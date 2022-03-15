@@ -359,12 +359,19 @@ void OnScreenKeyboard::onHWkeyHandler(rnsKey keyValue, rnsKeyAction eventKeyActi
             hlCandidate=focussedKey_;
             if(keyValue !=RNS_KEY_UnKnown ) {
     /*Case 3: Emit back other known keys*/
-                NotificationCenter::OSKCenter().emit("onOSKKeyEvent", keyValue, eventKeyAction);
+                rnsKey OSKkeyValue{RNS_KEY_UnKnown};
                 for (unsigned int rowIndex=0; (rowIndex < oskLayout_.keyInfo->size()) && (!keyFound);rowIndex++) {
-                    for (unsigned int index=0; index<oskLayout_.keyInfo->at(rowIndex).size();index++) {
-                        if(oskLayout_.keyInfo->at(rowIndex).at(index).keyValue == keyValue) {
-                            hlCandidate.set(index,rowIndex);
+                    for (unsigned int keyIndex=0; keyIndex<oskLayout_.keyInfo->at(rowIndex).size();keyIndex++) {
+                        OSKkeyValue=oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyValue;
+                        if(( oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyType == TEXT_KEY ) &&
+                           (oskLayout_.KBLayoutType == ALPHA_UPPERCASE_LAYOUT) &&
+                           (isalpha(*oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyName))) {
+                                OSKkeyValue = static_cast<rnsKey>(oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyValue-26);
+                        }
+                        if(OSKkeyValue == keyValue) {
+                            hlCandidate.set(keyIndex,rowIndex);
                             keyFound=true;
+                            NotificationCenter::OSKCenter().emit("onOSKKeyEvent", OSKkeyValue, eventKeyAction);
                             break;
                         }
                     }
@@ -389,7 +396,13 @@ void OnScreenKeyboard::handleSelection() {
             drawOSK(OSK_ALPHA_NUMERIC_KB);
         }
     }else {
-        NotificationCenter::OSKCenter().emit("onOSKKeyEvent", oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyValue, RNS_KEY_Press);
+        rnsKey keyValue=oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyValue;
+        if(( oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyType == TEXT_KEY ) &&
+           (oskLayout_.KBLayoutType == ALPHA_UPPERCASE_LAYOUT) &&
+           (isalpha(*oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyName))) {
+            keyValue = static_cast<rnsKey>(keyValue-26);
+        }
+        NotificationCenter::OSKCenter().emit("onOSKKeyEvent", keyValue, RNS_KEY_Press);
     }
 }
 
