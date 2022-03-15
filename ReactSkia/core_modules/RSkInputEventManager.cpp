@@ -7,9 +7,11 @@
 #include "RSkInputEventManager.h"
 #include "ReactSkia/components/RSkComponent.h"
 
+#include <mutex>
+
 static bool keyRepeat;
 static rnsKey previousKeyType;
-static rnsKeyAction previousKeyAction;
+std::mutex gMutex;
 
 namespace facebook{
 namespace react {
@@ -27,22 +29,21 @@ RSkInputEventManager::RSkInputEventManager(){
 
 void RSkInputEventManager::keyHandler(rnsKey eventKeyType, rnsKeyAction eventKeyAction){
   bool stopPropagate = false;
-  RNS_LOG_DEBUG("[RSkInputEventManager] [keyHandler] Key Repeat" << keyRepeat<<"  eventKeyType  " <<eventKeyType << " previousKeyType " <<previousKeyType <<"  eventKeyAction  " << eventKeyAction);
-  
-  if(previousKeyType == eventKeyType  && eventKeyAction == previousKeyAction && !keyRepeat){
+  RNS_LOG_DEBUG("[keyHandler] Key Repeat" << keyRepeat<<"  eventKeyType  " <<eventKeyType << " previousKeyType " <<previousKeyType <<"  eventKeyAction  " << eventKeyAction);
+  if(previousKeyType == eventKeyType  && eventKeyAction == RNS_KEY_Press){
     keyRepeat = true;
-  }else 
+  }
+  previousKeyType = eventKeyType; 
   if(eventKeyAction == RNS_KEY_Release ){
-    if(keyRepeat == true)
+    previousKeyType = RNS_KEY_UnKnown;
+    if(keyRepeat == true){
       keyRepeat = false;
+    }
     else{
-      previousKeyAction = eventKeyAction;
       return;// ignore key release 
     }
   }
-  previousKeyType = eventKeyType;
-  previousKeyAction = eventKeyAction;
-  RNS_LOG_DEBUG("[RSkInputEventManager] [keyHandler] Key Repeat" << keyRepeat<<"  eventKeyType  " <<eventKeyType << " previousKeyType " <<previousKeyType);
+  RNS_LOG_DEBUG(" [keyHandler] Key Repeat" << keyRepeat<<"  eventKeyType  " <<eventKeyType << " previousKeyType " <<previousKeyType);
   auto currentFocused = spatialNavigator_->getCurrentFocusElement();
   if(currentFocused){ // send key to Focused component.
     currentFocused->onHandleKey(eventKeyType, keyRepeat, &stopPropagate);
