@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#include <math.h>
+
 #include "include/core/SkFont.h"
 #include "include/core/SkFontMgr.h"
 
@@ -170,7 +172,7 @@ void OnScreenKeyboard::drawOSK(OSKTypes oskType) {
     RNS_PROFILE_END("OSk Draw completion : ",OSKDraw)
 }
 
-void OnScreenKeyboard::drawPlaceHolder(){
+void OnScreenKeyboard::drawPlaceHolder() {
     SkPaint paint;
     if(oskConfig_.placeHolderName) {
         SkFont font;
@@ -254,13 +256,25 @@ inline void OnScreenKeyboard::drawFont(SkPoint index,SkColor color,bool onHLTile
             }
         }
         OSKcanvas_->drawSimpleText(keyName, strlen(keyName), SkTextEncoding::kUTF8,textX,textY,font, textPaint);
-
 #ifdef SHOW_FONT_PLACING_ON_HLTILE
+        SkRect bounds;
         textPaint.setColor(SK_ColorRED);
-        textPaint.setStrokeWidth(4);
+        textPaint.setStrokeWidth(2);
+        //Text draw point
         OSKcanvas_->drawPoint(textX,textY,textPaint);
         textPaint.setColor(SK_ColorGREEN);
         textPaint.setStrokeWidth(2);
+        textPaint.setStyle(SkPaint::kStroke_Style);
+        font.measureText(keyName, strlen(keyName), SkTextEncoding::kUTF8, &bounds);
+        bounds.offset(textX,textY);
+        // Font bounds
+        OSKcanvas_->drawRect(bounds,textPaint);
+        textPaint.setColor(SK_ColorBLUE);
+        // Highlight Tile Coverage
+        OSKcanvas_->drawRect(oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile,textPaint);
+        textPaint.setColor(SK_ColorYELLOW);
+        textPaint.setStrokeWidth(1);
+        //HighLightTile Centre
         OSKcanvas_->drawLine(oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile.fLeft,
                              oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile.fTop+(oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile.height()/2),
                              oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile.fRight,
@@ -271,9 +285,11 @@ inline void OnScreenKeyboard::drawFont(SkPoint index,SkColor color,bool onHLTile
                              oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile.fLeft+(oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile.width()/2),
                              oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile.fBottom,
                              textPaint);
-
-#endif/*SHOW_FONT_PLACING_ON_HLTILE*/
-
+        // Bounds Mid portion
+        textPaint.setColor(SK_ColorMAGENTA);
+        OSKcanvas_->drawLine(bounds.fLeft,bounds.fTop+(bounds.height()/2),bounds.fRight,bounds.fTop+(bounds.height()/2),textPaint);
+        OSKcanvas_->drawLine(bounds.fLeft+(bounds.width()/2),bounds.fTop,bounds.fLeft+(bounds.width()/2),bounds.fBottom,textPaint);
+  #endif/*SHOW_FONT_PLACING_ON_HLTILE*/
     }
 }
 
@@ -326,7 +342,7 @@ void OnScreenKeyboard::onExposeHandler(RnsShell::Window* window) {
     }
  }
 
-void OnScreenKeyboard::onHWkeyHandler(rnsKey keyValue, rnsKeyAction eventKeyAction){
+void OnScreenKeyboard::onHWkeyHandler(rnsKey keyValue, rnsKeyAction eventKeyAction) {
     if(eventKeyAction != RNS_KEY_Press) return;
 
     SkPoint hlCandidate;
@@ -448,12 +464,13 @@ void OnScreenKeyboard::createOSKLayout(OSKTypes oskType) {
     }
 
     unsigned int groupKeyIndex{0},hlX,hlY,groupHLTileWidth,groupHLTileHeigth,groupID;
-    int fontHeightAdjustment=0;
+    float fontHeightAdjustment=0;
     SkPoint groupOffset,groupKeySpacing;
     SkRect bounds,boundsCapsHL,boundsHL;
     SkFont font,fontHL;
     char * keyName;
     SkString uniChar;
+    sk_sp<SkTypeface> defaultTypeface;
 
     unsigned int rowSize=oskLayout_.keyInfo->size();
     oskLayout_.keyPos->resize(rowSize);
@@ -522,6 +539,8 @@ void OnScreenKeyboard::createOSKLayout(OSKTypes oskType) {
                     } 
                 }
             } else {
+                font.setTypeface(defaultTypeface);
+                fontHL.setTypeface(defaultTypeface);
                 if(( oskLayout_.keyInfo->at(rowIndex).at(columnIndex).keyType == TEXT_KEY ) && (isalpha(*keyName))) {
                     char upperCase=*keyName-LOWER_TO_UPPER_CASE_OFFSET;
                     fontHL.measureText(&upperCase, 1, SkTextEncoding::kUTF8, &boundsCapsHL);
@@ -532,32 +551,29 @@ void OnScreenKeyboard::createOSKLayout(OSKTypes oskType) {
             }
             font.measureText(keyName, strlen(keyName), SkTextEncoding::kUTF8, &bounds);
             fontHL.measureText(keyName, strlen(keyName), SkTextEncoding::kUTF8,&boundsHL);
-#if 0
-            /* Fix : to adjust the font inside Higlight tile. Need for symobol like (|  `), which has greater 
-               high decend or ascend
-            */
-            fontHeightAdjustment=0;
-            if(( oskLayout_.keyPos->at(rowIndex).at(columnIndex).textHLXY.y() +(boundsHL.height()/2) )> oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.fBottom) fontHeightAdjustment =-3;
-            if(( oskLayout_.keyPos->at(rowIndex).at(columnIndex).textHLXY.y() -(boundsHL.height()/2) )< oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.fTop) fontHeightAdjustment =3;
-#endif
+
             oskLayout_.keyPos->at(rowIndex).at(columnIndex).textXY.set(
                         (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.x() + (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.width() - bounds.width() )/2),
                         (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.y() + (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.height() + bounds.height() )/2));
             oskLayout_.keyPos->at(rowIndex).at(columnIndex).textHLXY.set(
                         (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.x() + (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.width() - boundsHL.width() )/2),
-                        (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.y() + (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.height() + boundsHL.height() )/2)+fontHeightAdjustment);
-
-#ifdef SHOW_FONT_BOUNDS
-            SkPaint paint;
-            paint.setColor(SK_ColorRED);
-            paint.setStyle(SkPaint::kStroke_Style);
-            OSKcanvas_->drawRect(bounds,paint);
-            paint.setColor(SK_ColorBLUE);
-            OSKcanvas_->drawRect(boundsHL,paint);
-#endif/*SHOW_CREATED_COORDINATE*/
+                        (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.y() + (oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.height() + boundsHL.height() )/2));
+            /* Fix : to adjust the font inside Higlight tile. Need for symobol like (|  ` } { j),
+                     which has greater decend or ascend
+            */
+            fontHeightAdjustment=0;
+            boundsHL.offset(oskLayout_.keyPos->at(rowIndex).at(columnIndex).textHLXY.x(),oskLayout_.keyPos->at(rowIndex).at(columnIndex).textHLXY.y());
+            if(boundsHL.fTop < oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.fTop)
+                fontHeightAdjustment = floor(oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.fTop - boundsHL.fTop)+2;
+            if(oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.fBottom < boundsHL.fBottom)
+                fontHeightAdjustment = -floor((boundsHL.fBottom - oskLayout_.keyPos->at(rowIndex).at(columnIndex).highlightTile.fBottom )+2);
+            if(fontHeightAdjustment != 0) {
+                oskLayout_.keyPos->at(rowIndex).at(columnIndex).textHLXY.set(
+                    oskLayout_.keyPos->at(rowIndex).at(columnIndex).textHLXY.x() ,
+                    oskLayout_.keyPos->at(rowIndex).at(columnIndex).textHLXY.y()+fontHeightAdjustment);
+                }
         }
     }
-
 //3.  Calculation Navigation index
     for (unsigned int rowIndex = 0; rowIndex < oskLayout_.keyInfo->size(); rowIndex++) {
         for (unsigned int columnIndex = 0; columnIndex < oskLayout_.keyInfo->at(rowIndex).size(); columnIndex++) {
