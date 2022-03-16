@@ -119,9 +119,7 @@ void OnScreenKeyboard::cleanUpOSKInstance() {
         NotificationCenter::defaultCenter().removeListener(exposeEventID_);
         exposeEventID_=-1;
     }
-
     sem_destroy(&semReadyToDraw);
-
     if(OSKwindow_) {
         OSKwindow_->closeWindow();
         delete OSKwindow_;
@@ -130,7 +128,6 @@ void OnScreenKeyboard::cleanUpOSKInstance() {
 }
 
 void OnScreenKeyboard::showOSKWindow() {
-
     OSKwindow_->show();
     OSKcanvas_->clear(bgColor_);
     drawPlaceHolder();

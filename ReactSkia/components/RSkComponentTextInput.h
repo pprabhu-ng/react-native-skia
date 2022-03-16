@@ -11,7 +11,6 @@
 #include "react/renderer/components/textinput/TextInputShadowNode.h"
 #include "react/renderer/components/textinput/TextInputEventEmitter.h"
 #include "ReactSkia/components/RSkComponent.h"
-#include "ReactSkia/sdk/OnScreenKeyBoard.h"
 #include "ReactSkia/textlayoutmanager/RSkTextLayoutManager.h"
 
 

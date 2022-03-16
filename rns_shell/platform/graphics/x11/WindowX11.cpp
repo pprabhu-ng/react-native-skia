@@ -82,7 +82,7 @@ void Window::createEventLoop(Application* app) {
                                 RNS_LOG_INFO("Resize Request with (Width x Height) : (" << event.xconfigurerequest.width <<
                                     " x " << event.xconfigurerequest.height << ")");
                                 WindowX11* win = WindowX11::gWindowMap.find(event.xconfigurerequest.window);
-                                if(win && (win->winType == MainWindow )){
+                                if(win && (win->winType == MainWindow )) { // Only for main window
                                     auto windowDimension = win->getWindowDimension();
 
                                     if((windowDimension.width()!=event.xconfigurerequest.width) ||
@@ -93,11 +93,11 @@ void Window::createEventLoop(Application* app) {
                                         NotificationCenter::defaultCenter().emit("dimensionEventNotification");
                                     }
                                 }
-                            }
-                            break;
+                        }
+                        break;
                     }
                     case UnmapNotify:
-                        RNS_LOG_INFO("DO Nothing on UnmapNotify: Happens on window closure");
+                        RNS_LOG_DEBUG("Nothing to be done for UnmapNotify: Happens on window closure");
                     break;
                     default:
                         WindowX11* win = WindowX11::gWindowMap.find(event.xany.window);
@@ -285,7 +285,6 @@ bool WindowX11::handleEvent(const XEvent& event) {
      *    a. shift ON  --> UpperCase
      *    b. shift OFF --> LowerCase
      */
-<<<<<<< HEAD
     if (event.type == KeyRelease && XEventsQueued(display_, QueuedAfterReading)) {
         XEvent nev;
         XPeekEvent(display_, &nev);
@@ -297,9 +296,6 @@ bool WindowX11::handleEvent(const XEvent& event) {
             return false;
         }
     }
-=======
-
->>>>>>> Changes Done for POC includes:
     KeySym keysym = XkbKeycodeToKeysym(display_, event.xkey.keycode,0,(shiftLevel^capsLock));
     switch (event.type) {
         case MapNotify:
@@ -345,11 +341,12 @@ void WindowX11::setRequestedDisplayParams(const DisplayParams& params, bool allo
     RNS_LOG_NOT_IMPL;
     //INHERITED::setRequestedDisplayParams(params, allowReattach);
 }
+
 void WindowX11::onExpose() {
     NotificationCenter::defaultCenter().emit("windowExposed",(Window*)this);
 }
-void WindowX11::onKey(rnsKey eventKeyType, rnsKeyAction eventKeyAction){
 
+void WindowX11::onKey(rnsKey eventKeyType, rnsKeyAction eventKeyAction){
     if(winType == SubWindow)
        NotificationCenter::OSKCenter().emit("onHWKeyEvent", eventKeyType, eventKeyAction);
     else

@@ -10,6 +10,10 @@
 
 #include "RNSKeyCodeMapping.h"
 
+/*
+Position Configuration mentioned in this file is for 1280*720 screen.
+For other Screen Size, it will be scaled accordingly in SW w.r.t 1280*720.
+*/
 static SkSize baseScreenSize{1280,720};
 
 enum partitionID {
@@ -107,7 +111,6 @@ keyPlacementConfig_t alphaNumericKBGroupConfig[ALPHA_NUMERIC_KB_PARTITION_COUNT]
     {{820,50},{15,15},1.5,1,1}
 };
 
-
 /* KeyBoard Layout for Symbol Key Board */
 
 KBLayoutSibblingInfoContainer symbolKBKBKeySiblingInfo;
@@ -173,7 +176,6 @@ keyPlacementConfig_t symbolKBGroupConfig[SYMBOL_KB_PARTITION_COUNT]={
     //GROUP3-Function key
     {{600,50},{30,15},1.5,1,1}
 };
-
 
 /* KeyBoard Layout for Numeric Key Board */
 

@@ -71,14 +71,12 @@ public:
     void setRequestedDisplayParams(const DisplayParams&, bool allowReattach) override;
 
 private:
-    
     void onKey(rnsKey eventKeyType, rnsKeyAction eventKeyAction);
     void onExpose();
     rnsKey  keyIdentifierForX11KeyCode(KeySym keycode);
 
     Display*     display_;
     XWindow      window_;
- 
 #if USE(GLX)
     GLXFBConfig* fbConfig_;
     XVisualInfo* visualInfo_;

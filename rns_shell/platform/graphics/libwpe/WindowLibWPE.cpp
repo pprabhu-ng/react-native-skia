@@ -177,7 +177,7 @@ bool WindowLibWPE::initWindow(PlatformDisplay *platformDisplay,SkSize dimension,
         return false;
     }
 
-    viewBackend_=wpe_view_backend_create();
+    viewBackend_=wpe_view_backend_create();//Creating ViewBackend per window
     struct wpe_renderer_backend_egl* renderBackend = (dynamic_cast<PlatformDisplayLibWPE*>(platformDisplay))->renderBackend();
 
     if (requestedDisplayParams_.msaaSampleCount_ != MSAASampleCount_) {
@@ -204,8 +204,9 @@ bool WindowLibWPE::initWindow(PlatformDisplay *platformDisplay,SkSize dimension,
     // add to hashtable of windows
     gWindowMap.add(this);
 
-    if((this->winType == MainWindow ) && (WindowLibWPE::mainApp_))
+    if((this->winType == MainWindow ) && (WindowLibWPE::mainApp_))// TODO Only for main window
         WindowLibWPE::mainApp_->sizeChanged(viewWidth_, viewHeight_);
+
     return true;
 }
 
