@@ -82,7 +82,7 @@ void Window::createEventLoop(Application* app) {
                                 RNS_LOG_INFO("Resize Request with (Width x Height) : (" << event.xconfigurerequest.width <<
                                     " x " << event.xconfigurerequest.height << ")");
                                 WindowX11* win = WindowX11::gWindowMap.find(event.xconfigurerequest.window);
-                                if(win && (win->winType == MainWindow )){
+                                if(win && (win->winType == MainWindow )) { // Only for main window
                                     auto windowDimension = win->getWindowDimension();
 
                                     if((windowDimension.width()!=event.xconfigurerequest.width) ||
@@ -93,8 +93,8 @@ void Window::createEventLoop(Application* app) {
                                         NotificationCenter::defaultCenter().emit("dimensionEventNotification");
                                     }
                                 }
-                            }
-                            break;
+                        }
+                        break;
                     }
                     case UnmapNotify:
                         RNS_LOG_DEBUG("Nothing to be done for UnmapNotify: Happens on window closure");
@@ -295,7 +295,6 @@ bool WindowX11::handleEvent(const XEvent& event) {
             return false;
         }
     }
-
     KeySym keysym = XkbKeycodeToKeysym(display_, event.xkey.keycode,0,(shiftLevel^capsLock));
     switch (event.type) {
         case MapNotify:
@@ -347,7 +346,6 @@ void WindowX11::onExpose() {
 }
 
 void WindowX11::onKey(rnsKey eventKeyType, rnsKeyAction eventKeyAction){
-
     if(winType == SubWindow)
        NotificationCenter::OSKCenter().emit("onHWKeyEvent", eventKeyType, eventKeyAction);
     else

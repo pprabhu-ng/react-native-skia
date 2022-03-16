@@ -158,8 +158,8 @@ class OnScreenKeyboard {
         int OSKeventId_{-1};
         sem_t semPermitToLaunch;
         sem_t semPermitToExit;
-		sem_t semReadyToDraw;/* To sync expose event & window creation for x11 backend*/
-		bool  isOSKActive{false};
+        sem_t semReadyToDraw;/* To sync expose event & window creation for x11 backend*/
+        bool  isOSKActive{false};
 
         OSKConfig     oskConfig_;
         OSKLayout     oskLayout_;

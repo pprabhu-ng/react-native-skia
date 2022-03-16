@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1994-2021 OpenTV, Inc. and Nagravision S.A.
+ * Copyright (C) 1994-2022 OpenTV, Inc. and Nagravision S.A.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
@@ -10,6 +10,7 @@
 #include "ReactSkia/components/RSkComponent.h"
 #include "ReactSkia/core_modules/RSkSpatialNavigator.h"
 #include "ReactSkia/sdk/RNSKeyCodeMapping.h"
+#include "ReactSkia/sdk/OnScreenKeyBoard.h"
 #include "ReactSkia/textlayoutmanager/RSkTextLayoutManager.h"
 #include "ReactSkia/views/common/RSkDrawUtils.h"
 #include "ReactSkia/views/common/RSkConversion.h"
@@ -200,6 +201,15 @@ void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool keyRepeat, boo
       privateVarProtectorMutex.unlock();
       drawAndSubmit();
     }
+    /*
+       TODO:Launching with default configuration for now.
+            Need to parse & pass properties :
+         1. keyboardType [oskType]
+         2. returnKeyType [returnKeyLabel]
+         3. keyboardAppearance [oskTheme]
+         4. enablesReturnKeyAutomatically [enablesReturnKeyAutomatically]
+         5. placeholder [placeHolderName]
+    */
     OnScreenKeyboard::launch();
   } else if (isInEditingMode_) {
     // Logic to update the textinput string.
@@ -336,7 +346,7 @@ void RSkComponentTextInput::processEventKey (rnsKey eventKeyType,bool* stopPropa
           if (!caretHidden_) {
             drawAndSubmit();
           }
-          if(OnScreenKeyboard::IsKBActive()) // Ensure OSK is not exited by user
+          if(OnScreenKeyboard::IsKBActive()) // Ensure OSK not exited by user
             OnScreenKeyboard::exit();
           return;
         case RNS_KEY_Caps_Lock:
@@ -533,6 +543,7 @@ void RSkComponentTextInput::requestForEditingMode(bool isFlushDisplay){
        drawAndSubmit(isFlushDisplay);
     }
   }
+  //TODO:Launching with default configuration for now.
   OnScreenKeyboard::launch();
   RNS_LOG_DEBUG("[requestForEditingMode] END");
 }
@@ -567,7 +578,6 @@ void RSkComponentTextInput::resignFromEditingMode(bool isFlushDisplay) {
     } else {
       RNS_LOG_DEBUG("!! OSK window is not active to exit !!");
     }
-
   }
   RNS_LOG_DEBUG("[requestForEditingMode] *** END ***");
 }

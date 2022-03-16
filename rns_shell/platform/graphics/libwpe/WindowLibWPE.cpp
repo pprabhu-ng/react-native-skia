@@ -203,8 +203,9 @@ bool WindowLibWPE::initWindow(PlatformDisplay *platformDisplay,SkSize dimension,
     // add to hashtable of windows
     gWindowMap.add(this);
 
-    if((this->winType == MainWindow ) && (WindowLibWPE::mainApp_))
+    if((this->winType == MainWindow ) && (WindowLibWPE::mainApp_))// TODO Only for main window
         WindowLibWPE::mainApp_->sizeChanged(viewWidth_, viewHeight_);
+
     return true;
 }
 

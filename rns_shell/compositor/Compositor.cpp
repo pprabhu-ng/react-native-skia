@@ -35,6 +35,7 @@ Compositor::Compositor(Client& client, PlatformDisplayID displayID, SkSize& view
     if(nativeWindowHandle_) {
        createWindowContext();
     }
+
     if(windowContext_) {
         backBuffer_ = windowContext_->getBackbufferSurface();
     } else {
