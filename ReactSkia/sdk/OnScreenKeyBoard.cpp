@@ -70,16 +70,20 @@ void OnScreenKeyboard::prepareToLaunch() {
     }
     //Set up OSk configuration
     if(oskConfig_.oskTheme == OSK_LIGHT_THEME) {
-        bgColor_ = LIGHT_THEME_BG_COLOR ;
-        fontColor_ = LIGHT_THEME_FONT_COLOR;
+        bgColor_ = OSK_LIGHT_THEME_BG_COLOR ;
+        fontColor_ = OSK_LIGHT_THEME_FONT_COLOR;
     } else {
-        bgColor_ = DARK_THEME_BG_COLOR ;
-        fontColor_ =DARK_THEME_FONT_COLOR;
+        bgColor_ = OSK_DARK_THEME_BG_COLOR ;
+        fontColor_ =OSK_DARK_THEME_FONT_COLOR;
     }
     if(oskConfig_.oskType == OSK_ALPHA_NUMERIC_KB)
         oskLayout_.KBLayoutType = ALPHA_LOWERCASE_LAYOUT;
-    oskLayout_.textFontSize= FONT_SIZE *(ScreenSize.width()/baseScreenSize.width());
-    oskLayout_.textHLFontSize= HIGHLIGHT_FONT_SIZE *(ScreenSize.width()/baseScreenSize.width());
+
+    unsigned int XscaleFactor = ScreenSize.width()/baseScreenSize.width();
+    unsigned int YscaleFactor =ScreenSize.height()/baseScreenSize.height();
+    oskLayout_.textFontSize= OSK_FONT_SIZE *XscaleFactor;
+    oskLayout_.textHLFontSize= OSK_HIGHLIGHT_FONT_SIZE *XscaleFactor;
+    oskLayout_.HorizontalStartOffset= ((ScreenSize.width()-(ScreenSize.width()*OSK_PLACEHOLDER_LENGTH))/2)*XscaleFactor;
 
     createOSkWindow();
 }
@@ -145,10 +149,10 @@ void OnScreenKeyboard::drawOSK(OSKTypes oskType) {
     createOSKLayout(oskType);
     RNS_PROFILE_START(OSKDraw)
 //clear KeyBoard Area
-    SkRect kbArea=SkRect::MakeXYWH( ScreenSize.width()*START_OFFSET_OSK_X,
-                                    ScreenSize.height()*START_OFFSET_OSK_Y,
+    SkRect kbArea=SkRect::MakeXYWH( oskLayout_.HorizontalStartOffset,
+                                    ScreenSize.height()*OSK_KB_VERTICAL_OFFSET,
                                     ScreenSize.width(),
-                                    ScreenSize.height()- ScreenSize.height()*START_OFFSET_OSK_Y
+                                    ScreenSize.height()- ScreenSize.height()*OSK_KB_VERTICAL_OFFSET
                                   );
     SkPaint paintObj;
     paintObj.setColor(bgColor_);
@@ -174,17 +178,17 @@ void OnScreenKeyboard::drawPlaceHolder() {
     if(oskConfig_.placeHolderName) {
         SkFont font;
         paint.setColor(fontColor_);
-        font.setSize(PLACEHOLDER_FONT_SIZE);
+        font.setSize(OSK_FONT_SIZE);
         OSKcanvas_->drawSimpleText(oskConfig_.placeHolderName,strlen(oskConfig_.placeHolderName), SkTextEncoding::kUTF8,
-                                   ScreenSize.width()*START_OFFSET_NAME_X,
-                                   ScreenSize.height()*START_OFFSET_NAME_Y,
+                                   oskLayout_.HorizontalStartOffset,
+                                   ScreenSize.height()*OSK_PH_NAME_VERTICAL_OFFSET,
                                    font, paint);
     }
-    paint.setColor((oskConfig_.oskTheme == OSK_LIGHT_THEME) ? LIGHT_THEME_PH_COLOR: DARK_THEME_PH_COLOR);
-    SkRect rect=SkRect::MakeXYWH( ScreenSize.width()*START_OFFSET_PLACEHOLDER_X,
-                                  ScreenSize.height()*START_OFFSET_PLACEHOLDER_Y,
-                                  ScreenSize.width()*PLACEHOLDER_LENGTH,
-                                  PLACEHOLDER_HEIGHT
+    paint.setColor((oskConfig_.oskTheme == OSK_LIGHT_THEME) ? OSK_LIGHT_THEME_PH_COLOR: OSK_DARK_THEME_PH_COLOR);
+    SkRect rect=SkRect::MakeXYWH( oskLayout_.HorizontalStartOffset,
+                                  ScreenSize.height()*OSK_PLACEHOLDER_VERTICAL_OFFSET,
+                                  ScreenSize.width()*OSK_PLACEHOLDER_LENGTH,
+                                  OSK_PLACEHOLDER_HEIGHT
                                 );
     OSKcanvas_->drawRect(rect,paint);
 }
@@ -226,7 +230,7 @@ inline void OnScreenKeyboard::drawFont(SkPoint index,SkColor color,bool onHLTile
                 ToggleKeyMap :: iterator keyFunction =toggleKeyMap.find(keyName);
                 if(keyFunction != toggleKeyMap.end()) {
                    if(keyFunction->second != oskLayout_.KBLayoutType)
-                       textPaint.setColor((oskConfig_.oskTheme == OSK_LIGHT_THEME) ? LIGHT_THEME_INACTIVE_FONT_COLOR: DARK_THEME_INACTIVE_FONT_COLOR);
+                       textPaint.setColor((oskConfig_.oskTheme == OSK_LIGHT_THEME) ? OSK_LIGHT_THEME_INACTIVE_FONT_COLOR: OSK_DARK_THEME_INACTIVE_FONT_COLOR);
                 }
             }
             font.setSize(oskLayout_.textFontSize * oskLayout_.KBGroupConfig[groupID].fontScaleFactor);
@@ -293,7 +297,7 @@ inline void OnScreenKeyboard::drawFont(SkPoint index,SkColor color,bool onHLTile
 void OnScreenKeyboard::drawOSKPartition() {
     if(oskConfig_.oskType != OSK_NUMERIC_KB) {
         SkPaint paint;
-        paint.setColor((oskConfig_.oskTheme == OSK_LIGHT_THEME) ? LIGHT_THEME_PH_COLOR: DARK_THEME_PH_COLOR);
+        paint.setColor((oskConfig_.oskTheme == OSK_LIGHT_THEME) ? OSK_LIGHT_THEME_PH_COLOR: OSK_DARK_THEME_PH_COLOR);
         paint.setStrokeWidth(2);
         unsigned int startY,endY,xpos,rowCount=oskLayout_.keyInfo->size()-1;
         unsigned int KeyCount=oskLayout_.keyInfo->at(rowCount).size()-1;
@@ -321,9 +325,9 @@ void OnScreenKeyboard ::highlightFocussedKey(SkPoint index) {
      drawFont({lastKeyIndex,lastRowIndex},fontColor_);
 
     //Hight current focussed item
-    paintObj.setColor(HIGHLIGHT_BG_COLOR);
+    paintObj.setColor(OSK_HIGHLIGHT_BG_COLOR);
     OSKcanvas_->drawRect(oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile,paintObj);
-    drawFont({keyIndex,rowIndex},HIGHLIGHT_FONT_COLOR,true);
+    drawFont({keyIndex,rowIndex},OSK_HIGHLIGHT_FONT_COLOR,true);
     pushToDisplay();
     RNS_PROFILE_END(" Highlight Completion : ",HighlightOSKKey)
     return;
@@ -442,10 +446,6 @@ void OnScreenKeyboard::createOSKLayout(OSKTypes oskType) {
             oskLayout_.KBGroupConfig=alphaNumericKBGroupConfig;
         }
     }
-    unsigned int XscaleFactor = ScreenSize.width()/baseScreenSize.width();
-    unsigned int YscaleFactor =ScreenSize.height()/baseScreenSize.height();
-    oskLayout_.textFontSize= FONT_SIZE *XscaleFactor;
-    oskLayout_.textHLFontSize= HIGHLIGHT_FONT_SIZE *XscaleFactor;
 
     // Generate key Position info based on screen Size
     // Not needed, if screen Size is not changed & Layout already created
@@ -469,11 +469,12 @@ void OnScreenKeyboard::createOSKLayout(OSKTypes oskType) {
     SkString uniChar;
     sk_sp<SkTypeface> defaultTypeface;
 
+    unsigned int YscaleFactor=ScreenSize.height()/baseScreenSize.height();
     unsigned int rowSize=oskLayout_.keyInfo->size();
     oskLayout_.keyPos->resize(rowSize);
     oskLayout_.siblingInfo->resize(rowSize);
-    SkPoint oskStartpt{(START_OFFSET_OSK_X*ScreenSize.width()*XscaleFactor),
-                       (START_OFFSET_OSK_Y*ScreenSize.height()*YscaleFactor)};
+    SkPoint oskStartpt{ oskLayout_.HorizontalStartOffset,
+                       (OSK_KB_VERTICAL_OFFSET*ScreenSize.height()*YscaleFactor)};
 
     for (unsigned int rowIndex = 0; rowIndex < rowSize; rowIndex++) {
 

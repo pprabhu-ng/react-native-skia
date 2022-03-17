@@ -107,6 +107,7 @@ struct OSKLayout {
     KBLayoutType      KBLayoutType;
     unsigned int      textFontSize;
     unsigned int      textHLFontSize;
+    unsigned int      HorizontalStartOffset;
     SkPoint           defaultFocussIndex;
 };
 
