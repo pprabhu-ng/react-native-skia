@@ -102,7 +102,7 @@ KBLayoutKeyInfoContainer alphaNumericKBKeyInfo= {
 
 keyPlacementConfig_t alphaNumericKBGroupConfig[ALPHA_NUMERIC_KB_PARTITION_COUNT]={
     //GROUP1-Toggle key
-    {{20,60},{15,30},1.3,0.7,4},
+    {{20,60},{15,30},1.3,0.75,4},
     //GROUP2-Numeric key
     {{150,40},{15,15},1.25,1,1},
     //GROUP3-Alpha & SYmbol key
@@ -127,24 +127,17 @@ KBLayoutKeyInfoContainer symbolKBKBKeyInfo={
         {"&",RNS_KEY_Ampersand,TEXT_KEY,GROUP2},
         {"*",RNS_KEY_Asterisk,TEXT_KEY,GROUP2},
         {"~",RNS_KEY_Asciitilde,TEXT_KEY,GROUP2},
+        {"(",RNS_KEY_ParenLeft,TEXT_KEY,GROUP2},
+        {")",RNS_KEY_ParenRight,TEXT_KEY,GROUP2},
+        {",",RNS_KEY_Comma,TEXT_KEY,GROUP2},
+        {".",RNS_KEY_Period,TEXT_KEY,GROUP2},
         {"space",RNS_KEY_Space,FUNCTION_KEY,GROUP3}
     },
     {
      //row 2
         {"123abc",RNS_KEY_UnKnown,TOGGLE_KEY,GROUP1},
-        {"(",RNS_KEY_ParenLeft,TEXT_KEY,GROUP2},
-        {")",RNS_KEY_ParenRight,TEXT_KEY,GROUP2},
-        {",",RNS_KEY_Comma,TEXT_KEY,GROUP2},
-        {".",RNS_KEY_Period,TEXT_KEY,GROUP2},
-        {"?",RNS_KEY_Question,TEXT_KEY,GROUP2},
-        {"\"",RNS_KEY_Quotedbl,TEXT_KEY,GROUP2},
         {";",RNS_KEY_Semicolon,TEXT_KEY,GROUP2},
         {":",RNS_KEY_Colon,TEXT_KEY,GROUP2},
-        {"delete",RNS_KEY_Delete,FUNCTION_KEY,GROUP3}
-    },
-    {
-    //row 3
-        {"@?#",RNS_KEY_UnKnown ,TOGGLE_KEY,GROUP1},
         {"|",RNS_KEY_Bar,TEXT_KEY,GROUP2},
         {"\\",RNS_KEY_BackSlash,TEXT_KEY,GROUP2 },
         {"/",RNS_KEY_Shash,TEXT_KEY,GROUP2},
@@ -153,28 +146,34 @@ KBLayoutKeyInfoContainer symbolKBKBKeyInfo={
         {"[",RNS_KEY_BracketLeft,TEXT_KEY,GROUP2},
         {"]",RNS_KEY_BracketRight,TEXT_KEY,GROUP2},
         {"`",RNS_KEY_Grave,TEXT_KEY,GROUP2},
-        {"done",RNS_KEY_Select,FUNCTION_KEY,GROUP3}
+        {"'",RNS_KEY_Apostrophe,TEXT_KEY,GROUP2},
+                {"_",RNS_KEY_Underscore,TEXT_KEY,GROUP2},
+        {"delete",RNS_KEY_Delete,FUNCTION_KEY,GROUP3}
     },
     {
-      //row 4
-        {"'",RNS_KEY_Apostrophe,TEXT_KEY,GROUP2},
+    //row 3
+        {"@?#",RNS_KEY_UnKnown ,TOGGLE_KEY,GROUP1},
+        {"%",RNS_KEY_Percent,TEXT_KEY,GROUP2},
+        {">",RNS_KEY_Greater,TEXT_KEY,GROUP2},
+        {"<",RNS_KEY_Less,TEXT_KEY,GROUP2},
+        {"?",RNS_KEY_Question,TEXT_KEY,GROUP2},
+        {"\"",RNS_KEY_Quotedbl,TEXT_KEY,GROUP2},
         {"=",RNS_KEY_Equal,TEXT_KEY,GROUP2},
         {"+",RNS_KEY_Plus,TEXT_KEY,GROUP2},
         {"-",RNS_KEY_Minus,TEXT_KEY,GROUP2},
-        {"_",RNS_KEY_Underscore,TEXT_KEY,GROUP2},
-        {"%",RNS_KEY_Percent,TEXT_KEY,GROUP2},
-        {">",RNS_KEY_Greater,TEXT_KEY,GROUP2},
-        {"<",RNS_KEY_Less,TEXT_KEY,GROUP2}
+        {"right", RNS_KEY_Right,FUNCTION_KEY,GROUP2},
+        {"left", RNS_KEY_Left,FUNCTION_KEY,GROUP2},
+        {"done",RNS_KEY_Select,FUNCTION_KEY,GROUP3},
     }
 };
 
 keyPlacementConfig_t symbolKBGroupConfig[SYMBOL_KB_PARTITION_COUNT]={
     //GROUP1-Toggle key
-    {{20,60},{15,30},1.3,0.7,4},
+    {{20,60},{15,30},1.3,0.75,4},
     //GROUP2-Symbol key
-    {{150,40},{15,15},1.3,1,1},
+    {{150,40},{15,25},1.3,1,1},
     //GROUP3-Function key
-    {{600,50},{30,15},1.5,1,1}
+    {{820,50},{30,15},1.5,1,1}
 };
 
 /* KeyBoard Layout for Numeric Key Board */
