@@ -51,6 +51,7 @@ RSkComponentTextInput::RSkComponentTextInput(const ShadowView &shadowView)
   cursorPaint_.setAntiAlias(true);
   cursorPaint_.setStyle(SkPaint::kStroke_Style);
   cursorPaint_.setStrokeWidth(CURSOR_WIDTH);
+  //underlineColorAndroid_.setColor(SK_ColorBLUE);
   sem_init(&jsUpdateSem,0,0);
   isKeyRepeateOn=false;
 }
@@ -121,7 +122,12 @@ void RSkComponentTextInput::OnPaint(SkCanvas *canvas) {
   Rect frame = component.layoutMetrics.frame;
   ParagraphStyle paraStyle;
   TextShadow shadow;
+  TextStyle style;
   TextAttributes textAttributes = textInputProps.getEffectiveTextAttributes(FONTSIZE_MULTIPLIER);
+  if(textInputProps.underlineColorAndroid){
+    textAttributes.textDecorationColor = textInputProps.underlineColorAndroid;
+    textAttributes.textDecorationLineType=TextDecorationLineType::Underline;
+  }
   auto paraBuilder = std::static_pointer_cast<skia::textlayout::ParagraphBuilder>(
                           std::make_shared<skia::textlayout::ParagraphBuilderImpl>(
                           paraStyle, data.layoutManager->collection_));
@@ -174,6 +180,12 @@ void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool keyRepeat, boo
     textInputMetrics.contentSize.height = paragraph_->getHeight();
     textInputEventEmitter->onFocus(textInputMetrics);
     isInEditingMode_ = true;
+    privateVarProtectorMutex.lock();
+    if(textInputProps.clearTextOnFocus && !displayString_.empty()){
+      displayString_.clear();
+      drawAndSubmit();
+    }
+    privateVarProtectorMutex.unlock();
     if (!caretHidden_) {
       drawAndSubmit();
     }
@@ -324,6 +336,10 @@ void RSkComponentTextInput::processEventKey (rnsKey eventKeyType,bool* stopPropa
             drawAndSubmit();
           }
           return;
+        case RNS_KEY_Caps_Lock:
+        case RNS_KEY_Shift_L:
+        case RNS_KEY_Shift_R:
+          *stopPropagation = true;
         default:
           *waitForupdateProps = false;
           return;//noop
@@ -435,7 +451,6 @@ RnsShell::LayerInvalidateMask  RSkComponentTextInput::updateComponentProps(const
     cursorPaint_.setColor(RSkColorFromSharedColor(selectionColor_, SK_ColorBLUE));
     mask |= LayerPaintInvalidate;
   }
-
   if (textInputProps.editable != editable_) {
     editable_ = textInputProps.editable;
     mask |= LayerPaintInvalidate;
@@ -497,6 +512,12 @@ void RSkComponentTextInput::requestForEditingMode(){
   spatialNavigator->updateFocusCandidate(this);
   isInEditingMode_ = true;
   textInputEventEmitter->onFocus(textInputMetrics);
+  privateVarProtectorMutex.lock();
+  if(textInputProps.clearTextOnFocus && !displayString_.empty()){
+    displayString_.clear();
+    drawAndSubmit();
+  }
+  privateVarProtectorMutex.unlock();
   if (!caretHidden_) {
     drawAndSubmit();
   }

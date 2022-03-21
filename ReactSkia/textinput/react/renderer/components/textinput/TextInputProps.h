@@ -57,6 +57,7 @@ class TextInputProps final : public ViewProps, public BaseTextProps {
   int const mostRecentEventCount{0};
 
   bool autoFocus{false};
+  bool clearTextOnFocus{false};
 
   std::string const inputAccessoryViewID{};
 

@@ -44,6 +44,7 @@ class RSkComponentTextInput final : public RSkComponent {
   std::string placeholderString_{}; // Placeholder Text
   SharedColor placeholderColor_;  // Placeholder Text Color
   SharedColor selectionColor_;
+  SharedColor underlineColorAndroid_;
   struct cursor cursor_;
   SkPaint cursorPaint_;
   std::shared_ptr<skia::textlayout::Paragraph> paragraph_;
