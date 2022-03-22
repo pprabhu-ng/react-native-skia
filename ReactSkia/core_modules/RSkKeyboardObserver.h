@@ -16,14 +16,13 @@ class RSkKeyboardObserver final: public RSkEventEmitter {
   RSkKeyboardObserver(
       const std::string &name,
       std::shared_ptr<CallInvoker> jsInvoker,
-      Instance *bridgeInstance);
+      Instance *bridgeInstance)
+      : RSkEventEmitter(name, jsInvoker, bridgeInstance){}
 
  private:
-  unsigned int OSKEventId_ = UINT_MAX; // Some undefined ID
-  void startObserving(); 
-  void stopObserving(); 
-  void KeyBoardEventHandler(std::string eventName);
-  std::vector<std::string> events_ = {"keyboardWillShow","keyboardWillHide"};/*List of Events TBD*/
+  void startObserving() { RNS_LOG_NOT_IMPL;};
+
+  void stopObserving() { RNS_LOG_NOT_IMPL;};
 
 };
 

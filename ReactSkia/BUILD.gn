@@ -119,8 +119,6 @@ source_set("ReactSkia") {
     "core_modules/RSkTimingModule.cpp",
     "core_modules/RSkInputEventManager.cpp",
     "core_modules/RSkInputEventManager.h",
-    "core_modules/RSkKeyboardObserver.cpp",
-    "core_modules/RSkKeyboardObserver.h",
     "RSkSurfaceWindow.cpp",
     "RSkSurfaceWindow.h",
     "components/RSkComponent.cpp",
