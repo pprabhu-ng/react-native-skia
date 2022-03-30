@@ -346,8 +346,7 @@ void RSkComponentTextInput::processEventKey (rnsKey eventKeyType,bool* stopPropa
           if (!caretHidden_) {
             drawAndSubmit();
           }
-          if(OnScreenKeyboard::IsKBActive()) // Ensure OSK not exited by user
-            OnScreenKeyboard::exit();
+          OnScreenKeyboard::exit();
           return;
         case RNS_KEY_Caps_Lock:
         case RNS_KEY_Shift_L:
@@ -571,13 +570,7 @@ void RSkComponentTextInput::resignFromEditingMode(bool isFlushDisplay) {
   textInputEventEmitter->onBlur(textInputMetrics);
   if (!caretHidden_) {
     drawAndSubmit(isFlushDisplay);
-    OSKHandle->exit();
-    if( (OSKHandle_.get()) &&  !(OSKHandle_.unique())) {
-      OSKHandle_->exit();
-      OSKHandle_.reset();
-    } else {
-      RNS_LOG_DEBUG("!! OSK window is not active to exit !!");
-    }
+    OnScreenKeyboard::exit();
   }
   RNS_LOG_DEBUG("[requestForEditingMode] *** END ***");
 }

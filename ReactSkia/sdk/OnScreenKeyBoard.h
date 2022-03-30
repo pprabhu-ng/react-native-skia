@@ -22,22 +22,20 @@
 
 //Suported KeyBoards
 enum OSKTypes {
-    OSK_DEFAULT_TYPE,
-    OSK_ALPHA_NUMERIC_KB=OSK_DEFAULT_TYPE,
+    OSK_ALPHA_NUMERIC_KB,
     OSK_NUMERIC_KB,
     OSK_TYPE_END
 };
 //Suported Themes
 enum OSKThemes {
-    OSK_DEFAULT_THEME,
-    OSK_DARK_THEME=OSK_DEFAULT_THEME,
+    OSK_DARK_THEME,
     OSK_LIGHT_THEME
 };
 // OSK Error Code
 enum OSKErrorCode {
-    OSK_ERROR_NONE,
-    OSK_ERROR_ANOTHER_INSTANCE_ACTIVE,
-    OSK_ERROR_LAUNCH_FAILED
+    OSK_LAUNCH_SUCCESS=0,
+    OSK_ERROR_ANOTHER_INSTANCE_ACTIVE=-1,
+    OSK_ERROR_LAUNCH_FAILED=-2
 };
 enum KBLayoutType {
     ALPHA_LOWERCASE_LAYOUT,
@@ -47,23 +45,23 @@ enum KBLayoutType {
 };
 
 enum keyType {
-    TOGGLE_KEY ,
-    TEXT_KEY,
-    FUNCTION_KEY,
+    KEY_TYPE_TOGGLE,
+    KEY_TYPE_TEXT,
+    KEY_TYPE_FUNCTION,
     KEY_TYPE_COUNT
 };
 
 //Configuration to be specified while OSK Launch
 struct OSKConfig {
-    OSKTypes        oskType;
-    OSKThemes       oskTheme;
+    OSKTypes        type;
+    OSKThemes       theme;
     const char *    placeHolderName;
     const char *    returnKeyLabel;
     bool      enablesReturnKeyAutomatically;
 };
 
 // Default OSK Configuration
-static OSKConfig defaultOSKConfig={ OSK_DEFAULT_TYPE, OSK_DEFAULT_THEME, nullptr, "done", false };
+static OSKConfig defaultOSKConfig={ OSK_ALPHA_NUMERIC_KB, OSK_DARK_THEME, nullptr, "done", false };
 
 typedef struct keyPosition {
     SkPoint        textXY{}; // text X,Y to draw
@@ -76,7 +74,7 @@ typedef struct KeyInfo {
     const char *   keyName;
     rnsKey         keyValue;
     keyType        keyType;
-    unsigned int   KBPartitionId;
+    unsigned int   kbPartitionId;
 }KeyInfo_t;
 
 typedef struct KeySiblingInfo {
@@ -103,11 +101,11 @@ struct OSKLayout {
     KBLayoutKeyInfoContainer*  keyInfo;
     KBLayoutKeyPosContainer*    keyPos;
     KBLayoutSibblingInfoContainer*    siblingInfo;
-    keyPlacementConfig_t*          KBGroupConfig;
-    KBLayoutType      KBLayoutType;
+    keyPlacementConfig_t*          kbGroupConfig;
+    KBLayoutType      kbLayoutType;
     unsigned int      textFontSize;
     unsigned int      textHLFontSize;
-    unsigned int      HorizontalStartOffset;
+    unsigned int      horizontalStartOffset;
     SkPoint           defaultFocussIndex;
 };
 
@@ -119,22 +117,15 @@ class OnScreenKeyboard {
         static void exit(); //Interface to quit OSK
         static bool IsKBActive() {
              OnScreenKeyboard &oskHandle=OnScreenKeyboard::getInstance();
-             return oskHandle.isOSKActive;
+             return oskHandle.isOSKActive_;
         } // Interface to get whether is in launch or exit state
 
     private:
-        OnScreenKeyboard() {
-            sem_init(&semPermitToLaunch,0,1);//Allow by default. Next signal to be done on exit call
-            sem_init(&semPermitToExit,0,0);//Block by default. signal to be done on launch Call
-        };
-        ~OnScreenKeyboard() {
-            sem_destroy(&semPermitToLaunch);
-            sem_destroy(&semPermitToExit);
-        };
+        OnScreenKeyboard(){};
 
         void cleanUpOSKInstance();
-        void prepareToLaunch();
-        void createOSkWindow();
+        bool prepareToLaunch();
+        bool createOSkWindow();
         void showOSKWindow();
         void pushToDisplay();
 
@@ -150,22 +141,20 @@ class OnScreenKeyboard {
         void drawOSKPartition();
 
 // Maintainables
-        RnsShell::PlatformDisplay::Type platformType;
-        RnsShell::Window* OSKwindow_;
-        std::unique_ptr<RnsShell::WindowContext> OSKwindowContext_;
+        RnsShell::PlatformDisplay::Type platformType_;
+        RnsShell::Window* oskWindow_;
+        std::unique_ptr<RnsShell::WindowContext> oskWindowContext_;
         sk_sp<SkSurface> backBuffer_;
-        SkCanvas *OSKcanvas_=nullptr;
+        SkCanvas *oskCanvas_{nullptr};
         int exposeEventID_{-1};
-        int OSKeventId_{-1};
-        sem_t semPermitToLaunch;
-        sem_t semPermitToExit;
+        int oskEventId_{-1};
         sem_t semReadyToDraw;/* To sync expose event & window creation for x11 backend*/
-        bool  isOSKActive{false};
+        bool  isOSKActive_{false};
 
         OSKConfig     oskConfig_;
         OSKLayout     oskLayout_;
-        bool          generateOSKLayout{true};
-        SkSize        ScreenSize{0,0};
+        bool          generateOSKLayout_{true};
+        SkSize        screenSize_{0,0};
         SkPoint       focussedKey_{0};
         SkPoint       lastFocussedKey_{0};
         SkColor       bgColor_{SK_ColorWHITE};

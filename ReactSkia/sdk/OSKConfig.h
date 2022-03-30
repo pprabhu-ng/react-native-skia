@@ -8,7 +8,7 @@
 #define OSK_CONFIG_H
 
 // Dark Theme configuration
-#define OSK_DARK_THEME_BG_COLOR          SkColorSetARGB(0xFF, 0x34, 0x34, 0x34) //Dark Gray
+#define OSK_DARK_THEME_BG_COLOR               SkColorSetARGB(0xFF, 0x34, 0x34, 0x34) //Dark Gray
 #define OSK_DARK_THEME_FONT_COLOR             SK_ColorWHITE
 #define OSK_DARK_THEME_PH_COLOR               SK_ColorDKGRAY
 #define OSK_DARK_THEME_INACTIVE_FONT_COLOR    SkColorSetARGB(0xFF, 0x60, 0x60, 0x60) //Mild Lighter Tone of Dark Gray
