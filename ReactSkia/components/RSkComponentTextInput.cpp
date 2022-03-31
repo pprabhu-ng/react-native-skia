@@ -27,7 +27,6 @@ namespace react {
 
 using namespace RSkDrawUtils;
 using namespace skia::textlayout;
-
 #define NUMBER_OF_LINES         1
 #define FONTSIZE_MULTIPLIER     10
 #define CURSOR_WIDTH 2
@@ -56,6 +55,18 @@ RSkComponentTextInput::RSkComponentTextInput(const ShadowView &shadowView)
   isKeyRepeateOn=false;
 }
 
+SkPaint RSkComponentTextInput::convertTextColor ( SharedColor textColor ) {
+   SkPaint paint;
+   float ratio = 255.9999;
+   auto color = colorComponentsFromColor(textColor);
+   paint.setColor(SkColorSetARGB( color.alpha * ratio,
+                                     color.red * ratio,
+                                     color.green * ratio,
+                                     color.blue * ratio));
+   paint.setAntiAlias(true);
+   return paint;
+}
+
 void RSkComponentTextInput::drawAndSubmit(){
   layer()->client().notifyFlushBegin();
   layer()->invalidate( RnsShell::LayerPaintInvalidate);
@@ -64,7 +75,13 @@ void RSkComponentTextInput::drawAndSubmit(){
   }
   layer()->client().notifyFlushRequired();
 }
-
+void RSkComponentTextInput::drawUnderline(SkCanvas *canvas,Rect frame,SharedColor underlineColorAndroid){
+  SkPaint paint = convertTextColor(underlineColorAndroid);
+  paint.setAntiAlias(true);
+  paint.setStyle(SkPaint::kStroke_Style);
+  paint.setStrokeWidth(1);
+  canvas->drawLine(frame.origin.x,frame.origin.y+frame.size.height-3,frame.origin.x+frame.size.width,frame.origin.y+frame.size.height-3, paint);
+}
 void RSkComponentTextInput::drawTextInput(SkCanvas *canvas,
   LayoutMetrics layout,
   std::shared_ptr<ParagraphBuilder> &builder,
@@ -147,6 +164,7 @@ void RSkComponentTextInput::OnPaint(SkCanvas *canvas) {
   drawShadow(canvas, frame, borderMetrics, textInputProps.backgroundColor, layer()->shadowOpacity, layer()->shadowFilter);
   drawTextInput(canvas, component.layoutMetrics, paraBuilder, textInputProps);
   drawBorder(canvas, frame, borderMetrics, textInputProps.backgroundColor);
+  drawUnderline(canvas,frame,textInputProps.underlineColorAndroid);
 }
 
 /*

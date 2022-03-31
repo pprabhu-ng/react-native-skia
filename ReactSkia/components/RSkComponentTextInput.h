@@ -58,6 +58,8 @@ class RSkComponentTextInput final : public RSkComponent {
   void keyEventProcessingThread();
   void requestForEditingMode();
   void resignFromEditingMode();
+  void drawUnderline(SkCanvas *canvas,Rect frame,SharedColor underlineColorAndroid);
+  SkPaint convertTextColor ( SharedColor textColor );
 };
 
 } // namespace react
