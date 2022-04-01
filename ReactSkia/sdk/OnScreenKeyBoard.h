@@ -12,13 +12,9 @@
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColor.h"
 
-#include "rns_shell/compositor/Compositor.h"
-#include "rns_shell/common/Window.h"
-#include "rns_shell/platform/graphics/PlatformDisplay.h"
-#include "rns_shell/platform/graphics/WindowContextFactory.h"
-
 #include "NotificationCenter.h"
 #include "RNSKeyCodeMapping.h"
+#include "RNSShellUtils.h"
 
 //Suported KeyBoards
 enum OSKTypes {
@@ -109,7 +105,7 @@ struct OSKLayout {
     SkPoint           defaultFocussIndex;
 };
 
-class OnScreenKeyboard {
+class OnScreenKeyboard : public RNSShellUtils {
 
     public:
         static OnScreenKeyboard& getInstance(); // Interface to get OSK singleton object
@@ -123,14 +119,12 @@ class OnScreenKeyboard {
     private:
         OnScreenKeyboard(){};
 
-        void cleanUpOSKInstance();
         bool prepareToLaunch();
-        bool createOSkWindow();
+        void cleanUpOSKInstance();
         void showOSKWindow();
-        void pushToDisplay();
 
         void onHWkeyHandler(rnsKey key, rnsKeyAction eventKeyAction);
-        void onExposeHandler(RnsShell::Window* window);
+        void windowReadyToDrawCB( ) {showOSKWindow();}
 
         void createOSKLayout(OSKTypes KBtype );
         void highlightFocussedKey(SkPoint index);
@@ -141,16 +135,8 @@ class OnScreenKeyboard {
         void drawOSKPartition();
 
 // Maintainables
-        RnsShell::PlatformDisplay::Type platformType_;
-        RnsShell::Window* oskWindow_;
-        std::unique_ptr<RnsShell::WindowContext> oskWindowContext_;
-        sk_sp<SkSurface> backBuffer_;
-        SkCanvas *oskCanvas_{nullptr};
-        int exposeEventID_{-1};
         int oskEventId_{-1};
-        sem_t semReadyToDraw;/* To sync expose event & window creation for x11 backend*/
         bool  isOSKActive_{false};
-
         OSKConfig     oskConfig_;
         OSKLayout     oskLayout_;
         bool          generateOSKLayout_{true};
