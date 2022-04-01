@@ -3,5 +3,11 @@
   "workspaces": [
     "react-native",
     "packages/*"
-  ]
+  ],
+  "devDependencies": {
+    "detox": "^19.5.7",
+    "jest": "^27.5.1",
+    "linux-ubuntu": "file:../../linux-ubuntu"
+  },
+  "dependencies": {}
 }
