@@ -40,12 +40,7 @@ std::mutex privateVarProtectorMutex;
 std::mutex inputQueueMutex;
 static bool isKeyRepeateOn;
 unsigned int keyRepeateStartIndex;
-<<<<<<< HEAD
-=======
 
-static OnScreenKeyboard *OSKHandle{nullptr};
-
->>>>>>> changes to make darw on expose handling common for both x11 & wpe backend
 RSkComponentTextInput::RSkComponentTextInput(const ShadowView &shadowView)
     : RSkComponent(shadowView)
     ,isInEditingMode_(false)
@@ -510,7 +505,7 @@ void RSkComponentTextInput::requestForEditingMode(bool isFlushDisplay){
   // check if textinput is already in Editing
   if ( isInEditingMode_ )
     return;
-  RNS_LOG_TODO("[requestForEditingMode] Launch OnScreen Keyboard");
+
   auto spatialNavigator =  SpatialNavigator::RSkSpatialNavigator::sharedSpatialNavigator();
   auto candidateToFocus = getComponentData();
   auto textInputEventEmitter = std::static_pointer_cast<TextInputEventEmitter const>(candidateToFocus.eventEmitter);
@@ -551,7 +546,6 @@ void RSkComponentTextInput::resignFromEditingMode(bool isFlushDisplay) {
   RNS_LOG_DEBUG("[resignFromEditingMode] ENTER ");
   if (!this->isInEditingMode_)
     return;
-  RNS_LOG_TODO("[requestForEditingMode] Exit OnScreen Keyboard");
   TextInputMetrics textInputMetrics;
   auto component = this->getComponentData();
   if (this->isTextInputInFocus_){

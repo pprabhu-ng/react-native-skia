@@ -107,6 +107,8 @@ source_set("ReactSkia") {
     "sdk/NopollWebsocket.h",
     "sdk/OnScreenKeyBoard.cpp",
     "sdk/OnScreenKeyBoard.h",
+    "sdk/RNSShellUtils.cpp",
+    "sdk/RNSShellUtils.h",
     "core_modules/RSkDeviceInfo.cpp",
     "core_modules/RSkDeviceInfo.h",
     "core_modules/RSkEventEmitter.cpp",
