@@ -1,0 +1,32 @@
+{
+  "testRunner": "jest",
+  "runnerConfig": "e2e/config.json",
+  "skipLegacyWorkersInjection": true,
+  "apps": {
+    "linux.ubuntu.debug": {
+      "build" : "./scripts/generate-build.sh -d -p linux-ubuntu-debug",
+      "type": "linux.debug.app",
+      "binaryPath": "./out/Debug/linux-ubuntu-debug.tar"
+    },
+    "linux.ubuntu.release": {
+      "build" : "./scripts/generate-build.sh -p linux-ubuntu-release",
+      "type": "linux.release.app",
+      "binaryPath": "./out/Release/linux-ubuntu-release.tar"
+    }
+  },
+  "devices": {
+    "ubuntu": {
+      "type": "linux-ubuntu"
+    }
+  },
+  "configurations": {
+    "linux.ubuntu.debug" : {
+      "device": "ubuntu",
+      "app": "linux.ubuntu.debug"
+    },
+    "linux.ubuntu.release" : {
+      "device": "ubuntu",
+      "app": "linux.ubuntu.release"
+    }
+  }
+}
