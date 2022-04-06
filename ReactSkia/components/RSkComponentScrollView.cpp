@@ -74,6 +74,59 @@ RnsShell::LayerInvalidateMask RSkComponentScrollView::updateComponentState(
   return RnsShell::LayerInvalidateNone;
 }
 
+void RSkComponentScrollView::handleCommand(std::string commandName,folly::dynamic args){
+  RNS_LOG_DEBUG("handleCommand commandName[" << commandName << "] arg num:" << args.size());
+  if(commandName == "scrollToEnd") {
+    if(args.size() != 1 ) {
+      RNS_LOG_ERROR("Command scrollToEnd received " << args.size() << " arguments,expected 1");
+      return;
+    }
+
+    SkPoint lastScrollOffset = SkPoint::Make(0,0);
+    RnsShell::ScrollLayer* scrollLayer= SCROLL_LAYER_HANDLE;
+    if(isHorizontalScroll())
+      lastScrollOffset.fX = scrollLayer->getContentSize().width() - scrollLayer->getFrame().width();
+    else
+      lastScrollOffset.fY = scrollLayer->getContentSize().height() - scrollLayer->getFrame().height();
+
+    if(lastScrollOffset.equals(scrollLayer->scrollOffsetX,scrollLayer->scrollOffsetY)) {
+      RNS_LOG_DEBUG("Scroll position is already at end");
+      return;
+    }
+
+    if(args[0].getBool()) RNS_LOG_TODO("Animated not supported,fallback to scroll immediately");
+    handleScroll(lastScrollOffset);
+    return;
+
+  }else if(commandName == "scrollTo") {
+    if(args.size() != 3 ) {
+      RNS_LOG_ERROR("Command scrollTo received " << args.size() << " arguments,expected 3");
+      return;
+    }
+
+    int x = static_cast<int>(args[0].getDouble());
+    int y = static_cast<int>(args[1].getDouble());
+
+    SkPoint scrollOffset = SkPoint::Make(0,0);
+    RnsShell::ScrollLayer * scrollLayer = SCROLL_LAYER_HANDLE;
+    if(isHorizontalScroll())
+      scrollOffset.fX = std::min(std::max(0,x),(scrollLayer->getContentSize().width()-scrollLayer->getFrame().width()));
+    else
+      scrollOffset.fY = std::min(std::max(0,y),(scrollLayer->getContentSize().height()-scrollLayer->getFrame().height()));
+
+    if(scrollOffset.equals(scrollLayer->scrollOffsetX,scrollLayer->scrollOffsetY)) {
+      RNS_LOG_DEBUG("Scroll position is already at same offset");
+      return;
+    }
+
+    if(args[2].getBool()) RNS_LOG_TODO("Animated not supported,fallback to scroll immediately");
+
+    handleScroll(scrollOffset);
+    return;
+  }
+}
+
+
 // RSkSpatialNavigatorContainer functions
 
 bool RSkComponentScrollView::canScrollInDirection(rnsKey direction){
