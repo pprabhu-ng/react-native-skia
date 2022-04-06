@@ -12,8 +12,8 @@
 #include "ReactSkia/views/common/RSkImageCacheManager.h"
 #include "ReactSkia/utils/RnsLog.h"
 #include "ReactSkia/sdk/CurlNetworking.h"
+
 using namespace std;
-std::mutex mybufferLock_;
 
 #define SKIA_CPU_IMAGE_CACHE_HWM_LIMIT  SKIA_CPU_IMAGE_CACHE_LIMIT *.95 //95% as High Water mark level
 #define SKIA_GPU_IMAGE_CACHE_HWM_LIMIT  SKIA_CPU_IMAGE_CACHE_LIMIT *.95 //95% as High Water mark level
@@ -26,17 +26,10 @@ namespace ImageCacheManager {
 #define CPU_MEM_ARR_INDEX 0
 #define GPU_MEM_ARR_INDEX 1
 std::mutex mutexLock;
-//RSkImageCacheManager* RSkImageCacheManager::defaultImageCacheManager_{nullptr};
 
 RSkImageCacheManager::RSkImageCacheManager() {};
 RSkImageCacheManager::~RSkImageCacheManager() {};
 
-/*RSkImageCacheManager* RSkImageCacheManager::defaultImageCacheManager() {
-    if (!defaultImageCacheManager_) {
-      defaultImageCacheManager_ = new RSkImageCacheManager();
-    }
-    return defaultImageCacheManager_;
-}*/
 RSkImageCacheManager& RSkImageCacheManager::getInstance() {
   static RSkImageCacheManager cacheInstance;
   return cacheInstance;
@@ -59,7 +52,7 @@ sk_sp<SkImage> RSkImageCacheManager::makeImageData(const char *path,struct Remot
   }
 
 void RSkImageCacheManager::getCacheUsage(size_t usageArr[]) {
-    int fOldCount{0};
+  int fOldCount{0};
     usageArr[CPU_MEM_ARR_INDEX] = SkGraphics::GetResourceCacheTotalBytesUsed();
   #ifdef RNS_SHELL_HAS_GPU_SUPPORT
     GrDirectContext* gpuContext =RSkSurfaceWindow::getDirectContext();
@@ -97,7 +90,7 @@ bool RSkImageCacheManager::evictAsNeeded() {
   }
 
 void RSkImageCacheManager::init() {
-  //defaultImageCacheManager_->defaultImageCacheManager();
+
   RSkImageCacheManager &cacheInstance= RSkImageCacheManager::getInstance();
     SkGraphics::SetResourceCacheTotalByteLimit(SKIA_CPU_IMAGE_CACHE_LIMIT);
     #ifdef RNS_SHELL_HAS_GPU_SUPPORT
@@ -124,18 +117,14 @@ sk_sp<SkImage> RSkImageCacheManager::getImageData(const char *path,struct Remote
     /*Add entry to hash map only if the cache mem usage is with in the limit*/
     /* TO DO: Eviction mechanism to be improved by decouple it from getImageData,
             through worker thread ....*/
-    //if(defaultImageCacheManager_->evictAsNeeded() && imageData) {
     if(evictAsNeeded() && imageData) {
-
       imageLocalDataTimer.imageData= imageData;
       imageLocalDataTimer.cureentTime = SkTime::GetSecs()+1800; //current time + 30 min expiry time
       RNS_LOG_INFO("-------time :"<<SkTime::GetSecs());
-      //defaultImageCacheManager_->imageCache_.insert(std::pair<string, imagesDataTime >(path,imageLocalDataTimer));
       imageCache_.insert(std::pair<string, imagesDataTime >(path,imageLocalDataTimer));
-
       RNS_LOG_DEBUG("New Entry in Map..."<<" file :"<<path);
     } else {
-        RNS_LOG_WARN("Cache Memory limit reached or Couldn't create imageData, So file not cached ...");
+        RNS_LOG_DEBUG("Cache Memory limit reached or Couldn't create imageData, So file not cached ...");
     }
   }
   return imageData;
@@ -169,7 +158,6 @@ void RSkImageCacheManager::geturiImage(const char* path,struct RemoteImageData* 
   auto completionCallback =  [&](void* curlRequestData,void *userdata)->bool{
   struct CurlResponse *responseData =  (struct CurlResponse *)curlRequestData;
   struct RemoteImageData *remoteImageData = (struct RemoteImageData *)userdata;
- // remoteImageData->callback(responseData->responseurl,responseData->responseBuffer,responseData->contentSize,defaultImageCacheManager_->imageCache_);
   remoteImageData->callback(responseData->responseurl,responseData->responseBuffer,responseData->contentSize,imageCache_);
   return 0;
   };

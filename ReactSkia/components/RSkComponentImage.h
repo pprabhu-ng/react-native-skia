@@ -7,8 +7,6 @@
 #include "ReactSkia/components/RSkComponent.h"
 #include "ReactSkia/views/common/RSkImageCacheManager.h"
 
-#include <curl/curl.h>
-
 #define DEFAULT_IMAGE_FILTER_QUALITY kLow_SkFilterQuality /*Skia's Defualt is kNone_SkFilterQuality*/
 
 namespace facebook {

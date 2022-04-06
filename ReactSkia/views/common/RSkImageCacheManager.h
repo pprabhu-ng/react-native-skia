@@ -9,10 +9,10 @@
 #include "include/core/SkImage.h"
 #include "include/core/SkGraphics.h"
 #include "include/gpu/GrDirectContext.h"
-#include <curl/curl.h>
-#include <string>
+
 #define SKIA_CPU_IMAGE_CACHE_LIMIT  50*1024*1024 // 52,428,800 bytes
 #define SKIA_GPU_IMAGE_CACHE_LIMIT  50*1024*1024 // 52,428,800 bytes
+
 using namespace std;
 
 namespace facebook {
@@ -33,13 +33,11 @@ namespace ImageCacheManager{
   class RSkImageCacheManager{
    public:
     ~RSkImageCacheManager();
-    //static RSkImageCacheManager* defaultImageCacheManager();
     static void init();
     static RSkImageCacheManager& getInstance();
     sk_sp<SkImage> getImageData(const char *path,struct RemoteImageData* ptr);
 
    private:
-    //static RSkImageCacheManager *defaultImageCacheManager_;
     ImageCacheMap imageCache_;
     RSkImageCacheManager();
     sk_sp<SkImage> makeImageData(const char *path,struct RemoteImageData* ptr);

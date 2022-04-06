@@ -15,8 +15,6 @@
 #include "ReactSkia/utils/RnsUtils.h"
 #include "ReactSkia/views/common/RSkConversion.h"
 
-#include <string>
-
 namespace facebook {
 namespace react {
 
@@ -25,7 +23,7 @@ using namespace RSkImageUtils;
 using namespace ImageCacheManager;
 
 sk_sp<SkImage> getImage(ImageSource source,struct RemoteImageData* remoteImageData) {
-  
+
   std::string path;
   if ( source.uri.empty() ) {
     return nullptr;
@@ -162,15 +160,13 @@ void RSkComponentImage::remoteImageDataCallback(const char* path, char* response
   sk_sp<SkImage> imageData = SkImage::MakeFromEncoded(data);
   imageDataTimer.imageData = imageData;
   imageDataTimer.cureentTime = (SkTime::GetSecs()+1800);// current time + 30 min expiry time
-      RNS_LOG_INFO("-------time :"<<SkTime::GetSecs());
-
   if(imageData) {
     imageData_ = imageData;
     imageCache.insert(std::pair<std::string, imagesDataTime>(path,imageDataTimer));
-    RNS_LOG_INFO("New Entry in Map..."<<" file :"<<path);
+    RNS_LOG_DEBUG("New Entry in Map..."<<" file :"<<path);
     drawAndSubmit();
   } else {
-      RNS_LOG_WARN("Cache Memory limit reached or Couldn't create imageData, So file not cached ...");
+      RNS_LOG_DEBUG("Cache Memory limit reached or Couldn't create imageData, So file not cached ...");
   }
 }
 
