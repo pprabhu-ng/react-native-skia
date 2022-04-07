@@ -77,7 +77,7 @@ bool RSkImageCacheManager::evictAsNeeded() {
     while( it != imageCache_.end()) {
       if( evictCount >= EVICT_COUNT)
         break;
-      if((it->second.imageData)->unique()) {
+      if((it->second)->unique()) {
           it=imageCache_.erase(it);
           evictCount++;
       } else {
@@ -108,20 +108,16 @@ sk_sp<SkImage> RSkImageCacheManager::getImageData(const char *path,struct Remote
     return nullptr;
   }
   std::scoped_lock lock(mutexLock);
-  struct imagesDataTime imageLocalDataTimer;
   /*First to check file entry presence . If not exist, generate imageData*/
   ImageCacheMap::iterator it = imageCache_.find(path);
-  imageData= ((it != imageCache_.end()) ? it->second.imageData : nullptr);
+  imageData= ((it != imageCache_.end()) ? it->second : nullptr);
   if(!imageData) {
     imageData = makeImageData(path,remoteImageData);
     /*Add entry to hash map only if the cache mem usage is with in the limit*/
     /* TO DO: Eviction mechanism to be improved by decouple it from getImageData,
             through worker thread ....*/
     if(evictAsNeeded() && imageData) {
-      imageLocalDataTimer.imageData= imageData;
-      imageLocalDataTimer.cureentTime = SkTime::GetSecs()+1800; //current time + 30 min expiry time
-      RNS_LOG_INFO("-------time :"<<SkTime::GetSecs());
-      imageCache_.insert(std::pair<string, imagesDataTime >(path,imageLocalDataTimer));
+      imageCache_.insert(std::pair<string, sk_sp<SkImage>>(path,imageData));
       RNS_LOG_DEBUG("New Entry in Map..."<<" file :"<<path);
     } else {
         RNS_LOG_DEBUG("Cache Memory limit reached or Couldn't create imageData, So file not cached ...");

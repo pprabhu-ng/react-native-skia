@@ -34,7 +34,6 @@ sk_sp<SkImage> getImage(ImageSource source,struct RemoteImageData* remoteImageDa
     path = source.uri.c_str();
   }
   RNS_PROFILE_START(getImageData)
-  //RSkImageCacheManager &cacheInstance = RSkImageCacheManager::getInstance();
   sk_sp<SkImage> imageData = RSkImageCacheManager::getInstance().getImageData(path.c_str(),std::move(remoteImageData));
   RNS_PROFILE_END(path.c_str(),getImageData)
   if(!imageData) {
@@ -156,13 +155,10 @@ void RSkComponentImage::remoteImageDataCallback(const char* path, char* response
 
   sk_sp<SkImage> imageDatacheck;
   sk_sp<SkData> data = SkData::MakeWithCopy(response,size);
-  struct imagesDataTime imageDataTimer;
   sk_sp<SkImage> imageData = SkImage::MakeFromEncoded(data);
-  imageDataTimer.imageData = imageData;
-  imageDataTimer.cureentTime = (SkTime::GetSecs()+1800);// current time + 30 min expiry time
   if(imageData) {
     imageData_ = imageData;
-    imageCache.insert(std::pair<std::string, imagesDataTime>(path,imageDataTimer));
+    imageCache.insert(std::pair<std::string, sk_sp<SkImage>>(path,imageData));
     RNS_LOG_DEBUG("New Entry in Map..."<<" file :"<<path);
     drawAndSubmit();
   } else {

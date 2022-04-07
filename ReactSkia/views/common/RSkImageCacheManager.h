@@ -19,12 +19,7 @@ namespace facebook {
 namespace react {
 namespace ImageCacheManager{
 
-  struct imagesDataTime {
-   sk_sp<SkImage> imageData;
-   double cureentTime;
-  };
-
-  typedef facebook::better::map <string,imagesDataTime> ImageCacheMap;
+  typedef facebook::better::map <string,sk_sp<SkImage>> ImageCacheMap;
 
   struct RemoteImageData {
    std::function<void(const char*,char*,int,ImageCacheMap&)> callback;
