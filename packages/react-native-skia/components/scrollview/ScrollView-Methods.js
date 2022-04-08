@@ -8,8 +8,9 @@ const {
   View,
   Text,
   TouchableOpacity,
+  TouchableHighlight,
   TextInput,
-  AppRegistry	
+  AppRegistry
 } = require('react-native');
 
 const NUM_ITEMS = 20;
@@ -35,24 +36,25 @@ const SimpleViewApp = React.Node = () => {
    const items = makeItems(NUM_ITEMS, styles.itemWrapper);
    let svRef = React.useRef();
    let isHorizontal = true;
-   let offset=0;	
+   let offset=0;
+   let timeout=0;
 
    const [animate,toggleAnimate] = React.useState(false);
 
    const scrollToEnd = () => {
-      setTimeout(() => {	   
+      setTimeout(() => {
          svRef.current.scrollToEnd({animated:animate})
-      },5000);
+      },timeout);
    }
 
    const scrollTo = () => {
-      setTimeout(() => {	   
+      setTimeout(() => {
         if(isHorizontal) {
           svRef.current.scrollTo({x:offset,y:0,animated:animate})
-	} else {
+        } else {
           svRef.current.scrollTo({x:0,y:offset,animated:animate})
-	}
-      },5000);
+        }
+      },timeout);
    }
 
    const setOffset = (e) => {
@@ -60,6 +62,11 @@ const SimpleViewApp = React.Node = () => {
       offset = parseInt(e.nativeEvent.text)
    }
    
+   const setScrollTimeout = (e) => {
+      console.log(e.nativeEvent.text);
+      timeout = parseInt(e.nativeEvent.text)
+   }
+
    const setAnimate = () => {
       toggleAnimate(!animate);
    }
@@ -75,19 +82,20 @@ const SimpleViewApp = React.Node = () => {
              {items}
           </ScrollView>
 
-          <TouchableOpacity style={{margin:10,backgroundColor:'green',width:500,height:50}} onPress={setAnimate} >
+          <TouchableHighlight underlayColor='#FFBA08' style={{margin:10,backgroundColor:'darkgreen',width:500,height:50}} onPress={setAnimate} >
              <Text>{'Tap : Set Animated =' + animate}</Text>
-          </TouchableOpacity>
-          <TextInput placeholder={'SetOffset'} onSubmitEditing={setOffset} style={{margin:10,backgroundColor:'green',width:500,height:50}}/>
-          <TouchableOpacity style={{margin:10,backgroundColor:'green',width:500,height:50}} onPress={scrollTo} >
+          </TouchableHighlight>
+          <TextInput placeholder={'SetOffset'} onSubmitEditing={setOffset} style={{margin:10,backgroundColor:'darkgreen',width:500,height:50}}/>
+          <TextInput placeholder={'SetTimeoutForScroll'} onSubmitEditing={setScrollTimeout} style={{margin:10,backgroundColor:'darkgreen',width:500,height:50}}/>
+          <TouchableHighlight underlayColor='#FFBA08' style={{margin:10,backgroundColor:'darkgreen',width:500,height:50}} onPress={scrollTo} >
              <Text>{'Tap : ScrollTo'}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={{margin:10,backgroundColor:'green',width:500,height:50}} onPress={scrollToEnd} >
+          </TouchableHighlight>
+          <TouchableHighlight underlayColor='#FFBA08' style={{margin:10,backgroundColor:'darkgreen',width:500,height:50}} onPress={scrollToEnd} >
              <Text>{'Tap : ScrollToEnd'}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={{margin:10,backgroundColor:'green',width:500,height:50}} onPress={flashScrollIndicators} >
+          </TouchableHighlight>
+          <TouchableHighlight underlayColor='#FFBA08' style={{margin:10,backgroundColor:'darkgreen',width:500,height:50}} onPress={flashScrollIndicators} >
              <Text>{'Tap : Flash scroll indicators'}</Text>
-          </TouchableOpacity>
+          </TouchableHighlight>
          </>
       )
     }
@@ -104,7 +112,7 @@ const styles = StyleSheet.create({
     width:500,
     backgroundColor:'yellow',
     borderWidth:2,
-    borderColor:'black'	  
+    borderColor:'black'
   },
   itemWrapper: {
     backgroundColor: '#dddddd',
