@@ -75,12 +75,13 @@ RnsShell::LayerInvalidateMask RSkComponentScrollView::updateComponentState(
 }
 
 void RSkComponentScrollView::handleCommand(std::string commandName,folly::dynamic args){
-  RNS_LOG_DEBUG("handleCommand commandName[" << commandName << "] arg num:" << args.size());
   if(commandName == "scrollToEnd") {
     if(args.size() != 1 ) {
       RNS_LOG_ERROR("Command scrollToEnd received " << args.size() << " arguments,expected 1");
       return;
     }
+
+    RNS_LOG_DEBUG("handleCommand commandName[scrollToEnd] args[" << args[0] <<"]");
 
     SkPoint lastScrollOffset = SkPoint::Make(0,0);
     RnsShell::ScrollLayer* scrollLayer= SCROLL_LAYER_HANDLE;
@@ -98,11 +99,13 @@ void RSkComponentScrollView::handleCommand(std::string commandName,folly::dynami
     handleScroll(lastScrollOffset);
     return;
 
-  }else if(commandName == "scrollTo") {
+  } else if(commandName == "scrollTo") {
     if(args.size() != 3 ) {
       RNS_LOG_ERROR("Command scrollTo received " << args.size() << " arguments,expected 3");
       return;
     }
+
+    RNS_LOG_DEBUG("handleCommand commandName[scrollTo] args[" << args[0] <<"," << args[1] << "," << args[2] <<"]");
 
     int x = static_cast<int>(args[0].getDouble());
     int y = static_cast<int>(args[1].getDouble());
@@ -123,6 +126,9 @@ void RSkComponentScrollView::handleCommand(std::string commandName,folly::dynami
 
     handleScroll(scrollOffset);
     return;
+
+  } else {
+    RNS_LOG_TODO("handleCommand commandName[" << commandName << "] args size[" << args.size() << "]");
   }
 }
 
