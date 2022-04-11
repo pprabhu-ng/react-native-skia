@@ -89,14 +89,13 @@ void RSkComponentScrollView::handleCommand(std::string commandName,folly::dynami
     SkPoint lastScrollOffset = SkPoint::Make(0,0);
 
     if(isHorizontalScroll()) {
-      if(contentSize.width() <= frameRect.width()){
+      if(contentSize.width() <= frameRect.width()) {
          RNS_LOG_DEBUG("No scrollable content to scroll");
          return;
       }
       lastScrollOffset.fX = contentSize.width() - frameRect.width();
-    }
-    else {
-      if(contentSize.height() <= frameRect.height()){
+    } else {
+      if(contentSize.height() <= frameRect.height()) {
          RNS_LOG_DEBUG("No scrollable content to scroll");
          return;
       }
@@ -129,13 +128,13 @@ void RSkComponentScrollView::handleCommand(std::string commandName,folly::dynami
     SkPoint scrollOffset = SkPoint::Make(0,0);
 
     if(isHorizontalScroll()) {
-      if(contentSize.width() <= frameRect.width()){
+      if(contentSize.width() <= frameRect.width()) {
          RNS_LOG_DEBUG("No scrollable content to scroll");
          return;
       }
       scrollOffset.fX = std::min(std::max(0,x),(contentSize.width()-frameRect.width()));
     } else {
-      if(contentSize.height() <= frameRect.height()){
+      if(contentSize.height() <= frameRect.height()) {
          RNS_LOG_DEBUG("No scrollable content to scroll");
          return;
       }
