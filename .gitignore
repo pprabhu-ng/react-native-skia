@@ -20,7 +20,6 @@
 /third_party/swiftshader/
 /third_party/depot_tools/
 /third_party/libcurl/
-/third_party/expat/src/
 
 # Build output
 /out*/

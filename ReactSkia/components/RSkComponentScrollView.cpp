@@ -83,12 +83,25 @@ void RSkComponentScrollView::handleCommand(std::string commandName,folly::dynami
 
     RNS_LOG_DEBUG("handleCommand commandName[scrollToEnd] args[" << args[0] <<"]");
 
-    SkPoint lastScrollOffset = SkPoint::Make(0,0);
     RnsShell::ScrollLayer* scrollLayer= SCROLL_LAYER_HANDLE;
-    if(isHorizontalScroll())
-      lastScrollOffset.fX = scrollLayer->getContentSize().width() - scrollLayer->getFrame().width();
-    else
-      lastScrollOffset.fY = scrollLayer->getContentSize().height() - scrollLayer->getFrame().height();
+    SkISize contentSize = scrollLayer->getContentSize();
+    SkIRect frameRect = scrollLayer->getFrame();
+    SkPoint lastScrollOffset = SkPoint::Make(0,0);
+
+    if(isHorizontalScroll()) {
+      if(contentSize.width() <= frameRect.width()){
+         RNS_LOG_DEBUG("No scrollable content to scroll");
+         return;
+      }
+      lastScrollOffset.fX = contentSize.width() - frameRect.width();
+    }
+    else {
+      if(contentSize.height() <= frameRect.height()){
+         RNS_LOG_DEBUG("No scrollable content to scroll");
+         return;
+      }
+      lastScrollOffset.fY = contentSize.height() - frameRect.height();
+    }
 
     if(lastScrollOffset.equals(scrollLayer->scrollOffsetX,scrollLayer->scrollOffsetY)) {
       RNS_LOG_DEBUG("Scroll position is already at end");
@@ -110,12 +123,24 @@ void RSkComponentScrollView::handleCommand(std::string commandName,folly::dynami
     int x = static_cast<int>(args[0].getDouble());
     int y = static_cast<int>(args[1].getDouble());
 
-    SkPoint scrollOffset = SkPoint::Make(0,0);
     RnsShell::ScrollLayer * scrollLayer = SCROLL_LAYER_HANDLE;
-    if(isHorizontalScroll())
-      scrollOffset.fX = std::min(std::max(0,x),(scrollLayer->getContentSize().width()-scrollLayer->getFrame().width()));
-    else
-      scrollOffset.fY = std::min(std::max(0,y),(scrollLayer->getContentSize().height()-scrollLayer->getFrame().height()));
+    SkISize contentSize = scrollLayer->getContentSize();
+    SkIRect frameRect = scrollLayer->getFrame();
+    SkPoint scrollOffset = SkPoint::Make(0,0);
+
+    if(isHorizontalScroll()) {
+      if(contentSize.width() <= frameRect.width()){
+         RNS_LOG_DEBUG("No scrollable content to scroll");
+         return;
+      }
+      scrollOffset.fX = std::min(std::max(0,x),(contentSize.width()-frameRect.width()));
+    } else {
+      if(contentSize.height() <= frameRect.height()){
+         RNS_LOG_DEBUG("No scrollable content to scroll");
+         return;
+      }
+      scrollOffset.fY = std::min(std::max(0,y),(contentSize.height()-frameRect.height()));
+    }
 
     if(scrollOffset.equals(scrollLayer->scrollOffsetX,scrollLayer->scrollOffsetY)) {
       RNS_LOG_DEBUG("Scroll position is already at same offset");
