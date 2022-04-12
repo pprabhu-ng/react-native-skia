@@ -31,6 +31,11 @@ void RendererDelegate::commit() {
   layerTreeHost_->commitScene();
 }
 
+void RendererDelegate::renderImmediate() {
+  layerTreeHost_->renderImmediate();
+}
+
+
 void RendererDelegate::setRootLayer(SharedLayer rootLayer) {
   layerTreeHost_->setRootCompositingLayer(rootLayer);
 }

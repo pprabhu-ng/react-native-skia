@@ -39,7 +39,8 @@ public:
     SkSize& viewport() { return attributes_.viewportSize; }
     void invalidate();
     void begin(); // Call this before modifying render layer tree
-    void commit(); // Commit the changes in render layer tree
+    void commit(bool renderImmediate=false); // Commit the changes in render layer tree
+    void renderImmediate() {commit(true);};
 
 #if USE(RNS_SHELL_PARTIAL_UPDATES)
     bool supportsPartialUpdates() { return supportPartialUpdate_; } // Wheather compositor can support partial paint and update

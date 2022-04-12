@@ -125,7 +125,7 @@ void RSkComponentTextInput::OnPaint(SkCanvas *canvas) {
                           std::make_shared<skia::textlayout::ParagraphBuilderImpl>(
                           textLayout.paraStyle, data.layoutManager->collection_));
 
-
+  RNS_LOG_INFO("TI display string:" << displayString_.c_str());
   if (0 == displayString_.size()) {
     textAttributes.foregroundColor = placeholderColor_;
     data.layoutManager->buildText(textLayout, textInputProps.backgroundColor, textInputProps.paragraphAttributes, textAttributes, placeholderString_, true);
@@ -138,7 +138,9 @@ void RSkComponentTextInput::OnPaint(SkCanvas *canvas) {
     }
   }
 
-  drawShadow(canvas, frame, borderMetrics, textInputProps.backgroundColor, layer()->shadowOpacity, layer()->shadowFilter);
+  if(layer()->shadowOpacity && layer()->shadowFilter) {
+     drawShadow(canvas, frame, borderMetrics, textInputProps.shadowColor, layer()->shadowOpacity, layer()->shadowFilter);
+  }
   drawTextInput(canvas, component.layoutMetrics, textInputProps, textLayout);
   drawBorder(canvas, frame, borderMetrics, textInputProps.backgroundColor);
 }
@@ -406,7 +408,8 @@ RnsShell::LayerInvalidateMask  RSkComponentTextInput::updateComponentProps(const
   textString = textInputProps.text;
   caretHidden_ = textInputProps.caretHidden;
   maxLength_ = textInputProps.maxLength;
-  if (textString != displayString_) {
+  if ((textString != displayString_) && (textInputProps.value.has_value() || (textInputProps.defaultValue.has_value()&&forceUpadate))) {
+    RNS_LOG_INFO("TI textString:" << textString.c_str() << "  displayString_:" << displayString_.c_str());	  
     privateVarProtectorMutex.lock();
     displayString_ = textString;
     cursor_.end = textString.length();

@@ -107,8 +107,10 @@ RnsShell::LayerInvalidateMask RSkComponent::updateProps(const ShadowView &newSha
   //ShadowOpacity
    if ((forceUpdate) || (oldviewProps.shadowOpacity != newviewProps.shadowOpacity)) {
       layer_->shadowOpacity = ((newviewProps.shadowOpacity > 1.0) ? 1.0:newviewProps.shadowOpacity)*MAX_8BIT;
+      RNS_LOG_INFO("Shadow opacity change :" << layer_->shadowOpacity);
       /*TODO : To be tested and confirm updateMask need for this Prop*/
       updateMask =static_cast<RnsShell::LayerInvalidateMask>(updateMask | RnsShell::LayerInvalidateAll);
+      createShadowFilter=true;
    }
   //shadowRadius
    if ((forceUpdate) || (oldviewProps.shadowRadius != newviewProps.shadowRadius)) {
@@ -132,11 +134,13 @@ RnsShell::LayerInvalidateMask RSkComponent::updateProps(const ShadowView &newSha
       createShadowFilter=true;
    }
    if(layer_->shadowOpacity && createShadowFilter) {
+       RNS_LOG_INFO("Shadow filter change ");
        layer_->shadowFilter= SkImageFilters::DropShadowOnly(
                               layer_->shadowOffset.width(), layer_->shadowOffset.height(),
                               layer_->shadowRadius, layer_->shadowRadius,
                               layer_->shadowColor, nullptr);
-   } else if (layer_->shadowFilter != nullptr) {
+   } else if ((layer_->shadowFilter != nullptr) && (layer_->shadowOpacity == 0)) {
+       RNS_LOG_INFO("Shadow filter reset ");
        layer_->shadowFilter.reset();
    }
   //backfaceVisibility

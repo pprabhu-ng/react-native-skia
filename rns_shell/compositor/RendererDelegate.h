@@ -24,6 +24,7 @@ public:
     void beginRenderingUpdate();
     void setRootLayer(SharedLayer rootLayer);
     void commit();
+    void renderImmediate();
     void begin();
 
     // Layer Client Implementation

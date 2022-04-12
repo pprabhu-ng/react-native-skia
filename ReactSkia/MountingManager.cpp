@@ -12,6 +12,7 @@
 
 #include "ReactSkia/MountingManager.h"
 #include "ReactSkia/RSkSurfaceWindow.h"
+#include "platform/linux/TaskLoop.h"
 
 #include "rns_shell/compositor/RendererDelegate.h"
 
@@ -34,7 +35,7 @@ void MountingManager::schedulerDidFinishTransaction(
   }
 
   auto surfaceId = transaction->getSurfaceId();
-  auto &mutations = transaction->getMutations();
+  auto mutations = transaction->getMutations();
 
   if (mutations.empty()) {
     return;
@@ -42,8 +43,11 @@ void MountingManager::schedulerDidFinishTransaction(
 
   // auto telemetry = transaction->getTelemetry();
   // auto number = transaction->getNumber();
-
-  ProcessMutations(mutations, surfaceId);
+  RNS_LOG_INFO("CALL PROCESS MUTATIONS thread id[" << std::this_thread::get_id() << "]");
+  TaskLoop::main().dispatch([mutations,surfaceId,this]() {
+     ProcessMutations(mutations, surfaceId);
+  });
+  RNS_LOG_INFO("CALL DONE PROCESS MUTATIONS thread id[" << std::this_thread::get_id() << "]");
 }
 
 void MountingManager::schedulerDidRequestPreliminaryViewAllocation(
@@ -81,10 +85,11 @@ void MountingManager::ProcessMutations(
     ShadowViewMutationList const &mutations,
     SurfaceId surfaceId) {
 
+  RNS_LOG_INFO("ProcessMutations  start ");
   nativeRenderDelegate_.begin();
-
+  RNS_LOG_INFO("ProcessMutations  acquired lock ");
   for (auto const &mutation : mutations) {
-    RNS_LOG_DEBUG("\n============\n Mutation type : "<< mutation.type <<
+    RNS_LOG_INFO("\n[ "<< std::this_thread::get_id() << "]============\n Mutation type : "<< mutation.type <<
                  "\n ParentShadowView" <<
                  "\n\tTag:" << mutation.parentShadowView.tag <<
                  "\n\tName:" << (mutation.parentShadowView.componentName?mutation.parentShadowView.componentName : "null") <<
@@ -125,7 +130,9 @@ void MountingManager::ProcessMutations(
   RNS_LOG_INFO_EVERY_N(60, "Calling Compositor Commit(" << std::this_thread::get_id()) << ") : after " << SkTime::GetMSecs() - prevTime << " ms";
   prevTime = SkTime::GetMSecs();
 #endif
-  nativeRenderDelegate_.commit();
+  RNS_LOG_INFO("ProcessMutations  renderImmediate ");
+  nativeRenderDelegate_.renderImmediate();
+  RNS_LOG_INFO("ProcessMutations  renderImmediate done ");
 }
 
 

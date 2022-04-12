@@ -49,6 +49,10 @@ void LayerTreeHost::commitScene() {
   compositor_->commit();
 }
 
+void LayerTreeHost::renderImmediate() {
+  compositor_->renderImmediate();
+}
+
 void LayerTreeHost::setRootCompositingLayer(SharedLayer rootLayer) {
   compositor_->setRootLayer(rootLayer);
 }

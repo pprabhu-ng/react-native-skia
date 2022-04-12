@@ -172,17 +172,23 @@ void Compositor::begin() {
     surfaceDamage_.clear(); // Clear the previous damage rects.
 }
 
-void Compositor::commit() {
-    // Unlock here, to ensure updates and rendering of tree is synchronous
-    isMutating.unlock();
+void Compositor::commit(bool immediate) {
     
-    if(!windowContext_)
+    if(immediate) {
+      RNS_PROFILE_API_OFF("RenderTree :", renderLayerTree());
+      isMutating.unlock();    
+    } else {
+       // Unlock here, to ensure updates and rendering of tree is synchronous
+      isMutating.unlock();
+    
+      if(!windowContext_)
         return;
-
-    TaskLoop::main().dispatch([&]() {
-        std::scoped_lock lock(isMutating); // Lock to make sure render tree is not mutated during the rendering
-        RNS_PROFILE_API_OFF("RenderTree :", renderLayerTree());
-    });
+     
+       TaskLoop::main().dispatch([&]() {
+          std::scoped_lock lock(isMutating); // Lock to make sure render tree is not mutated during the rendering
+          RNS_PROFILE_API_OFF("RenderTree :", renderLayerTree());
+       });
+    }
 }
 
 void Compositor::setRootLayer(SharedLayer rootLayer) {
