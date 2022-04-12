@@ -16,16 +16,24 @@ struct ImgProps{
     ImageResizeMode resizeMode;
     SkColor tintColor;
 };
+
+typedef struct RemoteImageData {
+   std::function<void(const char*,char*,int)> callback;
+}RemoteImageData;
+
 class RSkComponentImage final : public RSkComponent {
  public:
   RSkComponentImage(const ShadowView &shadowView);
   RnsShell::LayerInvalidateMask updateComponentProps(const ShadowView &newShadowView,bool forceUpdate) override;
-  void drawAndSubmit();
-  void remoteImageDataCallback(const char* path, char* response, int size,ImageCacheManager::ImageCacheMap& imageCache);
 
  private :
-  sk_sp<SkImage> imageData_ = nullptr;
+  ImageCacheManager::RSkImageCacheManager imageCacheManagerInstance_;
   ImgProps imageProps;
+  sk_sp<SkImage> getLocalImage(ImageSource source);
+  sk_sp<SkImage> getImageData(const char *path);
+  void drawAndSubmit();
+  void remoteImageDataCallback(const char* path, char* response, int size);
+  void getUriImage(ImageSource source);
 
  protected:
   void OnPaint(SkCanvas *canvas) override;

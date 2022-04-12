@@ -17,33 +17,28 @@ using namespace std;
 
 namespace facebook {
 namespace react {
-namespace ImageCacheManager{
+namespace ImageCacheManager {
 
-  typedef facebook::better::map <string,sk_sp<SkImage>> ImageCacheMap;
+typedef facebook::better::map <string,sk_sp<SkImage>> ImageCacheMap;
 
-  struct RemoteImageData {
-   std::function<void(const char*,char*,int,ImageCacheMap&)> callback;
-  };
+class RSkImageCacheManager {
+ public:
+  RSkImageCacheManager();
+  ~RSkImageCacheManager();
+  static void init();
+  static RSkImageCacheManager& getImageCacheManagerInstance();
+  sk_sp<SkImage> findImageDataInCache(const char* path);
+  void imageDataInsertInCche(const char* path,sk_sp<SkImage> imageData);
+ private:
+  ImageCacheMap imageCache_;
+  void getCacheUsage(size_t usageArr[]);
+  bool evictAsNeeded();
 
-  class RSkImageCacheManager{
-   public:
-    ~RSkImageCacheManager();
-    static void init();
-    static RSkImageCacheManager& getInstance();
-    sk_sp<SkImage> getImageData(const char *path,struct RemoteImageData* ptr);
+#ifdef RNS_IMAGE_CACHE_USAGE_DEBUG
+  void printCacheUsage();
+#endif
+};
 
-   private:
-    ImageCacheMap imageCache_;
-    RSkImageCacheManager();
-    sk_sp<SkImage> makeImageData(const char *path,struct RemoteImageData* ptr);
-    void getCacheUsage(size_t usageArr[]);
-    bool evictAsNeeded();
-
-    #ifdef RNS_IMAGE_CACHE_USAGE_DEBUG
-      void printCacheUsage();
-    #endif
-    void geturiImage(const char* path,struct RemoteImageData* remoteImageData);
-  }; //RSkImageCacheManager
 } // ImageCacheManager
 } // namespace react
 } // namespace facebook
