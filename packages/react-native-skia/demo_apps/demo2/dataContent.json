@@ -213,6 +213,78 @@
      "year" : "2006",
      "description" : 
    "Durante siglos, dos razas han ido evolucionando en las profundidades de la Tierra: los vampiros y los hombres-lobo (Lycans)."
+  },
+  {
+     "imageFile" : "1.jpg",
+     "title" : "Frozen II",
+     "genre" : "Musical,Comedy",
+     "duration" : "1h 43m",
+     "year" : "2019",
+     "description" : 
+  "Elsa the Snow Queen has an extraordinary gift -- the power to create ice and snow. But no matter how happy she is to be surrounded by the people of Arendelle, Elsa finds herself strangely unsettled."
+  },
+  {
+     "imageFile" : "2.jpg",
+     "title" : "Bodied",
+     "genre" : "Comedy",
+     "duration" : "2h 01m",
+     "year" : "2017",
+     "description" : 
+   "A progressive graduate student finds success and sparks outrage when his interest in battle rap as a thesis subject turns into a competitive obsession."
+  },
+  {
+     "imageFile" : "3.jpg",
+     "title" : "Black Panther",
+     "genre" : "Action",
+     "duration" : "2h 02m",
+     "year" : "2018",
+     "description" : 
+   "After the death of his father, T'Challa returns home to the African nation of Wakanda to take his rightful place as king. When a powerful enemy suddenly reappears...."
+  },
+  {
+     "imageFile" : "4.jpg",
+     "title" : "The Lion King",
+     "genre" : "Adventure",
+     "duration" : "1h 58m",
+     "year" : "2019",
+     "description" : 
+   "Betrayed and exiled from his kingdom, lion cub Simba must figure out how to grow up and take back his royal destiny on the plains of the African savanna."
+  },
+  {
+     "imageFile" : "5.jpg",
+     "title" : "Joker",
+     "genre" : "Crime,Drama",
+     "duration" : "2h 02m",
+     "year" : "2019",
+     "description" : 
+   "Isolated, bullied and disregarded by society, failed comedian Arthur Fleck begins a slow descent into madness as he transforms into the criminal mastermind known as the Joker."
+  },
+  {
+     "imageFile" : "6.jpg",
+     "title" : "The Adams Family",
+     "genre" : "Comedy",
+     "duration" : "1h 27m",
+     "year" : "2019",
+     "description" : 
+   "Members of the mysterious and spooky Addams family -- Gomez, Morticia, Pugsley, Wednesday, Uncle Fester and Grandma -- encounter a shady TV personality who despises their eerie hilltop mansion."
+  },
+  {
+     "imageFile" : "7.jpg",
+     "title" : "Acceleration",
+     "genre" : "Action",
+     "duration" : "1h 25m",
+     "year" : "2019",
+     "description" : 
+   "When an evil crime lord is double-crossed by his most trusted operative, he kidnaps her young son."
+  },
+  {
+     "imageFile" : "8.jpg",
+     "title" : "Rambo : Last Blood",
+     "genre" : "Action",
+     "duration" : "1h 29m",
+     "year" : "2019",
+     "description" : 
+   "Vietnam War veteran John Rambo tries to find some semblance of peace by raising horses on a ranch in Arizona. He's also developed a special familial bond with a woman named Maria and her teenage   granddaughter Gabriela."
   }]
 
 
