@@ -115,21 +115,22 @@ var posterImagePath = windowSize.height > 720 ? posterImagePath_716x300 : poster
 
 const FocusableComponent = (props) =>  {
    const onPress = () => {}
+  const countT = props.count;	
 
    const onBlur = (e) => {
        console.log("onBlur---------" )
-       props.change({ imgscale: 1,borderWidth:0});
+       props.change({index:props.count,type:'blur'});
    }
 
    const onFocus = (e) => {
        console.log("onFocus---------" )
-       props.change({ imgscale: 1.2,borderWidth:2,index:props.count});
+       props.change({index:props.count,type:'focus'});
    }
 
    if(props.count >= 24) {
        return(
           <TouchableOpacity isTVSelectable='true' activeOpacity={0.75} onBlur={onBlur} onFocus={onFocus} style={[styles.elementView]} >
-             <Image style={{transform:[{scale: props.stateVal.imgscale}],width:300,height:160,marginLeft:30,marginTop:16}} source={thumbnailImagePath[props.count]}>
+             <Image style={{transform:[{scale: 2}],width:300,height:160,marginLeft:30,marginTop:16}} source={thumbnailImagePath[props.count]}>
              </Image>
           </TouchableOpacity>
       );
@@ -138,21 +139,21 @@ const FocusableComponent = (props) =>  {
           <TouchableHighlight isTVSelectable='true'  onPress={onPress} activeOpacity={0.9} underlayColor='transparent'
                              onBlur={onBlur} onFocus={onFocus}
                              style={[styles.elementView]} >
-             <Image style={{transform:[{scale: props.stateVal.imgscale}],width:300,height:160,marginLeft:30,marginTop:16}} source={thumbnailImagePath[props.count]} resizeMode="cover">
+             <Image style={{transform:[{scale: 2}],width:300,height:160,marginLeft:30,marginTop:16}} source={thumbnailImagePath[props.count]} resizeMode="cover">
              </Image>
           </TouchableHighlight>
        );
    } else if((props.count >= 8)) {
        return (
           <Pressable isTVSelectable='true' onBlur={onBlur} onFocus={onFocus} style={[styles.elementView]} >
-             <Image style={{transform:[{scale: props.stateVal.imgscale}],width:300,height:160,marginLeft:25,marginTop:10}} source={thumbnailImagePath[props.count]}>
+             <Image style={{transform:[{scale: 2}],width:300,height:160,marginLeft:25,marginTop:10}} source={thumbnailImagePath[props.count]}>
              </Image>
           </Pressable>
        );
    } else {
        return (
           <Pressable isTVSelectable='true' onBlur={onBlur} onFocus={onFocus} style={[styles.elementView]} >
-             <Image style={{width:300,height:160,marginLeft:25,marginTop:10,borderColor:'lightcyan',borderWidth:props.stateVal.borderWidth}} source={thumbnailImagePath[props.count]}>
+             <Image style={{width:300,height:160,marginLeft:25,marginTop:10,borderColor:'lightcyan',borderWidth:props.stateVal.list[props.count].borderWidth}} source={thumbnailImagePath[props.count]}>
              </Image>
           </Pressable>
        );
@@ -161,11 +162,48 @@ const FocusableComponent = (props) =>  {
 
 const SampleVODPage = (props) => {
 
-    let [stateValue, setState] = useState({imgscale: 1,borderWidth:0 , index:0});
+    let [stateValue, setState] = useState({list:[
+	     {imgscale: 1,borderWidth:0},
+	     {imgscale: 1,borderWidth:0},
+	     {imgscale: 1,borderWidth:0},
+	     {imgscale: 1,borderWidth:0},
+	     {imgscale: 1,borderWidth:0},
+	     {imgscale: 1,borderWidth:0},
+	     {imgscale: 1,borderWidth:0},
+	     {imgscale: 1,borderWidth:0},
+	     {imgscale: 1,borderWidth:0},
+	     {imgscale: 1,borderWidth:0},
+	     {imgscale: 1,borderWidth:0},
+	     {imgscale: 1,borderWidth:0},
+	     {imgscale: 1,borderWidth:0},
+	     {imgscale: 1,borderWidth:0},
+	     {imgscale: 1,borderWidth:0},
+	     {imgscale: 1,borderWidth:0},
+	     {imgscale: 1,borderWidth:0},
+	     {imgscale: 1,borderWidth:0},
+	     {imgscale: 1,borderWidth:0},
+	     {imgscale: 1,borderWidth:0},
+	     {imgscale: 1,borderWidth:0},
+	     {imgscale: 1,borderWidth:0},
+	     {imgscale: 1,borderWidth:0},
+	     {imgscale: 1,borderWidth:0},
+	     {imgscale: 1,borderWidth:0}],
+	     index:2}
+    );
     let content = props.contentData;
 
     function changeBackground (value) {
-       setState(value);
+
+       let tempArray = stateValue.list.slice();
+       if(value.type == 'focus') {	    
+          tempArray[value.index][imgscale] = 1.2;	    
+          tempArray[value.index][borderWidth] = 2;
+       } else {
+          tempArray[value.index][imgscale] = 1;	    
+          tempArray[value.index][borderWidth] = 0;
+
+       }
+       setState({list:tempArray,index:value});
     }
 
     const addItems = (n) => {
