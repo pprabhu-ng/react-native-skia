@@ -17,18 +17,15 @@ using namespace std;
 
 namespace facebook {
 namespace react {
-namespace ImageCacheManager {
 
 typedef facebook::better::map <string,sk_sp<SkImage>> ImageCacheMap;
 
 class RSkImageCacheManager {
  public:
-  RSkImageCacheManager();
-  ~RSkImageCacheManager();
   static void init();
   static RSkImageCacheManager& getImageCacheManagerInstance();
   sk_sp<SkImage> findImageDataInCache(const char* path);
-  void imageDataInsertInCche(const char* path,sk_sp<SkImage> imageData);
+  void imageDataInsertInCache(const char* path,sk_sp<SkImage> imageData);
  private:
   ImageCacheMap imageCache_;
   void getCacheUsage(size_t usageArr[]);
@@ -39,6 +36,5 @@ class RSkImageCacheManager {
 #endif
 };
 
-} // ImageCacheManager
 } // namespace react
 } // namespace facebook
