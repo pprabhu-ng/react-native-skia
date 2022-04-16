@@ -24,26 +24,31 @@ using namespace RSkImageUtils;
 RSkComponentImage::RSkComponentImage(const ShadowView &shadowView)
     : RSkComponent(shadowView) {
       imageCacheManagerInstance_ = RSkImageCacheManager::getImageCacheManagerInstance();
-    }
+}
 
 void RSkComponentImage::OnPaint(SkCanvas *canvas) {
   sk_sp<SkImage> imageData{nullptr};
+  string path;
   auto component = getComponentData();
   auto const &imageProps = *std::static_pointer_cast<ImageProps const>(component.props);
+
   /*First to check file entry presence . If not exist, generate imageData*/
-  imageData= imageCacheManagerInstance_.findImageDataInCache(imageProps.sources[0].uri.c_str());
-  if(!imageProps.sources.empty())
+  path = generateUriPath(imageProps.sources[0].uri.c_str());
+  const char *uriPath=&*path.begin();
+  if(!imageProps.sources.empty()) {
+    imageData = imageCacheManagerInstance_.findImageDataInCache(uriPath);
     if(!imageData) {
       if (imageProps.sources[0].type == ImageSource::Type::Local) {
-        imageData = getLocalImageData(imageProps.sources[0]);
+        imageData = getLocalImageData(uriPath);
       } else if(imageProps.sources[0].type == ImageSource::Type::Remote) {
-        requestNetworkImageData(imageProps.sources[0]);
+        requestNetworkImageData(uriPath);
       }
     }
+  }
   auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
   /* Emitting Load completed Event*/
   if(imageData)
-  imageEventEmitter->onLoad();
+    imageEventEmitter->onLoad();
   Rect frame = component.layoutMetrics.frame;
   SkRect frameRect = SkRect::MakeXYWH(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
   auto const &imageBorderMetrics=imageProps.resolveBorderMetrics(component.layoutMetrics);
@@ -98,37 +103,35 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
   }
 }
 
-sk_sp<SkImage> RSkComponentImage::getLocalImageData(ImageSource source) {
-  std::string path;
+sk_sp<SkImage> RSkComponentImage::getLocalImageData(string path) {
   sk_sp<SkImage> imageData{nullptr};
   sk_sp<SkData> data;
 
-  if (source.uri.empty()) {
-    return nullptr;
-  }
-  if(source.uri.substr(0, 14) == "file://assets/") {
-    path = "./" + source.uri.substr(7);
-  }
+  path = generateUriPath(path.c_str());
   if(!path.c_str()) {
     RNS_LOG_ERROR("Invalid File");
     return nullptr;
   }
-  data = SkData::MakeFromFileName(path.c_str());
+  const char *uriPath=&*path.begin();
+  data = SkData::MakeFromFileName(uriPath);
    if (!data) {
-    RNS_LOG_ERROR("Unable to make SkData for path : " << path.c_str());
+    RNS_LOG_ERROR("Unable to make SkData for path : " << uriPath);
     return nullptr;
   }
   imageData = SkImage::MakeFromEncoded(data);
-  if(imageData) {
-    imageCacheManagerInstance_.imageDataInsertInCache(source.uri.c_str(), imageData);
-    RNS_LOG_INFO("New Entry in Map..."<<" file :"<<source.uri.c_str());
-  } else {
-    RNS_LOG_ERROR("Insert image data to cache failed... :"<<" file :" << path.c_str());
-  }
+  if(imageData)
+    imageCacheManagerInstance_.imageDataInsertInCache(uriPath, imageData);
+
 #ifdef RNS_IMAGE_CACHE_USAGE_DEBUG
     printCacheUsage();
 #endif //RNS_IMAGECACHING_DEBUG
   return imageData;
+}
+
+string RSkComponentImage::generateUriPath(string path) {
+  if(path.substr(0, 14) == "file://assets/")
+    path = "./" + path.substr(7);
+  return path;
 }
 
 RnsShell::LayerInvalidateMask RSkComponentImage::updateComponentProps(const ShadowView &newShadowView,bool forceUpdate) {
@@ -158,23 +161,26 @@ void RSkComponentImage::drawAndSubmit() {
   layer()->client().notifyFlushRequired();
 }
 
-void RSkComponentImage::requestNetworkImageData(ImageSource source) {
+void RSkComponentImage::requestNetworkImageData(const char* path) {
   auto sharedCurlNetworking = CurlNetworking::sharedCurlNetworking();
-  CurlRequest *curlRequest = new CurlRequest(nullptr,source.uri.c_str(),0,"GET");
-
+  CurlRequest *curlRequest = new CurlRequest(nullptr,path,0,"GET");
   // callback for remoteImageData
-  callback = [&](const char* path, char* response, int size) {
+  networkImageDataCallback = [&](const char* path, char* response, int size) {
     // Responce callback from network. Get image data, insert in Cache and call Onpaint
     sk_sp<SkData> data = SkData::MakeWithCopy(response,size);
+    if (!data)
+    RNS_LOG_ERROR("Unable to make SkData for path : " << path);
     sk_sp<SkImage> imageData = SkImage::MakeFromEncoded(data);
-    if(imageData) {
-    //Add in cache if image data is valid
-      imageCacheManagerInstance_.imageDataInsertInCache(path, imageData);
-      RNS_LOG_INFO("New Entry in Map..."<<" file :"<<path);
-      drawAndSubmit();
-    } else {
-      RNS_LOG_DEBUG("Insert image data to cache failed... :"<<" file :"<<path);
+    sk_sp<SkImage> findImageData = imageCacheManagerInstance_.findImageDataInCache(path);
+    if(!findImageData) {
+      if(imageData) {
+        //Add in cache if image data is valid
+        imageCacheManagerInstance_.imageDataInsertInCache(path, imageData);
+        drawAndSubmit();
     }
+   } else {
+    drawAndSubmit();
+   }
   };
 
   folly::dynamic query = folly::dynamic::object();
@@ -184,7 +190,7 @@ void RSkComponentImage::requestNetworkImageData(ImageSource source) {
   auto completionCallback =  [&](void* curlresponseData,void *userdata)->bool {
     CurlResponse *responseData =  (CurlResponse *)curlresponseData;
     CurlRequest * curlRequest = (CurlRequest *) userdata;
-    callback(responseData->responseurl,responseData->responseBuffer,responseData->contentSize);
+    networkImageDataCallback(responseData->responseurl,responseData->responseBuffer,responseData->contentSize);
     delete curlRequest;
     return 0;
   };

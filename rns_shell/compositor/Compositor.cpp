@@ -147,12 +147,12 @@ void Compositor::renderLayerTree() {
         /* Check if paint required*/
         if(!rootLayer_.get()->needsPainting(paintContext)) return;
 #ifdef RNS_SHELL_HAS_GPU_SUPPORT
-        WindowContext::GrTransactionBegin();
+        WindowContext::grTransactionBegin();
 #endif
         RNS_PROFILE_API_OFF("Render Tree Paint", rootLayer_.get()->paint(paintContext));
         RNS_PROFILE_API_OFF("SkSurface Flush & Submit", backBuffer_->flushAndSubmit());
 #ifdef RNS_SHELL_HAS_GPU_SUPPORT
-        WindowContext::GrTransactionEnd();
+        WindowContext::grTransactionEnd();
 #endif
 #ifdef RNS_ENABLE_FRAME_RATE_CONTROL
         {

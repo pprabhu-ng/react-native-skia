@@ -47,8 +47,8 @@ public:
 
 #ifdef RNS_SHELL_HAS_GPU_SUPPORT
     GrDirectContext* directContext() const { return context_.get(); }
-    static void GrTransactionBegin() { GrTransactionLock.lock(); }
-    static void GrTransactionEnd() { GrTransactionLock.unlock(); }
+    static void grTransactionBegin() { GrTransactionLock.lock(); }
+    static void grTransactionEnd() { GrTransactionLock.unlock(); }
 #endif
     int width() const { return width_; }
     int height() const { return height_; }

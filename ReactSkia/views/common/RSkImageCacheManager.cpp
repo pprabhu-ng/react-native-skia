@@ -24,6 +24,7 @@ namespace react {
 
 #define CPU_MEM_ARR_INDEX 0
 #define GPU_MEM_ARR_INDEX 1
+std::mutex imageCacheLock;
 
 RSkImageCacheManager& RSkImageCacheManager::getImageCacheManagerInstance() {
   static RSkImageCacheManager imageCacheManagerInstance;
@@ -34,13 +35,13 @@ void RSkImageCacheManager::getCacheUsage(size_t usageArr[]) {
   int fOldCount{0};
   usageArr[CPU_MEM_ARR_INDEX] = SkGraphics::GetResourceCacheTotalBytesUsed();
 #ifdef RNS_SHELL_HAS_GPU_SUPPORT
-  RnsShell::WindowContext::GrTransactionBegin();
+  RnsShell::WindowContext::grTransactionBegin();
   GrDirectContext* gpuContext =RSkSurfaceWindow::getDirectContext();
   if(gpuContext)
     gpuContext->getResourceCacheUsage(&fOldCount, &usageArr[GPU_MEM_ARR_INDEX]);
   else
     usageArr[GPU_MEM_ARR_INDEX]=0;
-  RnsShell::WindowContext::GrTransactionEnd();
+  RnsShell::WindowContext::grTransactionEnd();
 #endif
   RNS_LOG_DEBUG("CPU CACHE consumed bytes: "<<usageArr[CPU_MEM_ARR_INDEX]<< ", GPU CACHE consumed bytes: "<<usageArr[GPU_MEM_ARR_INDEX]);
 }
@@ -49,16 +50,19 @@ bool RSkImageCacheManager::evictAsNeeded() {
   int evictCount{0};
   size_t usageArr[2]={0,0};
   getCacheUsage(usageArr);
-  if ((usageArr[CPU_MEM_ARR_INDEX] < SKIA_CPU_IMAGE_CACHE_HWM_LIMIT) &&
-      ( usageArr[GPU_MEM_ARR_INDEX] < SKIA_GPU_IMAGE_CACHE_HWM_LIMIT))
+  if ((usageArr[CPU_MEM_ARR_INDEX] < SKIA_CPU_IMAGE_CACHE_HWM_LIMIT) &&( usageArr[GPU_MEM_ARR_INDEX] < SKIA_GPU_IMAGE_CACHE_HWM_LIMIT))
     return true;
   ImageCacheMap::iterator it=imageCache_.begin();
+  RNS_LOG_INFO("evictCount : "<<evictCount);
   while( it != imageCache_.end()) {
-    if( evictCount >= EVICT_COUNT)
+    if( evictCount >= EVICT_COUNT){
+      RNS_LOG_INFO("evictCount:"<<evictCount<<"EVICT_COUNT:"<<EVICT_COUNT);
       break;
+    }
     if((it->second)->unique()) {
       it=imageCache_.erase(it);
       evictCount++;
+      RNS_LOG_INFO("evictCount:"<<evictCount<<"EVICT_COUNT:"<<EVICT_COUNT);
     } else {
       ++it;
     }
@@ -74,9 +78,11 @@ void RSkImageCacheManager::init() {
   RSkImageCacheManager::getImageCacheManagerInstance();
   SkGraphics::SetResourceCacheTotalByteLimit(SKIA_CPU_IMAGE_CACHE_LIMIT);
 #ifdef RNS_SHELL_HAS_GPU_SUPPORT
+  RnsShell::WindowContext::grTransactionBegin();
   GrDirectContext* gpuContext = RSkSurfaceWindow::getDirectContext();
   if(gpuContext)
     gpuContext->setResourceCacheLimit(SKIA_GPU_IMAGE_CACHE_LIMIT);
+  RnsShell::WindowContext::grTransactionEnd();
 #endif //RNS_SHELL_HAS_GPU_SUPPORT
 }
 
@@ -88,13 +94,16 @@ void printCacheUsage() {
   RNS_LOG_INFO("Memory consumed for this run in CPU CACHE :"<<(usageArr[CPU_MEM_ARR_INDEX] - prevCpuUsedMem));
   prevCpuUsedMem = usageArr[CPU_MEM_ARR_INDEX];
 #ifdef RNS_SHELL_HAS_GPU_SUPPORT
+  RnsShell::WindowContext::grTransactionBegin();
   RNS_LOG_INFO("Memory consumed for this run in GPU CACHE:"<<(usageArr[GPU_MEM_ARR_INDEX] - prevGpuUsedMem));
   prevGpuUsedMem = usageArr[GPU_MEM_ARR_INDEX];
+  RnsShell::WindowContext::grTransactionEnd();
 #endif
 }
 #endif//RNS_IMAGE_CACHE_USAGE_DEBUG
 
 sk_sp<SkImage> RSkImageCacheManager::findImageDataInCache(const char* path) {
+  std::scoped_lock lock(imageCacheLock);
   sk_sp<SkImage> imageData{nullptr};
   ImageCacheMap::iterator it = imageCache_.find(path);
   imageData= ((it != imageCache_.end()) ? it->second : nullptr);
@@ -102,8 +111,13 @@ sk_sp<SkImage> RSkImageCacheManager::findImageDataInCache(const char* path) {
 }
 
 void RSkImageCacheManager::imageDataInsertInCache(const char* path,sk_sp<SkImage> imageData) {
-  if(evictAsNeeded() && imageData)
-  imageCache_.insert(std::pair<std::string, sk_sp<SkImage>>(path,imageData));
+  std::scoped_lock lock(imageCacheLock);
+  if(evictAsNeeded() && imageData) {
+    imageCache_.insert(std::pair<std::string, sk_sp<SkImage>>(path,imageData));
+    RNS_LOG_INFO("New Entry in Map..."<<" file :"<<path);
+  } else {
+    RNS_LOG_ERROR("Insert image data to cache failed... :"<<" file :" << path);
+  }
 }
 
 } // namespace react

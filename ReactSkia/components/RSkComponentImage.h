@@ -25,14 +25,13 @@ class RSkComponentImage final : public RSkComponent {
  private :
   RSkImageCacheManager imageCacheManagerInstance_;
   ImgProps imageProps;
-  std::function<void(const char*,char*,int)> callback;
+  std::function<void(const char*,char*,int)> networkImageDataCallback;
 
-  sk_sp<SkImage> getLocalImageData(ImageSource source);
-  //sk_sp<SkImage> getImageData(const char *path);
+  sk_sp<SkImage> getLocalImageData(string path);
+  string generateUriPath(string path);
 
   void drawAndSubmit();
-  void remoteImageDataCallback(const char* path, char* response, int size);
-  void requestNetworkImageData(ImageSource source);
+  void requestNetworkImageData(const char*);
 
  protected:
   void OnPaint(SkCanvas *canvas) override;
