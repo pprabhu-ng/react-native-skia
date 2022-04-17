@@ -27,11 +27,11 @@ class RSkComponentImage final : public RSkComponent {
   ImgProps imageProps;
   std::function<void(const char*,char*,int)> networkImageDataCallback;
 
-  sk_sp<SkImage> getLocalImageData(string path);
+  sk_sp<SkImage> getLocalImageData(ImageSource source);
   string generateUriPath(string path);
 
   void drawAndSubmit();
-  void requestNetworkImageData(const char*);
+  void requestNetworkImageData(ImageSource source);
 
  protected:
   void OnPaint(SkCanvas *canvas) override;

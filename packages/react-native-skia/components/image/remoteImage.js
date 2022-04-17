@@ -10,125 +10,356 @@ https://pngimg.com/uploads/birds/birds_PNG95.png
 */
 import * as React from 'react';
 import type {Node} from 'react';
-import {AppRegistry,Image,Text,View,} from 'react-native';
+import {
+    AppRegistry,
+    Image,
+    Text,
+    View,
+} from 'react-native';
 import { useState } from 'react';
 
-var  subwidth = 800
+var subwidth = 800
 var subheight =500
 var widthImage=400;
-var heightImage=400;[100,200,300,400]
+var heightImage=400;
 
 const SimpleViewApp = React.Node = () => {
- var useCases =5;
- var timerValue=3000;
- const [UseCaseCount, toggleViewState] = useState(true);
+var useCases =5;
+var timerValue=10000;
+const [UseCaseCount, toggleViewState] = useState(true);
+const timer = setTimeout(()=>{
+    toggleViewState((UseCaseCount+1)%useCases);
+    }, timerValue)
 
- const timer = setTimeout(()=>{
-   toggleViewState((UseCaseCount+1)%useCases);
- }, timerValue)
-
- var subViewWidth=150;
- var subViewHeight=300;
-
- const renderMainView = () => {
- if(UseCaseCount == 1)
-   {
-      return (
-        <View
-          style={{ width: 400,
-                   height: 400,
-                   marginLeft:40,
-                   backgroundColor:'cornsilk',
-          }}>
-          <Image
-            source={{uri: 'https://pngimg.com/uploads/lion/lion_PNG23269.png',}}
-            style={{ width: 200,
-                     height: heightImage[UseCaseCount],
-                     backgroundColor:'ivory',
-            }}/>
-          <Text
-            style={{ color: '#fff',
-                     fontSize: 46,
-                     textAlign: 'center',color: 'black',
-                     marginTop: 20}}>
-            Network Image
-          </Text>
-        </View>)
-   }
- else if(UseCaseCount ==2)
-   {
-      return (
-        <View
-          style={{ width: 400,
-                   height: 400,
-                   marginLeft:10,
-                   backgroundColor:'cornsilk',
-          }}>
-          <Image
-            source={require('./disney-1-logo-png-transparent.png')}
-            style={{ width: 200,
-                     height: 200,
-            }}/>
-          <Text
-            style={{ color: '#fff',
-                     fontSize: 46,
-                     textAlign: 'center',
-                     color: 'black',
-                     marginTop: 32 }}>
-            Local Image
-          </Text>
-        </View>)
-   }
- else if(UseCaseCount ==3)
-   {
+var subViewWidth=150;
+var subViewHeight=300;
+const renderMainView = () => {
+  if(UseCaseCount == 1)
+    {
       return (
         <>
           <View
-            style={{ flex:0.5,
-                     flexDirection:'row',
+            style={{
+                flex:0.5,
+                flexDirection:'row',
             }}>
             <View
-              style={{ width: 400,
-                       height: 400,
-                       marginLeft:30,
+              style={{ width: 250,
+                       height: 250,
+                       marginLeft:10,
+                       backgroundColor:'cornsilk',
+              }}>
+              <Image
+                source={{uri: 'https://pngimg.com/uploads/lion/lion_PNG23269.png',}}
+                style={{ width: 200,
+                         height: 200,
+                         backgroundColor:'ivory',
+                }}/>
+            </View>
+            <View
+              style={{ width: 250,
+                       height: 250,
+                       marginLeft:10,
                        backgroundColor:'cornsilk',
               }}>
               <Image
                 source={{uri: 'https://pngimg.com/uploads/tiger/tiger_PNG23244.png',}}
-                style={{  width: 200,
-                          height: 200,
-                          backgroundColor:'blue',
-              }}/>
+                style={{ width: 200,
+                         height: 200,
+                         backgroundColor:'yellow',
+                }}/>
             </View>
             <View
-              style={{ width: 400,
-                       height: 400,
-                       marginLeft:30,
+              style={{ width: 250,
+                       height: 250,
+                       marginLeft:10,
                        backgroundColor:'cornsilk',
               }}>
               <Image
-                source={require('./disney-1-logo-png-transparent.png')}
+                source={{uri: 'https://pngimg.com/uploads/paper_plane/paper_plane_PNG54.png',}}
                 style={{ width: 200,
                          height: 200,
-              }}/>
+                         backgroundColor:'mintcream',
+               }}/>
+            </View>
+
+          </View>
+          <View
+            style={{
+                flex:0.5,
+                flexDirection:'row',
+            }}>
+            <View
+              style={{ width: 250,
+                       height: 250,
+                       marginLeft:10,
+                       backgroundColor:'cornsilk',
+              }}>
+              <Image
+                source={{uri: 'https://pngimg.com/uploads/arctic_fox/arctic_fox_PNG41376.png',}}
+                style={{ width: 200,
+                         height: 200,
+                         backgroundColor:'blue',
+                }}/>
+            </View>
+            <View
+              style={{ width: 250,
+                       height: 250,
+                       marginLeft:10,
+                       backgroundColor:'cornsilk',
+              }}>
+              <Text
+                style={{ color: '#fff',
+                         fontSize: 46,
+                         textAlign: 'center',
+                         color: 'black',
+                         marginTop: 16 }}>
+                Network Image
+              </Text>
+            </View>
+            <View
+              style={{ width: 250,
+                       height: 250,
+                       marginLeft:10,
+                       backgroundColor:'cornsilk',
+              }}>
+              <Image
+                source={{uri: 'https://pngimg.com/uploads/lion/lion_PNG23269.png',}}
+                style={{ width: 200,
+                         height: 200,
+                         backgroundColor:'green',
+                }}/>
+            </View>
+          </View>
+        </>
+      )
+    }
+  else if(UseCaseCount ==2)
+     {
+      return (
+        <>
+          <View
+            style={{
+                flex:0.5,
+                flexDirection:'row',
+            }}>
+            <View
+              style={{ width: 250,
+                       height: 250,
+                       marginLeft:10,
+                       backgroundColor:'cornsilk',
+              }}>
+              <Image
+               source={require('./disney-1-logo-png-transparent.png')}
+                style={{ width: 200,
+                         height: 200,
+                         backgroundColor:'ivory',
+                }}/>
+            </View>
+            <View
+              style={{ width: 250,
+                       height: 250,
+                       marginLeft:10,
+                       backgroundColor:'cornsilk',
+              }}>
+              <Image
+                source={require('./rolls_royce_PNG36.png')}
+                style={{ width: 200,
+                         height: 200,
+                         backgroundColor:'yellow',
+                }}/>
+            </View>
+            <View
+              style={{ width: 250,
+                       height: 250,
+                       marginLeft:10,
+                       backgroundColor:'cornsilk',
+              }}>
+              <Image
+                source={require('./index.jpeg')}
+                style={{ width: 200,
+                         height: 200,
+                         backgroundColor:'mintcream',
+               }}/>
             </View>
           </View>
           <View
-            style={{ flex:0.5,
-                     flexDirection:'row',
+            style={{
+                flex:0.5,
+                flexDirection:'row',
             }}>
-          <Text
-            style={{ color: '#fff', fontSize: 46,
-                     textAlign: 'center', marginTop: 10,
-                     color:'black' }}>
-            Network Image + local Image</Text>
+            <View
+              style={{ width: 250,
+                       height: 250,
+                       marginLeft:10,
+                       backgroundColor:'cornsilk',
+              }}>
+              <Image
+                source={require('./raspberry_PNG5077.png')}
+                style={{ width: 200,
+                         height: 200,
+                         backgroundColor:'blue',
+                }}/>
+            </View>
+            <View
+              style={{ width: 250,
+                       height: 250,
+                       marginLeft:10,
+                       backgroundColor:'cornsilk',
+              }}>
+              <Text
+                style={{ color: '#fff',
+                         fontSize: 46,
+                         textAlign: 'center',
+                         color: 'black',
+                         marginTop: 16 }}>
+                Local Image
+              </Text>
+            </View>
+            <View
+              style={{ width: 250,
+                       height: 250,
+                       marginLeft:10,
+                       backgroundColor:'cornsilk',
+              }}>
+              <Image
+                source={require('./audi_PNG1767.png')}
+                style={{ width: 200,
+                         height: 200,
+                         backgroundColor:'green',
+                }}/>
+            </View>
           </View>
-        </>)
+        </>
+      )
+    }
+ else if(UseCaseCount ==3)
+   {
+       return (
+        <>
+          <View
+            style={{
+                flex:0.5,
+                flexDirection:'row',
+            }}>
+            <View
+              style={{ width: 250,
+                       height: 250,
+                       marginLeft:10,
+                       backgroundColor:'cornsilk',
+              }}>
+              <Image
+                source={{uri: 'https://pngimg.com/uploads/beach/beach_PNG86.png',}}
+                style={{ width: 200,
+                         height: 200,
+                         backgroundColor:'ivory',
+                }}/>
+            </View>
+            <View
+              style={{ width: 250,
+                       height: 250,
+                       marginLeft:10,
+                       backgroundColor:'cornsilk',
+              }}>
+               <Text
+                style={{ color: '#fff',
+                         fontSize: 46,
+                         textAlign: 'center',
+                         color: 'black',
+                         marginTop: 16 }}>
+                Network Image
+              </Text>
+            </View>
+            <View
+              style={{ width: 250,
+                       height: 250,
+                       marginLeft:10,
+                       backgroundColor:'cornsilk',
+              }}>
+             <Image
+                source={{uri: 'https://pngimg.com/uploads/peacock/peacock_PNG19.png',}}
+                style={{ width: 200,
+                         height: 200,
+                         backgroundColor:'yellow',
+                }}/>
+            </View>
+          </View>
+          <View
+            style={{
+                flex:0.5,
+                flexDirection:'row',
+            }}>
+            <View
+              style={{ width: 250,
+                       height: 250,
+                       marginLeft:10,
+                       backgroundColor:'cornsilk',
+              }}>
+              <Image
+                 source={require('./rolls_royce_PNG36.png')}
+                style={{ width: 200,
+                         height: 200,
+                         backgroundColor:'ivory',
+                }}/>
+            </View>
+            <View
+              style={{ width: 250,
+                       height: 250,
+                       marginLeft:10,
+                       backgroundColor:'cornsilk',
+              }}>
+                <Text
+                style={{ color: '#fff',
+                         fontSize: 46,
+                         textAlign: 'center',
+                         color: 'black',
+                         marginTop: 16 }}>
+                Local Image
+              </Text>
+            </View>
+            <View
+              style={{ width: 250,
+                       height: 250,
+                       marginLeft:10,
+                       backgroundColor:'cornsilk',
+              }}>
+             <Image
+                source={require('./audi_PNG1767.png')}
+                style={{ width: 200,
+                         height: 200,
+                         backgroundColor:'yellow',
+                }}/>
+            </View>
+          </View>
+        </>
+      )
    }
  else if(UseCaseCount ==4)
    {
-      return (
-        <View
+     return (
+       <View
+         style={{
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  borderWidth: 2,
+                  height: subheight,
+                  width: subwidth,
+         }}>
+         <Image
+           style={{ width: widthImage,
+                    height: heightImage,
+                    backgroundColor: 'aquamarine', }}
+           source={{uri: 'https://pngimg.com/uploads/lion/lion_PNG23269.png',}}/>
+         <Text
+           style={{ color: '#fff', fontSize: 46,color:'black',
+                    textAlign: 'center', marginTop: 32 }}>
+           Change network image in 10 sec ...
+         </Text>
+       </View>)
+    else
+      {
+        return (
+          <View
             style={{ justifyContent: 'center',
                      alignItems: 'center',
                      borderWidth: 2,
@@ -136,35 +367,20 @@ const SimpleViewApp = React.Node = () => {
                      width: subwidth,
             }}>
             <Image
-              style={{ width: widthImage, height: heightImage, backgroundColor: 'aquamarine', }}
-              source={{uri: 'https://pngimg.com/uploads/lion/lion_PNG23269.png',}}/>
-           <Text
-              style={{ color: '#fff', fontSize: 46,color:'black',
-                       textAlign: 'center', marginTop: 32 }}>
-              Change network image in 3 sec ...
-           </Text>
-        </View>)
-   } else {
-     return (
-       <View
-         style={{ justifyContent: 'center',
-                  alignItems: 'center',
-                  borderWidth: 2,
-                  height: subheight,
-                  width: subwidth,
-         }}>
-         <Image
-           style={{ width: widthImage, height: heightImage, backgroundColor: 'darksalmon', }}
-           source={{uri: 'https://pngimg.com/uploads/mango/mango_PNG9173.png',}}/>
-         <Text
-           style={{ color: '#fff', fontSize: 46,
-                    textAlign: 'center', marginTop: 32,color:'black', }}>
-           Repeat again ....</Text>
-       </View>)
-   }
- }
-return (
-  renderMainView()
-);
-};
-AppRegistry.registerComponent('SimpleViewApp', () => SimpleViewApp);
+              style={{ width: widthImage,
+                       height: heightImage,
+                       backgroundColor: 'aquamarine', }}
+              source={{uri: 'https://pngimg.com/uploads/spider_man/spider_man_PNG84.png',}}/>
+            <Text
+                style={{ color: '#fff', fontSize: 46,
+                textAlign: 'center', marginTop: 32,color:'black', }}>
+                Repeat again all cases ....
+            </Text>
+          </View>)
+      }
+  }
+  return (
+    renderMainView()
+  );
+ };
+ AppRegistry.registerComponent('SimpleViewApp', () => SimpleViewApp);

@@ -25,7 +25,7 @@ class RSkImageCacheManager {
   static void init();
   static RSkImageCacheManager& getImageCacheManagerInstance();
   sk_sp<SkImage> findImageDataInCache(const char* path);
-  void imageDataInsertInCache(const char* path,sk_sp<SkImage> imageData);
+  bool imageDataInsertInCache(const char* path,sk_sp<SkImage> imageData);
  private:
   ImageCacheMap imageCache_;
   void getCacheUsage(size_t usageArr[]);

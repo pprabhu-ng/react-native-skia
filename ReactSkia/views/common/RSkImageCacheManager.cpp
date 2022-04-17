@@ -49,20 +49,19 @@ void RSkImageCacheManager::getCacheUsage(size_t usageArr[]) {
 bool RSkImageCacheManager::evictAsNeeded() {
   int evictCount{0};
   size_t usageArr[2]={0,0};
-  getCacheUsage(usageArr);
-  if ((usageArr[CPU_MEM_ARR_INDEX] < SKIA_CPU_IMAGE_CACHE_HWM_LIMIT) &&( usageArr[GPU_MEM_ARR_INDEX] < SKIA_GPU_IMAGE_CACHE_HWM_LIMIT))
+  RSkImageCacheManager::getCacheUsage(usageArr);
+  if ((usageArr[CPU_MEM_ARR_INDEX] < SKIA_CPU_IMAGE_CACHE_HWM_LIMIT) &&
+    ( usageArr[GPU_MEM_ARR_INDEX] < SKIA_GPU_IMAGE_CACHE_HWM_LIMIT))
     return true;
+
   ImageCacheMap::iterator it=imageCache_.begin();
-  RNS_LOG_INFO("evictCount : "<<evictCount);
   while( it != imageCache_.end()) {
     if( evictCount >= EVICT_COUNT){
-      RNS_LOG_INFO("evictCount:"<<evictCount<<"EVICT_COUNT:"<<EVICT_COUNT);
       break;
     }
     if((it->second)->unique()) {
       it=imageCache_.erase(it);
       evictCount++;
-      RNS_LOG_INFO("evictCount:"<<evictCount<<"EVICT_COUNT:"<<EVICT_COUNT);
     } else {
       ++it;
     }
@@ -94,10 +93,8 @@ void printCacheUsage() {
   RNS_LOG_INFO("Memory consumed for this run in CPU CACHE :"<<(usageArr[CPU_MEM_ARR_INDEX] - prevCpuUsedMem));
   prevCpuUsedMem = usageArr[CPU_MEM_ARR_INDEX];
 #ifdef RNS_SHELL_HAS_GPU_SUPPORT
-  RnsShell::WindowContext::grTransactionBegin();
   RNS_LOG_INFO("Memory consumed for this run in GPU CACHE:"<<(usageArr[GPU_MEM_ARR_INDEX] - prevGpuUsedMem));
   prevGpuUsedMem = usageArr[GPU_MEM_ARR_INDEX];
-  RnsShell::WindowContext::grTransactionEnd();
 #endif
 }
 #endif//RNS_IMAGE_CACHE_USAGE_DEBUG
@@ -110,13 +107,15 @@ sk_sp<SkImage> RSkImageCacheManager::findImageDataInCache(const char* path) {
   return imageData;
 }
 
-void RSkImageCacheManager::imageDataInsertInCache(const char* path,sk_sp<SkImage> imageData) {
+bool RSkImageCacheManager::imageDataInsertInCache(const char* path,sk_sp<SkImage> imageData) {
   std::scoped_lock lock(imageCacheLock);
   if(evictAsNeeded() && imageData) {
     imageCache_.insert(std::pair<std::string, sk_sp<SkImage>>(path,imageData));
     RNS_LOG_INFO("New Entry in Map..."<<" file :"<<path);
+    return true;
   } else {
     RNS_LOG_ERROR("Insert image data to cache failed... :"<<" file :" << path);
+    return false;
   }
 }
 
