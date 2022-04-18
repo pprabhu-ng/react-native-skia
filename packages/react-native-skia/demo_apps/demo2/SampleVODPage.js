@@ -33,14 +33,14 @@ const thumbnailImagePath = [
       require('./images/thumbnail_300x160/22.jpg'),
       require('./images/thumbnail_300x160/18.jpg'),
       require('./images/thumbnail_300x160/17.jpg'),
-      require('./images/thumbnail_300x160/1.jpg'),
       require('./images/thumbnail_300x160/2.jpg'),
-      require('./images/thumbnail_300x160/3.jpg'),
-      require('./images/thumbnail_300x160/4.jpg'),
       require('./images/thumbnail_300x160/5.jpg'),
-      require('./images/thumbnail_300x160/6.jpg'),
-      require('./images/thumbnail_300x160/7.jpg'),
       require('./images/thumbnail_300x160/8.jpg'),
+      require('./images/thumbnail_300x160/12.jpg'),
+      require('./images/thumbnail_300x160/21.jpg'),
+      require('./images/thumbnail_300x160/24.jpg'),
+      require('./images/thumbnail_300x160/14.jpg'),
+      require('./images/thumbnail_300x160/16.jpg'),
 ];
 const posterImagePath_716x300 = [
       require('./images/poster_716x300/1.jpg'),
@@ -67,14 +67,14 @@ const posterImagePath_716x300 = [
       require('./images/poster_716x300/22.jpg'),
       require('./images/poster_716x300/18.jpg'),
       require('./images/poster_716x300/17.jpg'),
-      require('./images/poster_716x300/1.jpg'),
       require('./images/poster_716x300/2.jpg'),
-      require('./images/poster_716x300/3.jpg'),
-      require('./images/poster_716x300/4.jpg'),
       require('./images/poster_716x300/5.jpg'),
-      require('./images/poster_716x300/6.jpg'),
-      require('./images/poster_716x300/7.jpg'),
       require('./images/poster_716x300/8.jpg'),
+      require('./images/poster_716x300/12.jpg'),
+      require('./images/poster_716x300/21.jpg'),
+      require('./images/poster_716x300/24.jpg'),
+      require('./images/poster_716x300/14.jpg'),
+      require('./images/poster_716x300/16.jpg'),
 ];
 const posterImagePath_512x288 = [
       require('./images/poster_512x288/1.jpg'),
@@ -101,36 +101,37 @@ const posterImagePath_512x288 = [
       require('./images/poster_512x288/22.jpg'),
       require('./images/poster_512x288/18.jpg'),
       require('./images/poster_512x288/17.jpg'),
-      require('./images/poster_512x288/1.jpg'),
       require('./images/poster_512x288/2.jpg'),
-      require('./images/poster_512x288/3.jpg'),
-      require('./images/poster_512x288/4.jpg'),
       require('./images/poster_512x288/5.jpg'),
-      require('./images/poster_512x288/6.jpg'),
-      require('./images/poster_512x288/7.jpg'),
       require('./images/poster_512x288/8.jpg'),
+      require('./images/poster_512x288/12.jpg'),
+      require('./images/poster_512x288/21.jpg'),
+      require('./images/poster_512x288/24.jpg'),
+      require('./images/poster_512x288/14.jpg'),
+      require('./images/poster_512x288/16.jpg'),
 ];
 
 var posterImagePath = windowSize.height > 720 ? posterImagePath_716x300 : posterImagePath_512x288 ;
 
 const FocusableComponent = (props) =>  {
+   let [state, setState] = useState({imgscale: 1,bw:0});
    const onPress = () => {}
-  const countT = props.count;	
 
    const onBlur = (e) => {
        console.log("onBlur---------" )
-       props.change({index:props.count,type:'blur'});
+       setState({ imgscale: 1, bw:0});
    }
 
    const onFocus = (e) => {
        console.log("onFocus---------" )
-       props.change({index:props.count,type:'focus'});
+       setState({ imgscale: 1.2 , bw:2});
+       props.change((props.count));
    }
 
    if(props.count >= 24) {
        return(
           <TouchableOpacity isTVSelectable='true' activeOpacity={0.75} onBlur={onBlur} onFocus={onFocus} style={[styles.elementView]} >
-             <Image style={{transform:[{scale: 2}],width:300,height:160,marginLeft:30,marginTop:16}} source={thumbnailImagePath[props.count]}>
+             <Image style={{transform:[{scale: state.imgscale}],width:300,height:160,marginLeft:30,marginTop:16}} source={thumbnailImagePath[props.count]}>
              </Image>
           </TouchableOpacity>
       );
@@ -139,21 +140,21 @@ const FocusableComponent = (props) =>  {
           <TouchableHighlight isTVSelectable='true'  onPress={onPress} activeOpacity={0.9} underlayColor='transparent'
                              onBlur={onBlur} onFocus={onFocus}
                              style={[styles.elementView]} >
-             <Image style={{transform:[{scale: 2}],width:300,height:160,marginLeft:30,marginTop:16}} source={thumbnailImagePath[props.count]} resizeMode="cover">
+             <Image style={{transform:[{scale: state.imgscale}],width:300,height:160,marginLeft:30,marginTop:16}} source={thumbnailImagePath[props.count]} resizeMode="cover">
              </Image>
           </TouchableHighlight>
        );
    } else if((props.count >= 8)) {
        return (
           <Pressable isTVSelectable='true' onBlur={onBlur} onFocus={onFocus} style={[styles.elementView]} >
-             <Image style={{transform:[{scale: 2}],width:300,height:160,marginLeft:25,marginTop:10}} source={thumbnailImagePath[props.count]}>
+             <Image style={{transform:[{scale: state.imgscale}],width:300,height:160,marginLeft:25,marginTop:10}} source={thumbnailImagePath[props.count]}>
              </Image>
           </Pressable>
        );
    } else {
        return (
           <Pressable isTVSelectable='true' onBlur={onBlur} onFocus={onFocus} style={[styles.elementView]} >
-             <Image style={{width:300,height:160,marginLeft:25,marginTop:10,borderColor:'lightcyan',borderWidth:props.stateVal.list[props.count].borderWidth}} source={thumbnailImagePath[props.count]}>
+             <Image style={{borderWidth:state.bw,borderColor:'lightcyan',width:300,height:160,marginLeft:25,marginTop:10}} source={thumbnailImagePath[props.count]}>
              </Image>
           </Pressable>
        );
@@ -162,54 +163,17 @@ const FocusableComponent = (props) =>  {
 
 const SampleVODPage = (props) => {
 
-    let [stateValue, setState] = useState({list:[
-	     {imgscale: 1,borderWidth:0},
-	     {imgscale: 1,borderWidth:0},
-	     {imgscale: 1,borderWidth:0},
-	     {imgscale: 1,borderWidth:0},
-	     {imgscale: 1,borderWidth:0},
-	     {imgscale: 1,borderWidth:0},
-	     {imgscale: 1,borderWidth:0},
-	     {imgscale: 1,borderWidth:0},
-	     {imgscale: 1,borderWidth:0},
-	     {imgscale: 1,borderWidth:0},
-	     {imgscale: 1,borderWidth:0},
-	     {imgscale: 1,borderWidth:0},
-	     {imgscale: 1,borderWidth:0},
-	     {imgscale: 1,borderWidth:0},
-	     {imgscale: 1,borderWidth:0},
-	     {imgscale: 1,borderWidth:0},
-	     {imgscale: 1,borderWidth:0},
-	     {imgscale: 1,borderWidth:0},
-	     {imgscale: 1,borderWidth:0},
-	     {imgscale: 1,borderWidth:0},
-	     {imgscale: 1,borderWidth:0},
-	     {imgscale: 1,borderWidth:0},
-	     {imgscale: 1,borderWidth:0},
-	     {imgscale: 1,borderWidth:0},
-	     {imgscale: 1,borderWidth:0}],
-	     index:2}
-    );
+    let [index, setIndex] = useState(0);
     let content = props.contentData;
 
     function changeBackground (value) {
-
-       let tempArray = stateValue.list.slice();
-       if(value.type == 'focus') {	    
-          tempArray[value.index][imgscale] = 1.2;	    
-          tempArray[value.index][borderWidth] = 2;
-       } else {
-          tempArray[value.index][imgscale] = 1;	    
-          tempArray[value.index][borderWidth] = 0;
-
-       }
-       setState({list:tempArray,index:value});
+       setIndex(value);
     }
 
     const addItems = (n) => {
        var arr = [];
        for (var i=n; i<n+8; i++){
-          arr.push(<FocusableComponent count={i} stateVal={stateValue} change={changeBackground}></FocusableComponent>);
+          arr.push(<FocusableComponent count={i} change={changeBackground}></FocusableComponent>);
        }
        return arr;
     }
@@ -241,7 +205,7 @@ const SampleVODPage = (props) => {
              {horizontalScrollView(8)}
              {horizontalScrollViewHeader('Recommendations')}
              {horizontalScrollView(16)}
-             {horizontalScrollViewHeader('WatchList')}
+             {horizontalScrollViewHeader('My List')}
              {horizontalScrollView(24)}
           </ScrollView>
        );
@@ -249,18 +213,18 @@ const SampleVODPage = (props) => {
 
     const posterView = () => {
         return(
-          <Image source={posterImagePath[stateValue.index]} style={styles.posterView} resizeMode="contain">
+          <Image source={posterImagePath[index]} style={styles.posterView} resizeMode="contain">
           </Image>
         );
     }
 
     const posterContent = () => {
-        let text1 = content[stateValue.index].duration.concat("  |  ", content[stateValue.index].genre, "  |  ", content[stateValue.index].year)
+        let text1 = content[index].duration.concat("  |  ", content[index].genre, "  |  ", content[index].year)
         return (
            <View style={styles.posterContentView}>
-                <Text style={styles.titleText}>{content[stateValue.index].title}</Text>
+                <Text style={styles.titleText}>{content[index].title}</Text>
                 <Text style={[styles.titleTextContent,{fontSize:titleTextGenreSize}]}>{text1}</Text>
-                <Text style={[styles.titleTextContent,{fontSize:titleTextContentSize}]}>{content[stateValue.index].description}</Text>
+                <Text style={[styles.titleTextContent,{fontSize:titleTextContentSize}]}>{content[index].description}</Text>
            </View>
          );
     }

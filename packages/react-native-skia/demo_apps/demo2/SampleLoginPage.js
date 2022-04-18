@@ -5,7 +5,8 @@ import { Dimensions , StyleSheet} from "react-native";
 import SampleVODPage from './SampleVODPage';
 
 const windowSize = Dimensions.get('window');
-
+const localContentData = require('./dataContent.json');
+let fetchServerData = !true;
 const TextInputBlock = (props) => {
     let [tiState,setTiState] = useState({borderColor:'black',shadowOpacity:0});
     const onFocus = () => {
@@ -14,11 +15,14 @@ const TextInputBlock = (props) => {
     const onBlur = () => {
        setTiState({borderColor:'black',shadowOpacity:0});
     }
+    const onPress = () => {
+    }
     return (
-        <TextInput style={[styles.textinput,styles.textinputView,{borderColor:tiState.borderColor,shadowOpacity:tiState.shadowOpacity}]} 
-	     placeholder={props.placeholderText} placeholderTextColor="dimgrey"
+        <TextInput style={[styles.textinput,styles.textinputView,{borderColor:tiState.borderColor,shadowOpacity:tiState.shadowOpacity}]}
+             placeholder={props.placeholderText} placeholderTextColor="dimgrey"
              secureTextEntry={props.secured} defaultValue={props.defaultValue}
-             onFocus={onFocus} onBlur={onBlur} onChangeText={props.onChangeText}/>
+             onFocus={onFocus} onBlur={onBlur}
+             onChangeText={props.onChangeText}/>
     );
 
 }
@@ -29,7 +33,7 @@ const SampleLoginPage = () => {
     let [requestStatus,setRequestStatus] = useState({text:"SIGN IN"});
     let [content,setContent] = useState([]);
     let [spinValue] = useState(new Animated.Value(0));
-    let [serverIp,setServerIp] = useState("http://192.168.0.106:9081");
+    let [serverIp,setServerIp] = useState("http://192.168.47.118:9081");
 
     const startFetchVODData = () => {
        var request = new XMLHttpRequest();
@@ -63,7 +67,14 @@ const SampleLoginPage = () => {
     const onPress = () => {
        setRequestStatus({text:"Loading"})
        setTimeout(()=> {
-         startFetchVODData()
+         if(fetchServerData) {
+            startFetchVODData()
+         } else {
+            setContent(localContentData);
+            setTimeout(()=> {
+               setLoginStatus(true);
+            },2000);
+         }
        },3000);
        startRotation();
     }
@@ -103,12 +114,12 @@ const SampleLoginPage = () => {
 
        } else  if (requestStatus.text == "Error") {
           return (
-	      <>	  
+            <>
               <TouchableHighlight underlayColor='#61dafb' style={[styles.submitView]} onPress={onPress} activeOpacity={0.65}>
                   <Text style={{margin:5,color:'dimgrey' , fontSize:windowSize.height/35 , fontWeight:'bold',textAlign:'center'}}>{"SIGN IN"}</Text>
               </TouchableHighlight>
-              <Text style={{margin:10,color:'red' , fontSize:windowSize.height/45 ,textAlign:'center'}}>{"Sign in request failed.Please check your server connection."}</Text>
-	      </>	  
+              <Text style={{margin:15,color:'red' , fontSize:windowSize.height/45 ,textAlign:'center'}}>{"Sign in request failed.Please check your server connection."}</Text>
+            </>
           );
        } else {
           return (
@@ -152,7 +163,7 @@ const styles = StyleSheet.create({
        width : '38%',
        height : windowSize.height/15,
        borderWidth : 3,
-       borderRadius : 12,	    
+       borderRadius : 12,
        backgroundColor:'transparent',
        shadowColor : 'black',
        shadowRadius : 10,
@@ -166,10 +177,10 @@ const styles = StyleSheet.create({
        marginTop : 30,
        alignItems : 'center',
        padding: 20,
-       width : '13%',	    
+       width : '13%',
        borderWidth: 3,
-       borderRadius : 80,	    
-       backgroundColor:'transparent',	    
+       borderRadius : 80,
+       backgroundColor:'transparent',
     }
 });
 
