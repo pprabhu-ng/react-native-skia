@@ -17,8 +17,10 @@ using namespace std;
 #define SKIA_CPU_IMAGE_CACHE_HWM_LIMIT  SKIA_CPU_IMAGE_CACHE_LIMIT *.95 //95% as High Water mark level
 #define SKIA_GPU_IMAGE_CACHE_HWM_LIMIT  SKIA_CPU_IMAGE_CACHE_LIMIT *.95 //95% as High Water mark level
 #define EVICT_COUNT  2 // Max No. of entries to be evicted in single run
-std::mutex RnsShell::WindowContext::GrTransactionLock;
 
+#ifdef RNS_SHELL_HAS_GPU_SUPPORT
+std::mutex RnsShell::WindowContext::grTransactionLock_;
+#endif
 namespace facebook {
 namespace react {
 
@@ -109,7 +111,7 @@ sk_sp<SkImage> RSkImageCacheManager::findImageDataInCache(const char* path) {
 
 bool RSkImageCacheManager::imageDataInsertInCache(const char* path,sk_sp<SkImage> imageData) {
   std::scoped_lock lock(imageCacheLock);
-  if(evictAsNeeded() && imageData) {
+  if(imageData && evictAsNeeded()) {
     imageCache_.insert(std::pair<std::string, sk_sp<SkImage>>(path,imageData));
     RNS_LOG_INFO("New Entry in Map..."<<" file :"<<path);
     return true;

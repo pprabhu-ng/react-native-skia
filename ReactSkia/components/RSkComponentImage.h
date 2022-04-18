@@ -25,10 +25,10 @@ class RSkComponentImage final : public RSkComponent {
  private :
   RSkImageCacheManager imageCacheManagerInstance_;
   ImgProps imageProps;
-  std::function<void(const char*,char*,int)> networkImageDataCallback;
+  function<void(const char*,char*,int)> networkImageDataCallback;
 
   sk_sp<SkImage> getLocalImageData(ImageSource source);
-  string generateUriPath(string path);
+  inline string generateUriPath(string path);
 
   void drawAndSubmit();
   void requestNetworkImageData(ImageSource source);

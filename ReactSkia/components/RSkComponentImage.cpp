@@ -96,7 +96,7 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
     drawBorder(canvas,frame,imageBorderMetrics,imageProps.backgroundColor);
   } else {
   /* Emitting Image Load failed Event*/
-    RNS_LOG_ERROR("Image not loaded");
+    RNS_LOG_ERROR("Image not loaded :"<<imageProps.sources[0].uri.c_str());
     imageEventEmitter->onError();
   }
 }
@@ -169,9 +169,11 @@ void RSkComponentImage::requestNetworkImageData(ImageSource source) {
       drawAndSubmit();
     } else {
       sk_sp<SkData> data = SkData::MakeWithCopy(response,size);
-      if (!data)
+      if (!data){
         RNS_LOG_ERROR("Unable to make SkData for path : " << path);
-        sk_sp<SkImage> imageData = SkImage::MakeFromEncoded(data);
+        return;
+      }  
+      sk_sp<SkImage> imageData = SkImage::MakeFromEncoded(data);
         //Add in cache if image data is valid
       if(imageData && imageCacheManagerInstance_.imageDataInsertInCache(path, imageData))
         drawAndSubmit();

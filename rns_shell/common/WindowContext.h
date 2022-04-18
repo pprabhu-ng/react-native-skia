@@ -47,8 +47,8 @@ public:
 
 #ifdef RNS_SHELL_HAS_GPU_SUPPORT
     GrDirectContext* directContext() const { return context_.get(); }
-    static void grTransactionBegin() { GrTransactionLock.lock(); }
-    static void grTransactionEnd() { GrTransactionLock.unlock(); }
+    static void grTransactionBegin() { grTransactionLock_.lock(); }
+    static void grTransactionEnd() { grTransactionLock_.unlock(); }
 #endif
     int width() const { return width_; }
     int height() const { return height_; }
@@ -60,7 +60,7 @@ protected:
 
 #ifdef RNS_SHELL_HAS_GPU_SUPPORT
     sk_sp<GrDirectContext> context_;
-    static std::mutex GrTransactionLock;
+    static std::mutex grTransactionLock_;
 #endif
     int               width_;
     int               height_;
