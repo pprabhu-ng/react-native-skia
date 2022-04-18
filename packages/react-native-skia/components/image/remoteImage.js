@@ -18,21 +18,15 @@ import {
 } from 'react-native';
 import { useState } from 'react';
 
-var subwidth = 800
-var subheight =500
-var widthImage=400;
-var heightImage=400;
-
 const SimpleViewApp = React.Node = () => {
 var useCases =5;
 var timerValue=10000;
+
 const [UseCaseCount, toggleViewState] = useState(true);
 const timer = setTimeout(()=>{
     toggleViewState((UseCaseCount+1)%useCases);
     }, timerValue)
 
-var subViewWidth=150;
-var subViewHeight=300;
 const renderMainView = () => {
   if(UseCaseCount == 1)
     {
@@ -40,17 +34,16 @@ const renderMainView = () => {
         <>
           <View
             style={{
-                flex:0.5,
-                flexDirection:'row',
+              flexDirection:'row',
             }}>
             <View
               style={{ width: 250,
                        height: 250,
-                       marginLeft:10,
+                       margin:10,
                        backgroundColor:'cornsilk',
               }}>
               <Image
-                source={{uri: 'https://pngimg.com/uploads/lion/lion_PNG23269.png',}}
+                source={{uri: 'https://pngimg.com/uploads/lion/lion_PNG23269.png'}}
                 style={{ width: 200,
                          height: 200,
                          backgroundColor:'ivory',
@@ -59,11 +52,11 @@ const renderMainView = () => {
             <View
               style={{ width: 250,
                        height: 250,
-                       marginLeft:10,
+                       margin:10,
                        backgroundColor:'cornsilk',
               }}>
               <Image
-                source={{uri: 'https://pngimg.com/uploads/tiger/tiger_PNG23244.png',}}
+                source={{uri: 'https://pngimg.com/uploads/tiger/tiger_PNG23244.png'}}
                 style={{ width: 200,
                          height: 200,
                          backgroundColor:'yellow',
@@ -72,11 +65,11 @@ const renderMainView = () => {
             <View
               style={{ width: 250,
                        height: 250,
-                       marginLeft:10,
+                       margin:10,
                        backgroundColor:'cornsilk',
               }}>
               <Image
-                source={{uri: 'https://pngimg.com/uploads/paper_plane/paper_plane_PNG54.png',}}
+                source={{uri: 'https://pngimg.com/uploads/paper_plane/paper_plane_PNG54.png'}}
                 style={{ width: 200,
                          height: 200,
                          backgroundColor:'mintcream',
@@ -86,17 +79,16 @@ const renderMainView = () => {
           </View>
           <View
             style={{
-                flex:0.5,
                 flexDirection:'row',
             }}>
             <View
               style={{ width: 250,
                        height: 250,
-                       marginLeft:10,
+                       margin:10,
                        backgroundColor:'cornsilk',
               }}>
               <Image
-                source={{uri: 'https://pngimg.com/uploads/arctic_fox/arctic_fox_PNG41376.png',}}
+                source={{uri: 'https://pngimg.com/uploads/arctic_fox/arctic_fox_PNG41376.png'}}
                 style={{ width: 200,
                          height: 200,
                          backgroundColor:'blue',
@@ -105,7 +97,7 @@ const renderMainView = () => {
             <View
               style={{ width: 250,
                        height: 250,
-                       marginLeft:10,
+                       margin:10,
                        backgroundColor:'cornsilk',
               }}>
               <Text
@@ -120,11 +112,11 @@ const renderMainView = () => {
             <View
               style={{ width: 250,
                        height: 250,
-                       marginLeft:10,
+                       margin:10,
                        backgroundColor:'cornsilk',
               }}>
               <Image
-                source={{uri: 'https://pngimg.com/uploads/lion/lion_PNG23269.png',}}
+                source={{uri: 'https://pngimg.com/uploads/panda/panda_PNG10.png'}}
                 style={{ width: 200,
                          height: 200,
                          backgroundColor:'green',
@@ -140,13 +132,12 @@ const renderMainView = () => {
         <>
           <View
             style={{
-                flex:0.5,
                 flexDirection:'row',
             }}>
             <View
               style={{ width: 250,
                        height: 250,
-                       marginLeft:10,
+                       margin:10,
                        backgroundColor:'cornsilk',
               }}>
               <Image
@@ -159,7 +150,7 @@ const renderMainView = () => {
             <View
               style={{ width: 250,
                        height: 250,
-                       marginLeft:10,
+                       margin:10,
                        backgroundColor:'cornsilk',
               }}>
               <Image
@@ -172,7 +163,7 @@ const renderMainView = () => {
             <View
               style={{ width: 250,
                        height: 250,
-                       marginLeft:10,
+                       margin:10,
                        backgroundColor:'cornsilk',
               }}>
               <Image
@@ -185,13 +176,12 @@ const renderMainView = () => {
           </View>
           <View
             style={{
-                flex:0.5,
                 flexDirection:'row',
             }}>
             <View
               style={{ width: 250,
                        height: 250,
-                       marginLeft:10,
+                       margin:10,
                        backgroundColor:'cornsilk',
               }}>
               <Image
@@ -204,7 +194,7 @@ const renderMainView = () => {
             <View
               style={{ width: 250,
                        height: 250,
-                       marginLeft:10,
+                       margin:10,
                        backgroundColor:'cornsilk',
               }}>
               <Text
@@ -219,7 +209,7 @@ const renderMainView = () => {
             <View
               style={{ width: 250,
                        height: 250,
-                       marginLeft:10,
+                       margin:10,
                        backgroundColor:'cornsilk',
               }}>
               <Image
@@ -239,17 +229,16 @@ const renderMainView = () => {
         <>
           <View
             style={{
-                flex:0.5,
                 flexDirection:'row',
             }}>
             <View
               style={{ width: 250,
                        height: 250,
-                       marginLeft:10,
+                       margin:10,
                        backgroundColor:'cornsilk',
               }}>
               <Image
-                source={{uri: 'https://pngimg.com/uploads/beach/beach_PNG86.png',}}
+                source={{uri: 'https://pngimg.com/uploads/beach/beach_PNG86.png'}}
                 style={{ width: 200,
                          height: 200,
                          backgroundColor:'ivory',
@@ -258,7 +247,7 @@ const renderMainView = () => {
             <View
               style={{ width: 250,
                        height: 250,
-                       marginLeft:10,
+                       margin:10,
                        backgroundColor:'cornsilk',
               }}>
                <Text
@@ -273,11 +262,11 @@ const renderMainView = () => {
             <View
               style={{ width: 250,
                        height: 250,
-                       marginLeft:10,
+                       margin:10,
                        backgroundColor:'cornsilk',
               }}>
              <Image
-                source={{uri: 'https://pngimg.com/uploads/peacock/peacock_PNG19.png',}}
+                source={{uri: 'https://pngimg.com/uploads/peacock/peacock_PNG19.png'}}
                 style={{ width: 200,
                          height: 200,
                          backgroundColor:'yellow',
@@ -286,13 +275,12 @@ const renderMainView = () => {
           </View>
           <View
             style={{
-                flex:0.5,
                 flexDirection:'row',
             }}>
             <View
               style={{ width: 250,
                        height: 250,
-                       marginLeft:10,
+                       margin:10,
                        backgroundColor:'cornsilk',
               }}>
               <Image
@@ -305,7 +293,7 @@ const renderMainView = () => {
             <View
               style={{ width: 250,
                        height: 250,
-                       marginLeft:10,
+                       margin:10,
                        backgroundColor:'cornsilk',
               }}>
                 <Text
@@ -320,7 +308,7 @@ const renderMainView = () => {
             <View
               style={{ width: 250,
                        height: 250,
-                       marginLeft:10,
+                       margin:10,
                        backgroundColor:'cornsilk',
               }}>
              <Image
@@ -335,27 +323,28 @@ const renderMainView = () => {
       )
    }
  else if(UseCaseCount ==4)
-   {
+   { 
      return (
        <View
          style={{
                   justifyContent: 'center',
                   alignItems: 'center',
                   borderWidth: 2,
-                  height: subheight,
-                  width: subwidth,
+                  height: 500,
+                  width: 800,
          }}>
          <Image
-           style={{ width: widthImage,
-                    height: heightImage,
+           style={{ width: 400,
+                    height: 400,
                     backgroundColor: 'aquamarine', }}
-           source={{uri: 'https://pngimg.com/uploads/lion/lion_PNG23269.png',}}/>
+           source={{uri: 'https://pngimg.com/uploads/lion/lion_PNG23269.png'}}/>
          <Text
            style={{ color: '#fff', fontSize: 46,color:'black',
                     textAlign: 'center', marginTop: 32 }}>
            Change network image in 10 sec ...
          </Text>
        </View>)
+     }
     else
       {
         return (
@@ -363,14 +352,14 @@ const renderMainView = () => {
             style={{ justifyContent: 'center',
                      alignItems: 'center',
                      borderWidth: 2,
-                     height: subheight,
-                     width: subwidth,
+                     height: 500,
+                     width: 800,
             }}>
             <Image
-              style={{ width: widthImage,
-                       height: heightImage,
+              style={{ width: 400,
+                       height: 400,
                        backgroundColor: 'aquamarine', }}
-              source={{uri: 'https://pngimg.com/uploads/spider_man/spider_man_PNG84.png',}}/>
+              source={{uri: 'https://pngimg.com/uploads/spider_man/spider_man_PNG84.png'}}/>
             <Text
                 style={{ color: '#fff', fontSize: 46,
                 textAlign: 'center', marginTop: 32,color:'black', }}>
