@@ -125,7 +125,7 @@ sk_sp<SkImage> RSkComponentImage::getLocalImageData(ImageSource source) {
   return imageData;
 }
 
-string RSkComponentImage::generateUriPath(string path) {
+inline string RSkComponentImage::generateUriPath(string path) {
   if(path.substr(0, 14) == "file://assets/")
     path = "./" + path.substr(7);
   return path;
@@ -158,27 +158,29 @@ void RSkComponentImage::drawAndSubmit() {
   layer()->client().notifyFlushRequired();
 }
 
+// callback for remoteImageData
+void RSkComponentImage::networkImageDataCallback(const char* path, char* response, int size) {
+  // Responce callback from network. Get image data, insert in Cache and call Onpaint
+  sk_sp<SkImage> findImageData = imageCacheManagerInstance_.findImageDataInCache(path);
+  if(findImageData) {
+    drawAndSubmit();
+  } else {
+    sk_sp<SkData> data = SkData::MakeWithCopy(response,size);
+    if (!data){
+      RNS_LOG_ERROR("Unable to make SkData for path : " << path);
+      return;
+    }
+    sk_sp<SkImage> imageData = SkImage::MakeFromEncoded(data);
+      //Add in cache if image data is valid
+    if(imageData && imageCacheManagerInstance_.imageDataInsertInCache(path, imageData))
+      drawAndSubmit();
+  }
+}
+
 void RSkComponentImage::requestNetworkImageData(ImageSource source) {
   auto sharedCurlNetworking = CurlNetworking::sharedCurlNetworking();
   CurlRequest *curlRequest = new CurlRequest(nullptr,source.uri.c_str(),0,"GET");
-  // callback for remoteImageData
-  networkImageDataCallback = [&](const char* path, char* response, int size) {
-    // Responce callback from network. Get image data, insert in Cache and call Onpaint
-    sk_sp<SkImage> findImageData = imageCacheManagerInstance_.findImageDataInCache(path);
-    if(findImageData) {
-      drawAndSubmit();
-    } else {
-      sk_sp<SkData> data = SkData::MakeWithCopy(response,size);
-      if (!data){
-        RNS_LOG_ERROR("Unable to make SkData for path : " << path);
-        return;
-      }  
-      sk_sp<SkImage> imageData = SkImage::MakeFromEncoded(data);
-        //Add in cache if image data is valid
-      if(imageData && imageCacheManagerInstance_.imageDataInsertInCache(path, imageData))
-        drawAndSubmit();
-    }
-  };
+
   folly::dynamic query = folly::dynamic::object();
   curlRequest->curlResponse.responseBuffer=(char *)malloc(1);
 
