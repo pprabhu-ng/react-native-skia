@@ -23,7 +23,6 @@ class RSkComponentImage final : public RSkComponent {
   RnsShell::LayerInvalidateMask updateComponentProps(const ShadowView &newShadowView,bool forceUpdate) override;
 
  private :
-  RSkImageCacheManager imageCacheManagerInstance_;
   ImgProps imageProps;
 
   sk_sp<SkImage> getLocalImageData(ImageSource source);
@@ -31,7 +30,7 @@ class RSkComponentImage final : public RSkComponent {
 
   inline string generateUriPath(string path);
   void drawAndSubmit();
-  void networkImageDataCallback(const char* path, char* response, int size);
+  void processImageData(const char* path, char* response, int size);
 
  protected:
   void OnPaint(SkCanvas *canvas) override;

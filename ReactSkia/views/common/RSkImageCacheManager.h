@@ -22,12 +22,16 @@ typedef facebook::better::map <string,sk_sp<SkImage>> ImageCacheMap;
 
 class RSkImageCacheManager {
  public:
+  ~RSkImageCacheManager();
+  static RSkImageCacheManager* getImageCacheManagerInstance();
   static void init();
-  static RSkImageCacheManager& getImageCacheManagerInstance();
   sk_sp<SkImage> findImageDataInCache(const char* path);
   bool imageDataInsertInCache(const char* path,sk_sp<SkImage> imageData);
  private:
+  static RSkImageCacheManager *imageCacheManagerInstance_;
   ImageCacheMap imageCache_;
+  RSkImageCacheManager();
+
   void getCacheUsage(size_t usageArr[]);
   bool evictAsNeeded();
 

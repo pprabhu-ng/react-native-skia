@@ -19,7 +19,7 @@ using namespace std;
 #define EVICT_COUNT  2 // Max No. of entries to be evicted in single run
 
 #ifdef RNS_SHELL_HAS_GPU_SUPPORT
-std::mutex RnsShell::WindowContext::grTransactionLock_;
+std::mutex RnsShell::WindowContext::grTransactionMutex_;
 #endif
 namespace facebook {
 namespace react {
@@ -28,9 +28,16 @@ namespace react {
 #define GPU_MEM_ARR_INDEX 1
 std::mutex imageCacheLock;
 
-RSkImageCacheManager& RSkImageCacheManager::getImageCacheManagerInstance() {
-  static RSkImageCacheManager imageCacheManagerInstance;
-  return imageCacheManagerInstance;
+RSkImageCacheManager* RSkImageCacheManager::imageCacheManagerInstance_{nullptr};
+
+RSkImageCacheManager::RSkImageCacheManager() { };
+RSkImageCacheManager::~RSkImageCacheManager() { };
+
+RSkImageCacheManager* RSkImageCacheManager::getImageCacheManagerInstance() {
+  if (!imageCacheManagerInstance_) {
+    imageCacheManagerInstance_ = new RSkImageCacheManager();
+  }
+  return imageCacheManagerInstance_;
 }
 
 void RSkImageCacheManager::getCacheUsage(size_t usageArr[]) {
@@ -91,7 +98,7 @@ void RSkImageCacheManager::init() {
 void printCacheUsage() {
   static size_t prevCpuUsedMem{0},prevGpuUsedMem{0};
   size_t usageArr[2]={0,0};
-  RSkImageCacheManager::getCacheUsage(usageArr);
+  getCacheUsage(usageArr);
   RNS_LOG_INFO("Memory consumed for this run in CPU CACHE :"<<(usageArr[CPU_MEM_ARR_INDEX] - prevCpuUsedMem));
   prevCpuUsedMem = usageArr[CPU_MEM_ARR_INDEX];
 #ifdef RNS_SHELL_HAS_GPU_SUPPORT
@@ -113,7 +120,7 @@ bool RSkImageCacheManager::imageDataInsertInCache(const char* path,sk_sp<SkImage
   std::scoped_lock lock(imageCacheLock);
   if(imageData && evictAsNeeded()) {
     imageCache_.insert(std::pair<std::string, sk_sp<SkImage>>(path,imageData));
-    RNS_LOG_INFO("New Entry in Map..."<<" file :"<<path);
+    RNS_LOG_DEBUG("New Entry in Map..."<<" file :"<<path);
     return true;
   } else {
     RNS_LOG_ERROR("Insert image data to cache failed... :"<<" file :" << path);
