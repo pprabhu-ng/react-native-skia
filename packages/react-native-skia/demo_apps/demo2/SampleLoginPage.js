@@ -15,14 +15,17 @@ const TextInputBlock = (props) => {
     const onBlur = () => {
        setTiState({borderColor:'black',shadowOpacity:0});
     }
-    const onPress = () => {
+    const onSubmitEditing = () => {
+       if(props.nextRef) {
+          props.nextRef.current.focus();
+       }
     }
     return (
-        <TextInput style={[styles.textinput,styles.textinputView,{borderColor:tiState.borderColor,shadowOpacity:tiState.shadowOpacity}]}
+        <TextInput ref={props.currentRef} style={[styles.textinput,styles.textinputView,{borderColor:tiState.borderColor,shadowOpacity:tiState.shadowOpacity}]}
              placeholder={props.placeholderText} placeholderTextColor="dimgrey"
              secureTextEntry={props.secured} defaultValue={props.defaultValue}
              onFocus={onFocus} onBlur={onBlur}
-             onChangeText={props.onChangeText}/>
+             onChangeText={props.onChangeText} onSubmitEditing={onSubmitEditing}/>
     );
 
 }
@@ -34,6 +37,8 @@ const SampleLoginPage = () => {
     let [content,setContent] = useState([]);
     let [spinValue] = useState(new Animated.Value(0));
     let [serverIp,setServerIp] = useState("http://192.168.47.118:9081");
+    let usrRef = useRef();
+    let pswdRef = useRef();
 
     const startFetchVODData = () => {
        var request = new XMLHttpRequest();
@@ -132,10 +137,10 @@ const SampleLoginPage = () => {
 
     const loginPage = () => {
       return (
-          <ImageBackground style={styles.backgroundimage} source={require('./images/bg.jpg')} resizeMode='cover'>
+          <ImageBackground style={styles.backgroundimage} source={require('./images/bg.jpg')} resizeMode='cover' onLayout={()=>{usrRef.current.focus()}}>
              <Image style={{ marginTop:20,marginBottom:100,width: 200, height: 200 }} source={require('react-native/Libraries/NewAppScreen/components/logo.png')}/>
-             <TextInputBlock placeholderText={"Username"} secured={false} defaultValue={""} ></TextInputBlock>
-             <TextInputBlock placeholderText={"Password"} secured={true}  defaultValue={""} ></TextInputBlock>
+             <TextInputBlock currentRef={usrRef} nextRef={pswdRef} placeholderText={"Username"} secured={false} defaultValue={""} ></TextInputBlock>
+             <TextInputBlock currentRef={pswdRef} placeholderText={"Password"} secured={true}  defaultValue={""} ></TextInputBlock>
              {loadingButton()}
           </ImageBackground>
       )
