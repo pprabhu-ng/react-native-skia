@@ -6,6 +6,8 @@
 */
 
 #include <semaphore.h>
+#include <thread>
+#include <atomic>
 
 #include "include/core/SkCanvas.h"
 
@@ -17,6 +19,8 @@
 
 class RNSShellUtils {
     public:
+        RNSShellUtils();
+        ~RNSShellUtils(){threadOnNeed=false;};
         bool createWindow(SkSize windowSize,std::function<void ()> windowReadyCB);
         void closeWindow();
         void setWindowTittle(const char* titleString);
@@ -26,14 +30,27 @@ class RNSShellUtils {
 
     private:
     void onExposeHandler(RnsShell::Window* window);
+    void platformSpecificInit();
+    void windowWorkerThread();
+    bool createNativeWindow();
+    void renderToDisplay();
 
     std::unique_ptr<RnsShell::WindowContext> oskWindowContext_{nullptr};
     RnsShell::Window* oskWindow_{nullptr};
-    sem_t semReadyToDraw;/* To sync expose event & window creation for x11 backend*/
-    std::function<void ()> windowReadyTodrawCB{nullptr};
-    SkSize            windowDimension_;
     sk_sp<SkSurface>  backBuffer_;
+
+    /* members to fuilfill X11 suggestion of "draw on receiving expose event to avoid data loss" */
+    sem_t semReadyToDraw;
+    std::function<void ()> windowReadyTodrawCB{nullptr};
+    RnsShell::PlatformDisplay::Type displayPlatForm;
+    SkSize            windowDimension_;
     int exposeEventID_{-1};
+
+    /* member to fulfill OpenGl  requirement of " Create window & render to happen on same thread context */
+    sem_t semWaitForActionRequest;
+    bool threadOnNeed{true};
+    std::atomic <bool> createWindowRequested{false};
+    std::atomic <bool> renderToDisplayRequested{false};
 
 };
 

@@ -16,10 +16,32 @@
 #include "OSKConfig.h"
 #include "OSKLayout.h"
 
+enum OSKDrawCommands {
+    DrawOSK,
+    DrawKBLayout,
+    DrawHighLight,
+    DrawPlaceHolderString,
+};
+std::queue<OSKDrawCommands> drawCallQueue;
+std::mutex drawCallQueueMutex;
 std::mutex oskLaunchExitCtrlMutex;//For synchronized OSK Launch & Exit
+
+#define PUSH_DRAW_COMMAND_TO_QUEUE(__X__) if(oskState_== OSK_STATE_LAUNCHED) { \
+                                            drawCallQueueMutex.lock();\
+                                            drawCallQueue.push(__X__); \
+                                            drawCallQueueMutex.unlock();\
+                                            sem_post(&semWaitForDrawRequest);\
+                                         }
+
 OnScreenKeyboard& OnScreenKeyboard::getInstance() {
     static OnScreenKeyboard oskHandle;
     return oskHandle;
+}
+
+OnScreenKeyboard::OnScreenKeyboard() {
+    sem_init(&semWaitForDrawRequest,0,0);
+    std::thread workerThread(&OnScreenKeyboard::drawCallWorkerThread,this);
+    workerThread.detach();
 }
 
 OSKErrorCode OnScreenKeyboard::launch(OSKConfig oskConfig) {
@@ -27,11 +49,14 @@ OSKErrorCode OnScreenKeyboard::launch(OSKConfig oskConfig) {
 
     OnScreenKeyboard &oskHandle=OnScreenKeyboard::getInstance();
 
-    if(oskHandle.isOSKActive_) return OSK_ERROR_ANOTHER_INSTANCE_ACTIVE;
+    if((oskHandle.oskState_ == OSK_STATE_LAUNCH_INPROGRESS) || (oskHandle.oskState_ == OSK_STATE_LAUNCHED))
+        return OSK_ERROR_ANOTHER_INSTANCE_ACTIVE;
 
     std::scoped_lock lock(oskLaunchExitCtrlMutex);
 
     oskHandle.isOSKActive_=true;
+    oskHandle.oskState_=OSK_STATE_LAUNCH_INPROGRESS;
+
     memcpy(&oskHandle.oskConfig_,&oskConfig,sizeof(oskConfig));
     if( oskHandle.prepareToLaunch() ) return OSK_LAUNCH_SUCCESS;
 
@@ -42,11 +67,41 @@ void OnScreenKeyboard::exit() {
     RNS_LOG_TODO("Need to emitkeyboardWillHide Event  to APP");
 
     OnScreenKeyboard &oskHandle=OnScreenKeyboard::getInstance();
-    if(oskHandle.isOSKActive_) {
-        oskHandle.isOSKActive_=false;
-        std::scoped_lock lock(oskLaunchExitCtrlMutex);
-        oskHandle.cleanUpOSKInstance();
+
+    if((oskHandle.oskState_ == OSK_STATE_EXIT_INPROGRESS) || (oskHandle.oskState_ == OSK_STATE_EXITED))
+        return;
+
+    oskHandle.oskState_=OSK_STATE_EXIT_INPROGRESS;
+/* Stop Listening for Hw Key Event*/
+    if(oskHandle.oskEventId_) {
+        NotificationCenter::OSKCenter().removeListener(oskHandle.oskEventId_);
+        oskHandle.oskEventId_= -1;
     }
+/*Clear any pending calls in draw call queue*/
+    drawCallQueueMutex.lock();
+/*1. Consume All Sem signals*/
+    while(0 == sem_trywait(&oskHandle.semWaitForDrawRequest));
+/*2. Claer any pending request in the queue*/
+    while (!drawCallQueue.empty()) {
+      drawCallQueue.pop();
+    }
+    drawCallQueueMutex.unlock();
+
+    std::scoped_lock lock(oskLaunchExitCtrlMutex);
+    oskHandle.closeWindow();
+    oskHandle.oskState_=OSK_STATE_EXITED;
+}
+
+void  OnScreenKeyboard::updatePlaceHolderString(std::string PHdisplayString) {
+    OnScreenKeyboard &oskHandle=OnScreenKeyboard::getInstance();
+    oskHandle.displayString_=PHdisplayString;
+    if(oskHandle.oskState_ == OSK_STATE_LAUNCHED) {
+        drawCallQueueMutex.lock();
+        drawCallQueue.push(DrawPlaceHolderString);
+        drawCallQueueMutex.unlock();
+        sem_post(&oskHandle.semWaitForDrawRequest);
+    }
+    return;
 }
 
 bool OnScreenKeyboard::prepareToLaunch() {
@@ -86,56 +141,14 @@ bool OnScreenKeyboard::prepareToLaunch() {
     return returnCode;
 }
 
-void OnScreenKeyboard::cleanUpOSKInstance() {
-    if( oskEventId_ )  {
-        NotificationCenter::OSKCenter().removeListener(oskEventId_);
-        oskEventId_= -1;
-    }
-    closeWindow();
-}
+bool OnScreenKeyboard::drawOSK() {
 
-void OnScreenKeyboard::showOSKWindow() {
+if((oskState_!= OSK_STATE_LAUNCHED)) return false;
+
+/*1. Set up OSK Window background*/
     oskCanvas->clear(bgColor_);
-    drawPlaceHolder();
-    drawOSK(oskConfig_.type);
-    // Registering Key Pressed event
-    std::function<void(rnsKey, rnsKeyAction)> handler = std::bind(&OnScreenKeyboard::onHWkeyHandler,this,
-                                                                    std::placeholders::_1,
-                                                                    std::placeholders::_2);
-    oskEventId_ = NotificationCenter::OSKCenter().addListener("onHWKeyEvent", handler);
-}
 
-void OnScreenKeyboard::drawOSK(OSKTypes oskType) {
-
-    RNS_PROFILE_START(OSKLayoutCreate)
-    createOSKLayout(oskType);
-    RNS_PROFILE_START(OSKDraw)
-//clear KeyBoard Area
-    SkRect kbArea=SkRect::MakeXYWH( oskLayout_.horizontalStartOffset,
-                                    screenSize_.height()*OSK_KB_VERTICAL_OFFSET,
-                                    screenSize_.width(),
-                                    screenSize_.height()- screenSize_.height()*OSK_KB_VERTICAL_OFFSET
-                                  );
-    SkPaint paintObj;
-    paintObj.setColor(bgColor_);
-    oskCanvas->drawRect(kbArea,paintObj);
-    if(oskLayout_.keyInfo && oskLayout_.keyPos) {
-        /*1. Draw Keys */
-        for (unsigned int rowIndex = 0; rowIndex < oskLayout_.keyInfo->size(); rowIndex++) {
-            for (unsigned int keyIndex = 0; keyIndex < oskLayout_.keyInfo->at(rowIndex).size(); keyIndex++) {
-                drawFont({keyIndex,rowIndex},fontColor_);
-            }
-        }
-        /*2. Draw KB partition*/
-        drawOSKPartition();
-        /*3. Highlighlight default focussed key*/
-        highlightFocussedKey(oskLayout_.defaultFocussIndex);
-        focussedKey_=oskLayout_.defaultFocussIndex;
-    }
-    RNS_PROFILE_END("OSk Draw completion : ",OSKDraw)
-}
-
-void OnScreenKeyboard::drawPlaceHolder() {
+/*2. Draw PlaceHolder*/
     SkPaint paint;
     if(oskConfig_.placeHolderName) {
         SkFont font;
@@ -153,9 +166,79 @@ void OnScreenKeyboard::drawPlaceHolder() {
                                   OSK_PLACEHOLDER_HEIGHT
                                 );
     oskCanvas->drawRect(rect,paint);
+
+/*3. Draw PLaceHolder Display String */
+    drawPlaceHolderDisplayString();
+
+/*4. Draw  KeyBoard Layout*/
+    activeOskType=oskConfig_.type;
+    drawKBLayout();
+
+
+/*5. Finally Listen for  Key Pressed event */
+    std::function<void(rnsKey, rnsKeyAction)> handler = std::bind(&OnScreenKeyboard::onHWkeyHandler,this,
+                                                                    std::placeholders::_1,
+                                                                    std::placeholders::_2);
+    oskEventId_ = NotificationCenter::OSKCenter().addListener("onHWKeyEvent", handler);
+    return true;
 }
 
-inline void OnScreenKeyboard::drawFont(SkPoint index,SkColor color,bool onHLTile) {
+bool OnScreenKeyboard::drawKBLayout() {
+    bool retrunCode{false};
+    if((oskState_!= OSK_STATE_LAUNCHED)) return retrunCode;
+
+    RNS_PROFILE_START(OSKLayoutCreate)
+    createOSKLayout(activeOskType);
+    RNS_PROFILE_START(OSKDraw)
+//clear KeyBoard Area
+    SkRect kbArea=SkRect::MakeXYWH( oskLayout_.horizontalStartOffset,
+                                    screenSize_.height()*OSK_KB_VERTICAL_OFFSET,
+                                    screenSize_.width(),
+                                    screenSize_.height()- screenSize_.height()*OSK_KB_VERTICAL_OFFSET
+                                  );
+    SkPaint paintObj;
+    paintObj.setColor(bgColor_);
+    oskCanvas->drawRect(kbArea,paintObj);
+    if(oskLayout_.keyInfo && oskLayout_.keyPos) {
+        /*1. Draw Keys */
+        for (unsigned int rowIndex = 0; rowIndex < oskLayout_.keyInfo->size(); rowIndex++) {
+            for (unsigned int keyIndex = 0; keyIndex < oskLayout_.keyInfo->at(rowIndex).size(); keyIndex++) {
+                retrunCode=drawKBKeyFont({keyIndex,rowIndex},fontColor_);
+            }
+        }
+        /*2. Draw KB partition*/
+        if(oskConfig_.type != OSK_NUMERIC_KB) {
+            SkPaint paint;
+            paint.setColor((oskConfig_.theme == OSK_LIGHT_THEME) ? OSK_LIGHT_THEME_PH_COLOR: OSK_DARK_THEME_PH_COLOR);
+            paint.setStrokeWidth(2);
+            unsigned int startY,endY,xpos,rowCount=oskLayout_.keyInfo->size()-1;
+            unsigned int KeyCount=oskLayout_.keyInfo->at(rowCount).size()-1;
+            endY=oskLayout_.keyPos->at(rowCount).at(KeyCount).highlightTile.fBottom+3;
+            startY=oskLayout_.keyPos->at(0).at(0).highlightTile.fTop - oskLayout_.kbGroupConfig[oskLayout_.keyInfo->at(0).at(0).kbPartitionId].groupKeySpacing.y();
+            for (unsigned int index=1;index<oskLayout_.keyInfo->at(0).size();index++) {
+                if(oskLayout_.keyInfo->at(0).at(index).kbPartitionId != oskLayout_.keyInfo->at(0).at(index-1).kbPartitionId) {
+                    xpos=oskLayout_.keyPos->at(0).at(index).highlightTile.x()-(oskLayout_.keyPos->at(0).at(index).highlightTile.fLeft - oskLayout_.keyPos->at(0).at(index-1).highlightTile.fRight)/2;
+                    oskCanvas->drawLine(xpos,startY,xpos,endY,paint);
+                }
+            }
+        }
+        /*3. Highlighlight default focussed key*/
+        focussedKey_=oskLayout_.defaultFocussIndex;
+        drawHighLightOnFocussedKey();
+    }
+    RNS_PROFILE_END("OSk Draw completion : ",OSKDraw)
+    return retrunCode;
+}
+
+bool OnScreenKeyboard::drawPlaceHolderDisplayString() {
+    if((oskState_!= OSK_STATE_LAUNCHED)) return false;
+    /*TO DO IMPLEMENTATION*/
+    return true;
+}
+inline bool OnScreenKeyboard::drawKBKeyFont(SkPoint index,SkColor color,bool onHLTile) {
+
+    if((oskState_!= OSK_STATE_LAUNCHED)) return false;
+
     unsigned int rowIndex=index.y(),keyIndex=index.x();
 
     if(oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyName ) {
@@ -254,29 +337,15 @@ inline void OnScreenKeyboard::drawFont(SkPoint index,SkColor color,bool onHLTile
         oskCanvas->drawLine(bounds.fLeft+(bounds.width()/2),bounds.fTop,bounds.fLeft+(bounds.width()/2),bounds.fBottom,textPaint);
   #endif/*SHOW_FONT_PLACING_ON_HLTILE*/
     }
+    return true;
 }
 
-void OnScreenKeyboard::drawOSKPartition() {
-    if(oskConfig_.type != OSK_NUMERIC_KB) {
-        SkPaint paint;
-        paint.setColor((oskConfig_.theme == OSK_LIGHT_THEME) ? OSK_LIGHT_THEME_PH_COLOR: OSK_DARK_THEME_PH_COLOR);
-        paint.setStrokeWidth(2);
-        unsigned int startY,endY,xpos,rowCount=oskLayout_.keyInfo->size()-1;
-        unsigned int KeyCount=oskLayout_.keyInfo->at(rowCount).size()-1;
-        endY=oskLayout_.keyPos->at(rowCount).at(KeyCount).highlightTile.fBottom+3;
-        startY=oskLayout_.keyPos->at(0).at(0).highlightTile.fTop - oskLayout_.kbGroupConfig[oskLayout_.keyInfo->at(0).at(0).kbPartitionId].groupKeySpacing.y();
-        for (unsigned int index=1;index<oskLayout_.keyInfo->at(0).size();index++) {
-            if(oskLayout_.keyInfo->at(0).at(index).kbPartitionId != oskLayout_.keyInfo->at(0).at(index-1).kbPartitionId) {
-                xpos=oskLayout_.keyPos->at(0).at(index).highlightTile.x()-(oskLayout_.keyPos->at(0).at(index).highlightTile.fLeft - oskLayout_.keyPos->at(0).at(index-1).highlightTile.fRight)/2;
-                oskCanvas->drawLine(xpos,startY,xpos,endY,paint);
-            }
-        }
-    }
-}
+bool OnScreenKeyboard ::drawHighLightOnFocussedKey() {
 
-void OnScreenKeyboard ::highlightFocussedKey(SkPoint index) {
+    if((oskState_!= OSK_STATE_LAUNCHED)) return false;
+
     SkPaint paintObj;
-    unsigned int rowIndex=index.y(),keyIndex=index.x();
+    unsigned int rowIndex=focussedKey_.y(),keyIndex=focussedKey_.x();
     unsigned int lastRowIndex=lastFocussedKey_.y(),lastKeyIndex=lastFocussedKey_.x();
 
      RNS_PROFILE_START(HighlightOSKKey)
@@ -284,19 +353,18 @@ void OnScreenKeyboard ::highlightFocussedKey(SkPoint index) {
      paintObj.setColor(bgColor_);
      paintObj.setAntiAlias(true);
      oskCanvas->drawRect(oskLayout_.keyPos->at(lastRowIndex).at(lastKeyIndex).highlightTile,paintObj);
-     drawFont({lastKeyIndex,lastRowIndex},fontColor_);
+     drawKBKeyFont({lastKeyIndex,lastRowIndex},fontColor_);
 
     //Hight current focussed item
     paintObj.setColor(OSK_HIGHLIGHT_BG_COLOR);
     oskCanvas->drawRect(oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile,paintObj);
-    drawFont({keyIndex,rowIndex},OSK_HIGHLIGHT_FONT_COLOR,true);
-    pushToDisplay();
+    drawKBKeyFont({keyIndex,rowIndex},OSK_HIGHLIGHT_FONT_COLOR,true);
     RNS_PROFILE_END(" Highlight Completion : ",HighlightOSKKey)
-    return;
+    return true;
 }
 
 void OnScreenKeyboard::onHWkeyHandler(rnsKey keyValue, rnsKeyAction eventKeyAction) {
-    if(eventKeyAction != RNS_KEY_Press) return;
+    if((eventKeyAction != RNS_KEY_Press) || (oskState_ != OSK_STATE_LAUNCHED)) return;
 
     SkPoint hlCandidate;
     lastFocussedKey_=focussedKey_;
@@ -352,7 +420,7 @@ void OnScreenKeyboard::onHWkeyHandler(rnsKey keyValue, rnsKeyAction eventKeyActi
     }
     focussedKey_ = hlCandidate;
     if(focussedKey_ != lastFocussedKey_)
-        highlightFocussedKey(focussedKey_);
+        PUSH_DRAW_COMMAND_TO_QUEUE(DrawHighLight);
 }
 
 void OnScreenKeyboard::handleSelection() {
@@ -363,7 +431,8 @@ void OnScreenKeyboard::handleSelection() {
         ToggleKeyMap :: iterator keyFunction =toggleKeyMap.find(oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyName);
         if((keyFunction != toggleKeyMap.end()) && (keyFunction->second != oskLayout_.kbLayoutType)) {
             oskLayout_.kbLayoutType=keyFunction->second;
-            drawOSK(OSK_ALPHA_NUMERIC_KB);
+            activeOskType=OSK_ALPHA_NUMERIC_KB;
+            PUSH_DRAW_COMMAND_TO_QUEUE(DrawKBLayout);
         }
     }else {
         rnsKey keyValue=oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyValue;
@@ -587,6 +656,52 @@ void OnScreenKeyboard::createOSKLayout(OSKTypes oskType) {
                 <<"  Up Key :  "<< oskLayout_.keyInfo->at(upRow).at(upKey).keyName
                 <<"  down Key :  "<< oskLayout_.keyInfo->at(downRow).at(downKey).keyName);
 #endif/*SHOW_SIBLING_INFO*/
+        }
+    }
+}
+
+void OnScreenKeyboard::windowReadyToDrawCB() {
+    if(oskCanvas == nullptr) {
+      closeWindow();
+      oskState_=OSK_STATE_EXITED;
+      return;
+    }
+    if(oskState_== OSK_STATE_LAUNCH_INPROGRESS) {
+        oskState_=OSK_STATE_LAUNCHED;
+        PUSH_DRAW_COMMAND_TO_QUEUE(DrawOSK);
+    }
+}
+
+void OnScreenKeyboard::drawCallWorkerThread() {
+    bool proceedToRender{false};
+    while(drawHandlerOnNeed) {
+        sem_wait(&semWaitForDrawRequest);
+        if(oskState_== OSK_STATE_LAUNCHED) {
+            std::scoped_lock lock(oskLaunchExitCtrlMutex);
+            if(!drawCallQueue.empty()) {
+                drawCallQueueMutex.lock();
+                OSKDrawCommands drawCommand=drawCallQueue.front();
+                drawCallQueueMutex.unlock();
+                proceedToRender=false;
+                switch(drawCommand) {
+                    case DrawOSK:
+                        proceedToRender=drawOSK();
+                    break;
+                    case DrawKBLayout:
+                        proceedToRender=drawKBLayout();
+                    break;
+                    case DrawHighLight:
+                        proceedToRender=drawHighLightOnFocussedKey();
+                    break;
+                    case DrawPlaceHolderString:
+                        proceedToRender=drawPlaceHolderDisplayString();
+                    break;
+                    default:
+                    break;
+                }
+                if(!drawCallQueue.empty())  drawCallQueue.pop();
+                if(proceedToRender) pushToDisplay();
+            }
         }
     }
 }
