@@ -8,13 +8,14 @@
 #define OSK_H
 
 #include <semaphore.h>
+#include <queue>
 
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColor.h"
 
 #include "NotificationCenter.h"
 #include "RNSKeyCodeMapping.h"
-#include "RNSShellUtils.h"
+#include "WindowDelegator.h"
 
 //Suported KeyBoards
 enum OSKTypes {
@@ -33,6 +34,15 @@ enum OSKErrorCode {
     OSK_ERROR_ANOTHER_INSTANCE_ACTIVE=-1,
     OSK_ERROR_LAUNCH_FAILED=-2
 };
+
+enum OSKState {
+    OSK_STATE_LAUNCH_INPROGRESS,
+    OSK_STATE_LAUNCHED,
+    OSK_STATE_EXIT_INPROGRESS,
+    OSK_STATE_EXITED,
+    OSK_STATE_INACTIVE=OSK_STATE_EXITED
+};
+
 enum KBLayoutType {
     ALPHA_LOWERCASE_LAYOUT,
     ALPHA_UPPERCASE_LAYOUT,
@@ -114,37 +124,47 @@ class OnScreenKeyboard : public RNSShellUtils {
         static bool IsKBActive() {
              OnScreenKeyboard &oskHandle=OnScreenKeyboard::getInstance();
              return oskHandle.isOSKActive_;
-        } // Interface to get whether is in launch or exit state
+        } // Interface to get whether OSK is in launch or exit state
+        static void updatePlaceHolderString(std::string TIDisplayString);
 
     private:
-        OnScreenKeyboard(){};
+        OnScreenKeyboard();
+        ~OnScreenKeyboard(){drawHandlerOnNeed=false;};
 
         bool prepareToLaunch();
-        void cleanUpOSKInstance();
-        void showOSKWindow();
-
         void onHWkeyHandler(rnsKey key, rnsKeyAction eventKeyAction);
-        void windowReadyToDrawCB( ) {showOSKWindow();}
-
+        void windowReadyToDrawCB();
         void createOSKLayout(OSKTypes KBtype );
-        void highlightFocussedKey(SkPoint index);
         void handleSelection();
-        void drawOSK(OSKTypes oskType);
-        void drawPlaceHolder();
-        void drawFont(SkPoint index,SkColor color,bool onHLTile=false);
-        void drawOSKPartition();
 
-// Maintainables
-        int oskEventId_{-1};
+        bool drawHighLightOnFocussedKey();
+        bool drawOSK();
+        bool drawKBLayout();
+        bool drawPlaceHolderDisplayString();
+        bool drawKBKeyFont(SkPoint index,SkColor color,bool onHLTile=false);
+
+        void drawCallWorkerThread();
+
+
+// Members for OSK Layout & sytling
         bool  isOSKActive_{false};
         OSKConfig     oskConfig_;
         OSKLayout     oskLayout_;
-        bool          generateOSKLayout_{true};
         SkSize        screenSize_{0,0};
-        SkPoint       focussedKey_{0};
-        SkPoint       lastFocussedKey_{0};
         SkColor       bgColor_{SK_ColorWHITE};
         SkColor       fontColor_{SK_ColorWHITE};
+
+// Members for OSK operations
+        int oskEventId_{-1};
+        bool          generateOSKLayout_{true};
+        SkPoint       focussedKey_{0};
+        SkPoint       lastFocussedKey_{0};
+        sem_t         semWaitForDrawRequest;
+        bool          drawHandlerOnNeed{true};
+        std::string   displayString_{}; // Text to be displayed on screen
+        OSKState      oskState_{OSK_STATE_INACTIVE};
+        OSKTypes      activeOskType{OSK_ALPHA_NUMERIC_KB};
+
 };
 #endif //OSK_H
 
