@@ -27,13 +27,19 @@ namespace react {
 #define CPU_MEM_ARR_INDEX 0
 #define GPU_MEM_ARR_INDEX 1
 std::mutex imageCacheLock;
+std::mutex RSkImageCacheManager::mutex_;
 
 RSkImageCacheManager* RSkImageCacheManager::imageCacheManagerInstance_{nullptr};
 
 RSkImageCacheManager::RSkImageCacheManager() { };
-RSkImageCacheManager::~RSkImageCacheManager() { };
+RSkImageCacheManager::~RSkImageCacheManager() {
+  std::lock_guard<std::mutex> lock(mutex_);
+  if(this == imageCacheManagerInstance_)
+    imageCacheManagerInstance_ = nullptr;
+};
 
 RSkImageCacheManager* RSkImageCacheManager::getImageCacheManagerInstance() {
+  std::lock_guard<std::mutex> lock(mutex_);
   if (!imageCacheManagerInstance_) {
     imageCacheManagerInstance_ = new RSkImageCacheManager();
   }
