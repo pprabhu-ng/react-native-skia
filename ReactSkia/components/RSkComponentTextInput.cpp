@@ -11,7 +11,6 @@
 #include "ReactSkia/core_modules/RSkSpatialNavigator.h"
 #include "ReactSkia/sdk/RNSKeyCodeMapping.h"
 #include "ReactSkia/sdk/OnScreenKeyBoard.h"
-#include "ReactSkia/textlayoutmanager/RSkTextLayoutManager.h"
 #include "ReactSkia/views/common/RSkDrawUtils.h"
 #include "ReactSkia/views/common/RSkConversion.h"
 #include "rns_shell/compositor/layers/PictureLayer.h"

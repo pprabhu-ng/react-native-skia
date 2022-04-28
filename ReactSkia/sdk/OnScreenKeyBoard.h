@@ -37,10 +37,9 @@ enum OSKErrorCode {
 
 enum OSKState {
     OSK_STATE_LAUNCH_INPROGRESS,
-    OSK_STATE_LAUNCHED,
+    OSK_STATE_ACTIVE,
     OSK_STATE_EXIT_INPROGRESS,
-    OSK_STATE_EXITED,
-    OSK_STATE_INACTIVE=OSK_STATE_EXITED
+    OSK_STATE_INACTIVE,
 };
 
 enum KBLayoutType {
@@ -115,39 +114,31 @@ struct OSKLayout {
     SkPoint           defaultFocussIndex;
 };
 
-class OnScreenKeyboard : public RNSShellUtils {
+class OnScreenKeyboard : public WindowDelegator{
 
     public:
         static OnScreenKeyboard& getInstance(); // Interface to get OSK singleton object
         static OSKErrorCode launch(OSKConfig oskConfig=defaultOSKConfig);// Interface to launch OSK
         static void exit(); //Interface to quit OSK
-        static bool IsKBActive() {
-             OnScreenKeyboard &oskHandle=OnScreenKeyboard::getInstance();
-             return oskHandle.isOSKActive_;
-        } // Interface to get whether OSK is in launch or exit state
         static void updatePlaceHolderString(std::string TIDisplayString);
 
     private:
-        OnScreenKeyboard();
-        ~OnScreenKeyboard(){drawHandlerOnNeed=false;};
+        OnScreenKeyboard(){};
+        ~OnScreenKeyboard(){};
 
-        bool prepareToLaunch();
+        void launchOSKWindow(OSKConfig oskConfig);
         void onHWkeyHandler(rnsKey key, rnsKeyAction eventKeyAction);
-        void windowReadyToDrawCB();
         void createOSKLayout(OSKTypes KBtype );
-        void handleSelection();
 
-        bool drawHighLightOnFocussedKey();
+        void emitOSKKeyEvent(rnsKey keyValue);
+        void windowReadyToDrawCB();
+
+        bool drawHighLightOnKey(SkPoint index);
         bool drawOSK();
-        bool drawKBLayout();
-        bool drawPlaceHolderDisplayString();
+        bool drawKBLayout(OSKTypes oskType);
         bool drawKBKeyFont(SkPoint index,SkColor color,bool onHLTile=false);
 
-        void drawCallWorkerThread();
-
-
 // Members for OSK Layout & sytling
-        bool  isOSKActive_{false};
         OSKConfig     oskConfig_;
         OSKLayout     oskLayout_;
         SkSize        screenSize_{0,0};
@@ -157,14 +148,11 @@ class OnScreenKeyboard : public RNSShellUtils {
 // Members for OSK operations
         int oskEventId_{-1};
         bool          generateOSKLayout_{true};
-        SkPoint       focussedKey_{0};
-        SkPoint       lastFocussedKey_{0};
-        sem_t         semWaitForDrawRequest;
-        bool          drawHandlerOnNeed{true};
+        SkPoint       currentFocussIndex_{};
+        SkPoint       lastFocussIndex_{};
         std::string   displayString_{}; // Text to be displayed on screen
+        std::string   lastDisplayedString_{};
         OSKState      oskState_{OSK_STATE_INACTIVE};
-        OSKTypes      activeOskType{OSK_ALPHA_NUMERIC_KB};
-
 };
 #endif //OSK_H
 
