@@ -7,7 +7,6 @@
 
 #include <semaphore.h>
 #include <thread>
-#include <atomic>
 
 #include "include/core/SkCanvas.h"
 
@@ -15,43 +14,41 @@
 #include "rns_shell/common/Window.h"
 #include "rns_shell/platform/graphics/PlatformDisplay.h"
 #include "rns_shell/platform/graphics/WindowContextFactory.h"
+#include "rns_shell/platform/linux/TaskLoop.h"
 
 
-class RNSShellUtils {
+class WindowDelegator {
     public:
-        RNSShellUtils();
-        ~RNSShellUtils(){threadOnNeed=false;};
-        bool createWindow(SkSize windowSize,std::function<void ()> windowReadyCB);
+        WindowDelegator(){};
+       ~WindowDelegator(){};
+
+        void createWindow(SkSize windowSize,std::function<void ()> windowReadyTodrawCB,bool runOnTaskRunner=true);
         void closeWindow();
         void setWindowTittle(const char* titleString);
-        void pushToDisplay();
+        void commitDrawCall();
 
         SkCanvas *oskCanvas{nullptr};
 
     private:
     void onExposeHandler(RnsShell::Window* window);
-    void platformSpecificInit();
     void windowWorkerThread();
-    bool createNativeWindow();
+    void createNativeWindow();
     void renderToDisplay();
 
     std::unique_ptr<RnsShell::WindowContext> oskWindowContext_{nullptr};
     RnsShell::Window* oskWindow_{nullptr};
     sk_sp<SkSurface>  backBuffer_;
 
-    /* members to fuilfill X11 suggestion of "draw on receiving expose event to avoid data loss" */
-    sem_t semReadyToDraw;
-    std::function<void ()> windowReadyTodrawCB{nullptr};
-    RnsShell::PlatformDisplay::Type displayPlatForm;
-    SkSize            windowDimension_;
+    /*To fulfill OpenGl requirement of create & rendering to be handled from same thread context*/
+    std::unique_ptr<RnsShell::TaskLoop> windowTaskRunner_{nullptr};
+    bool ownsTaskrunner_{false};
+    /* members to fullfill X11 suggestion of "draw on receiving expose event to avoid data loss" */
+    sem_t semReadyToDraw_;
+    std::function<void ()> windowReadyTodrawCB_{nullptr};
+
+    RnsShell::PlatformDisplay::Type displayPlatForm_;
     int exposeEventID_{-1};
-
-    /* member to fulfill OpenGl  requirement of " Create window & render to happen on same thread context */
-    sem_t semWaitForActionRequest;
-    bool threadOnNeed{true};
-    std::atomic <bool> createWindowRequested{false};
-    std::atomic <bool> renderToDisplayRequested{false};
-
+    SkSize windowSize_;
 };
 
 
