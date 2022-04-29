@@ -1,12 +1,11 @@
 /*
-* Copyright (C) 1994-2021 OpenTV, Inc. and Nagravision S.A.
+* Copyright (C) 1994-2022 OpenTV, Inc. and Nagravision S.A.
 *
-* Use of this source code is governed by a BSD-style license that can be
-* found in the LICENSE file.
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
 */
 
 #include <algorithm>
-#include <glog/logging.h>
 
 #include "RSkTimingModule.h"
 
@@ -19,13 +18,11 @@ RSkTimingModule::RSkTimingModule(
     Instance *bridgeInstance)
     : TurboModule(name, jsInvoker),
       sendIdleEvents_(false),
-      bridgeInstance_(bridgeInstance),
-      timerThread_("RSkTimingThread") {
+      bridgeInstance_(bridgeInstance) {
   methodMap_["createTimer"] = MethodMetadata{4, createTimerWrapper};
   methodMap_["deleteTimer"] = MethodMetadata{1, deleteTimerWrapper};
   methodMap_["setSendIdleEvents"] = MethodMetadata{1, setSendIdleEventsWrapper};
 
-  timerThread_.getEventBase()->waitUntilRunning();
 }
 
 jsi::Value RSkTimingModule::createTimerWrapper(
@@ -56,12 +53,7 @@ jsi::Value RSkTimingModule::createTimer(
   RNS_LOG_DEBUG("Create Timer for callbackId : " << callbackId << ", jsSchedulingTime : " << jsSchedulingTime << ", Duration : " << duration);
   SysTimePoint schedulingTime{std::chrono::milliseconds(static_cast<unsigned long long>(jsSchedulingTime))};
 
-  // For super fast, on-off timers, just enqueue them immediately rather than waiting
-  if(duration == 0 && repeats == false) {
-    timerThread_.getEventBase()->runInEventBaseThread(std::bind(&RSkTimingModule::immediatelyCallTimer, this, callbackId));
-  } else {
-    createTimerForNextFrame(callbackId, duration, schedulingTime, repeats);
-  }
+  createTimerForNextFrame(callbackId, duration, schedulingTime, repeats);
   return jsi::Value::undefined();
 }
 
@@ -76,59 +68,42 @@ void RSkTimingModule::createTimerForNextFrame(
   double jsSchedulingOverhead = std::max(elapsed.count(), 0.0);
   double targetDuration = std::max((jsDuration - jsSchedulingOverhead), 0.0);
 
-  SharedTimer timer = std::make_shared<RSkTimer>(callbackId, jsDuration, targetDuration, repeats);
-  timers_[callbackId] = timer;
-
-  timerThread_.getEventBase()->runInEventBaseThread(
-    [this, callbackId, jsDuration, targetDuration, repeats]() {
-      HHWheelTimer& wheelTimer = timerThread_.getEventBase()->timer();
-      DurationUs remainingDuration = timerCallback_.getTimeRemaining();
-      // Schedule callback if it is not scheduled or if new callbacks target duration is smaller than running timers remaining duration
-      if(timerCallback_.isScheduled() == false || targetDuration < (remainingDuration.count()/1000)) {
-        RNS_LOG_DEBUG("Schedule timer for callbackId : " << callbackId << ", Callback Duration : " << jsDuration << " Repeats : "<< repeats << " " <<
-                      " Target Duration : " << targetDuration << " Remaining Duration :" << remainingDuration.count());
-        timerCallback_.cb = std::bind(&RSkTimingModule::timerDidFire, this);
-        wheelTimer.scheduleTimeout(&timerCallback_, std::chrono::milliseconds(static_cast<unsigned long long>(targetDuration)));
-      } else {
-        RNS_LOG_TRACE("No need to schedule for callbackId : " << callbackId << " with Duration : " << jsDuration);
-      }
-    }
-  );
-}
-
-// Private hack to support setTimeout(fn, 0) similar to IOS
-void RSkTimingModule::immediatelyCallTimer(double callbackId) {
-  if(bridgeInstance_) {
-    RNS_LOG_DEBUG("--> immediatelyCallTimer - callbackId=" << callbackId << ", duration=0");
-    bridgeInstance_->callJSFunction("JSTimers", "callTimers", folly::dynamic::array(folly::dynamic::array(callbackId)));
+  SharedJsTimer jstimer = std::make_shared<RSkJsTimer>(callbackId, jsDuration, targetDuration, repeats);
+  if(timer_ == nullptr) {
+      timer_ = new Timer(targetDuration,false, [this](){timerDidFire();},true);
+  } else {
+      double remainingDuration = timer_->getTimeRemaining();
+      if((remainingDuration == 0) || (targetDuration < remainingDuration))
+          timer_->reschedule(targetDuration,false);
   }
+  jsTimers_[callbackId] = jstimer;
 }
 
 void RSkTimingModule::timerDidFire() {
-  std::vector<RSkTimer *> timersToCall;
+  std::vector<RSkJsTimer *> jsTimersToCall;
   SysTimePoint now = system_clock::now(); //Take this as base clock for all calculations here
   SysTimePoint nextScheduledTarget = now + milliseconds(static_cast<unsigned long long>(31536000000)); // Set 1 year ahead time from now
 
   // Loop timer list and list down all expired timer into a vector
-  for (auto& timer : timers_) {
+  for (auto& timer : jsTimers_) {
     if( timer.second->target_ <= now ) { // Expired timer
       // Insert in sorted order
-      auto it = lower_bound(timersToCall.begin(), timersToCall.end(), timer.second,
+      auto it = lower_bound(jsTimersToCall.begin(), jsTimersToCall.end(), timer.second,
       [](auto& inList, auto& newItem ) { return (inList->target_ < newItem->target_);});
 
-      timersToCall.insert(it, timer.second.get());
-      RNS_LOG_TRACE("Expired TimerID=" << timer.second->callbackId_ << ", repeat=" << timer.second->repeats_ << ", duration=" << timer.second->duration_);
+      jsTimersToCall.insert(it, timer.second.get());
+      RNS_LOG_DEBUG("Expired TimerID=" << timer.second->callbackId_ << ", repeat=" << timer.second->repeats_ << ", duration=" << timer.second->duration_);
     } else {
-      RNS_LOG_TRACE("Pending TimerID=" << timer.second->callbackId_ << ", repeat=" << timer.second->repeats_ << ", duration=" << timer.second->duration_);
+      RNS_LOG_DEBUG("Pending TimerID=" << timer.second->callbackId_ << ", repeat=" << timer.second->repeats_ << ", duration=" << timer.second->duration_);
       if(timer.second->target_ < nextScheduledTarget)
         nextScheduledTarget = timer.second->target_;
     }
   }
 
   // Call expired callbacks
-  if((timersToCall.size() > 0 ) && bridgeInstance_) {
+  if((jsTimersToCall.size() > 0 ) && bridgeInstance_) {
     dynamic sortedTimers = folly::dynamic::array;
-    for (auto& timer : timersToCall) {
+    for (auto& timer : jsTimersToCall) {
       RNS_LOG_DEBUG("TimersToCall ID : " << timer->callbackId_ << " Duration : " << timer->duration_ );
       sortedTimers.push_back(timer->callbackId_);
     }
@@ -136,13 +111,13 @@ void RSkTimingModule::timerDidFire() {
   }
 
   // Go through the expired timers and reschedule repeating callbacks
-  for (auto& timer : timersToCall) {
+  for (auto& timer : jsTimersToCall) {
     if (timer->repeats_) {
       timer->reschedule(now); // First update target_ of this timer
       if(timer->target_ < nextScheduledTarget)
         nextScheduledTarget = timer->target_;
     } else {
-      timers_.erase(timer->callbackId_); // Remove expired callbacks which is already fired and doesnt repeat
+      jsTimers_.erase(timer->callbackId_); // Remove expired callbacks which is already fired and doesnt repeat
     }
   }
 
@@ -154,11 +129,10 @@ void RSkTimingModule::timerDidFire() {
   }
 
   // Reschedule timer with nextScheduledTarget
-  if(timers_.size() > 0) {
-    HHWheelTimer& wheelTimer = timerThread_.getEventBase()->timer();
+  if(jsTimers_.size() > 0) {
     duration<double, std::milli> remaining = nextScheduledTarget - system_clock::now(); // Remining duration to target from this point in time.
     double targetDuration = std::max(remaining.count(), 0.0);
-    wheelTimer.scheduleTimeout(&timerCallback_, std::chrono::milliseconds(static_cast<unsigned long long>(targetDuration)));
+    timer_->reschedule(targetDuration,false);
     RNS_LOG_DEBUG("Rescheduled timer with shortest duration : " << targetDuration);
   }
 }
@@ -180,7 +154,11 @@ jsi::Value RSkTimingModule::deleteTimerWrapper(
 
 jsi::Value RSkTimingModule::deleteTimer(double timerId) {
   RNS_LOG_DEBUG("Delete Timer for callbackId : " << timerId);
-  timers_.erase(timerId);
+  jsTimers_.erase(timerId);
+  if(jsTimers_.empty()) {
+     timer_->abort();
+     timer_ = nullptr;
+  }
   return jsi::Value::undefined();
 }
 
