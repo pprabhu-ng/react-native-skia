@@ -68,7 +68,7 @@ public:
 private:
  noPollCtx* ctx_;
  static NopollWebsocket *sharedNopollWebsocket_;
- static std::mutex mutex_;
+ static std::mutex requestLock_;
 };
 }
 }

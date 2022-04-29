@@ -15,12 +15,12 @@ namespace react {
 
 std::queue<NopollRequest*> RequestQueue;
 int currentWorkerThreadCount = 0;
-std::mutex globalMtx;
-std::mutex requestQueueMtx;
+std::mutex threadCountLock;
+std::mutex requestQueueLock;
 sem_t startDownloadingThread;  /*semaphore to signal downloading thread to start, once there is something in the list*/
 
 NopollWebsocket* NopollWebsocket::sharedNopollWebsocket_{nullptr};
-std::mutex NopollWebsocket::mutex_;
+std::mutex NopollWebsocket::requestLock_;
 
 NopollWebsocket::NopollWebsocket() {
   ctx_ = nopoll_ctx_new ();
@@ -40,7 +40,7 @@ NopollWebsocket::NopollWebsocket() {
 }
 
 NopollWebsocket* NopollWebsocket::sharedNopollWebsocket() {
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard<std::mutex> lock(requestLock_);
   if(sharedNopollWebsocket_ == nullptr)
     sharedNopollWebsocket_ = new NopollWebsocket();
   return sharedNopollWebsocket_;
@@ -48,7 +48,7 @@ NopollWebsocket* NopollWebsocket::sharedNopollWebsocket() {
 
 NopollWebsocket::~NopollWebsocket() {
   nopoll_ctx_unref(ctx_);
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard<std::mutex> lock(requestLock_);
   if(this == sharedNopollWebsocket_)
     sharedNopollWebsocket_ = nullptr;
 }
@@ -56,20 +56,20 @@ NopollWebsocket::~NopollWebsocket() {
 void NopollWebsocket::multiConn(){
   NopollRequest* nopollRequest = nullptr;
   while(true) { // forever
-    requestQueueMtx.lock();
+    requestQueueLock.lock();
     if(RequestQueue.size() !=0) {
       nopollRequest =RequestQueue.front();
       RequestQueue.pop();
     } else {
-      globalMtx.lock();
+      threadCountLock.lock();
       currentWorkerThreadCount--;
-      globalMtx.unlock();
-      requestQueueMtx.unlock();
+      threadCountLock.unlock();
+      requestQueueLock.unlock();
       break;
     }
-    requestQueueMtx.unlock();
+    requestQueueLock.unlock();
     if(!nopollRequest)
-      return;
+      continue;
     switch(nopollRequest->messageType){
       case REQUEST_MESSAGE_TYPE_OPEN:
         getConnectNopoll(nopollRequest);
@@ -94,19 +94,19 @@ void NopollWebsocket::multiConn(){
 
 void  NopollWebsocket::pollThread() {
   while(true) { //forever
-    requestQueueMtx.lock();
+    requestQueueLock.lock();
     if(RequestQueue.empty()){
-      requestQueueMtx.unlock();
+      requestQueueLock.unlock();
       sem_wait(&startDownloadingThread);
     } else {
-      globalMtx.lock();
+      threadCountLock.lock();
       if(currentWorkerThreadCount < MAX_WORKER_THEAD_COUNT) {
         std::thread connectionThreads(&NopollWebsocket::multiConn,this);
         connectionThreads.detach();
         currentWorkerThreadCount++;
       }
-      globalMtx.unlock();
-      requestQueueMtx.unlock();
+      threadCountLock.unlock();
+      requestQueueLock.unlock();
       usleep(100); //to avoid cpu utilization
     }
   }
@@ -151,9 +151,9 @@ std::string * NopollWebsocket::parseUrl(std::string& url) {
 
 void NopollWebsocket::getConnect(NopollRequest* nopollRequest) {
   nopollRequest->messageType = REQUEST_MESSAGE_TYPE_OPEN;
-  requestQueueMtx.lock();
+  requestQueueLock.lock();
   RequestQueue.push(nopollRequest);
-  requestQueueMtx.unlock();
+  requestQueueLock.unlock();
   sem_post(&startDownloadingThread);
 }
 
@@ -196,9 +196,9 @@ void NopollWebsocket::getConnectNopoll(NopollRequest* nopollRequest) {
 
 void NopollWebsocket::send(NopollRequest* nopollRequest) {
   nopollRequest->messageType = REQUEST_MESSAGE_TYPE_SEND;
-  requestQueueMtx.lock();
+  requestQueueLock.lock();
   RequestQueue.push(nopollRequest);
-  requestQueueMtx.unlock();
+  requestQueueLock.unlock();
   sem_post(&startDownloadingThread);
 }
 
@@ -220,9 +220,9 @@ void NopollWebsocket::sendNopoll(NopollRequest* nopollRequest) {
 
 void NopollWebsocket::close(NopollRequest* nopollRequest) {
   nopollRequest->messageType = REQUEST_MESSAGE_TYPE_CLOSE;
-  requestQueueMtx.lock();
+  requestQueueLock.lock();
   RequestQueue.push(nopollRequest);
-  requestQueueMtx.unlock();
+  requestQueueLock.unlock();
   sem_post(&startDownloadingThread);
 }
 
@@ -241,10 +241,10 @@ void NopollWebsocket::closeNopoll(NopollRequest* nopollRequest) {
 }
 
 void NopollWebsocket::ping(NopollRequest* nopollRequest) {
-  requestQueueMtx.lock();
+  requestQueueLock.lock();
   nopollRequest->messageType = REQUEST_MESSAGE_TYPE_PING;
   RequestQueue.push(nopollRequest);
-  requestQueueMtx.unlock();
+  requestQueueLock.unlock();
   sem_post(&startDownloadingThread);
 }
 
@@ -262,9 +262,9 @@ void NopollWebsocket::pingNopoll(NopollRequest* nopollRequest) {
 
 void NopollWebsocket::sendBinary(NopollRequest* nopollRequest) {
   nopollRequest->messageType = REQUEST_MESSAGE_TYPE_SENDBINARY;
-  requestQueueMtx.lock();
+  requestQueueLock.lock();
   RequestQueue.push(nopollRequest);
-  requestQueueMtx.unlock();
+  requestQueueLock.unlock();
   sem_post(&startDownloadingThread);
 }
 
