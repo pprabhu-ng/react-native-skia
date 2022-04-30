@@ -21,7 +21,7 @@ class RSkComponentImage final : public RSkComponent {
  public:
   RSkComponentImage(const ShadowView &shadowView);
   RnsShell::LayerInvalidateMask updateComponentProps(const ShadowView &newShadowView,bool forceUpdate) override;
-
+  //std::function<void(void)> headerCallback;
  private :
   ImgProps imageProps;
 

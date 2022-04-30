@@ -18,7 +18,12 @@ using namespace std;
 namespace facebook {
 namespace react {
 
-typedef facebook::better::map <string,sk_sp<SkImage>> ImageCacheMap;
+typedef struct imageDataExpiryTime {
+  sk_sp<SkImage> imageData;
+  double expiryTime;
+}imageDataExpiryTime;
+
+typedef facebook::better::map <string,imageDataExpiryTime> ImageCacheMap;
 
 class RSkImageCacheManager {
  public:
@@ -31,11 +36,13 @@ class RSkImageCacheManager {
   static std::mutex mutex_;
   static RSkImageCacheManager *imageCacheManagerInstance_;
   ImageCacheMap imageCache_;
+  imageDataExpiryTime imageDataExpiryTime_;
   RSkImageCacheManager();
 
   void getCacheUsage(size_t usageArr[]);
   bool evictAsNeeded();
-
+  void expiryTimeCallback();
+ // int setSmallestTargetDuration();
 #ifdef RNS_IMAGE_CACHE_USAGE_DEBUG
   void printCacheUsage();
 #endif
