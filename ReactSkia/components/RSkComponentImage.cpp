@@ -181,6 +181,19 @@ void RSkComponentImage::requestNetworkImageData(ImageSource source) {
 
   folly::dynamic query = folly::dynamic::object();
 
+auto headerCallback = [&](void* curlResponse,void *userdata) -> size_t {
+  CurlResponse *response = (CurlResponse *)curlResponse;
+  CurlRequest * curlRequest = (CurlRequest *) userdata;
+  int cacheTime=0;
+  std::string buffer = response->headerBuffer;
+  std::string delimiter = "Cache-Control: max-age";
+  size_t pos = std::string::npos;
+  if((pos = buffer.find(delimiter)) != std::string::npos) {
+    cacheTime = stoi(buffer.substr(buffer.find(delimiter)+delimiter.size()+1,buffer.size()));
+  }
+    RNS_LOG_INFO("__-----------------headercallback hederBuffer max-age :"<< cacheTime <<"  headerBufferOffset :"<<response->headerBufferOffset);
+    return 0;
+  };
   // completioncallback lambda fuction
   auto completionCallback =  [&](void* curlresponseData,void *userdata)->bool {
     CurlResponse *responseData =  (CurlResponse *)curlresponseData;
@@ -191,6 +204,7 @@ void RSkComponentImage::requestNetworkImageData(ImageSource source) {
   };
 
   curlRequest->curldelegator.delegatorData = curlRequest;
+  curlRequest->curldelegator.CURLNetworkingHeaderCallback = headerCallback;
   curlRequest->curldelegator.CURLNetworkingCompletionCallback=completionCallback;
   sharedCurlNetworking->sendRequest(curlRequest,query);
 }
