@@ -40,6 +40,7 @@ public:
     virtual sk_sp<SkSurface> getBackbufferSurface() = 0;
 
     virtual void swapBuffers(std::vector<SkIRect> &damage) = 0;
+    virtual int getBufferAge() = 0;
     virtual bool makeContextCurrent() = 0;
 
     virtual bool isValid() = 0;
