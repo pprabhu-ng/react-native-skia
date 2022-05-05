@@ -46,6 +46,7 @@ public:
     bool isValid() override { return SkToBool(backendContext_.get()); }
 
     void swapBuffers(std::vector<SkIRect> &damage) override;
+    int getBufferAge() override;
 #if USE(RNS_SHELL_PARTIAL_UPDATES)
     bool hasSwapBuffersWithDamage() override;
     bool hasBufferCopy() override;
@@ -68,6 +69,7 @@ protected:
     void destroyContext();
     virtual void onDestroyContext() = 0;
     virtual void onSwapBuffers(std::vector<SkIRect> &damage) = 0;
+    virtual int getSwapBufferAge() = 0;
 #if USE(RNS_SHELL_PARTIAL_UPDATES)
     virtual bool onHasSwapBuffersWithDamage() = 0;
     virtual bool onHasBufferCopy() = 0;
