@@ -53,8 +53,10 @@ void NopollWebsocket::multiConn(){
     requestQueueLock_.lock();
     if(RequestQueue_.size() !=0) {
       nopollRequest =RequestQueue_.front();
-      if(!nopollRequest)
+      if(!nopollRequest) {
+        requestQueueLock_.unlock();
         continue;
+      }
       RequestQueue_.pop();
     } else {
       threadCountLock_.lock();
