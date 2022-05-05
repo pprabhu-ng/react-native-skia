@@ -75,6 +75,13 @@ void RSkComponentTextInput::drawTextInput(SkCanvas *canvas,
   ParagraphStyle paraStyle;
   float yOffset;
 
+  //cursor
+  int position = 0;
+  SkRect cursorRect;
+  std::vector<TextBox> rects;
+
+  OnScreenKeyboard::updatePlaceHolderString(displayString_);
+
   // setParagraphStyle
   textLayout.paraStyle.setMaxLines(NUMBER_OF_LINES);
   textLayout.paraStyle.setEllipsis(u"\u2026");
