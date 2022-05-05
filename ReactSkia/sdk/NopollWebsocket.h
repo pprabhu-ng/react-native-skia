@@ -69,6 +69,12 @@ private:
  noPollCtx* ctx_;
  static NopollWebsocket *sharedNopollWebsocket_;
  static std::mutex requestLock_;
+ std::queue<NopollRequest*> RequestQueue_;
+ int currentWorkerThreadCount_ = 0;
+ std::mutex threadCountLock_;
+ std::mutex requestQueueLock_;
+ sem_t startDownloadingThread_;  /*semaphore to signal downloading thread to start, once there is something in the list*/
+
 };
 }
 }
