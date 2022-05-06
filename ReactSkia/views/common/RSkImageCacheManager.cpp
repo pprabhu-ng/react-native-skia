@@ -28,7 +28,7 @@ namespace react {
 #define GPU_MEM_ARR_INDEX 1
 std::mutex imageCacheLock;
 std::mutex RSkImageCacheManager::mutex_;
-double scheduleTimeExpiry;
+
 RSkImageCacheManager* RSkImageCacheManager::imageCacheManagerInstance_{nullptr};
 
 RSkImageCacheManager::RSkImageCacheManager() { };
@@ -117,38 +117,28 @@ void printCacheUsage() {
 void RSkImageCacheManager::expiryTimeCallback() {
   ImageCacheMap::iterator it =imageCache_.begin();
   double currentTime = SkTime::GetSecs();
-  scheduleTimeExpiry = 31536000000;
-
+  double scheduleTimeExpiry = 31536000000;
+//RNS_LOG_INFO("------------expiryTimeCallback  currentTime:"<<currentTime);
   while(it != imageCache_.end()) {
+    RNS_LOG_INFO("----------second expiry time :"<<it->second.expiryTime<<" currentTime :"<<currentTime);
     if(it->second.expiryTime <= currentTime){
      std::cout<<"erase imageData :"<<std::endl;
      it=imageCache_.erase(it);
     } else{
       if (scheduleTimeExpiry > it->second.expiryTime)
         scheduleTimeExpiry = it->second.expiryTime;
-     it++;
+      RNS_LOG_INFO("----------expiryTimeCallback  currentTime: "<<currentTime <<" scheduleTimeExpiry :"<<scheduleTimeExpiry_);
+      it++;
     }
   }
-  //if(!imageCache_.size())
-   // timerRequest(scheduleTimeExpiry-currentTime,currentTime,0,timerExpiryCallback);
-    //rescheduleTimer(timerRequest);
+  if(imageCache_.size()){
+    scheduleTimeExpiry_ = scheduleTimeExpiry;
+    RNS_LOG_INFO("----------timer reschedule :"<<scheduleTimeExpiry_-SkTime::GetSecs());
+    timer_->reschedule((scheduleTimeExpiry_ - SkTime::GetSecs()),0);
+  } else {
+    scheduleTimeExpiry_=0;
+  }
 }
-/*
-int RSkImageCacheManager::setSmallestTargetDuration() {
- int smallestTargetDurstion;
- ImageCacheMap::iterator it =imageCache_.begin();
- scheduleTimerExpiry = 31536000000;
- while(it != imageCache_.end()) {
-   if(it->second.expiryTime < smallestTargetDurstion)
-    smallestTargetDurstion = it->second.expiryTime;
- }
- return (smallestTargetDurstion - SkTime::GetSecs());
-}*/
-/*void removeFromCache(url){
-  encodeImageCacheData =findImageDataInCache(url)
-  if(imageCache_.expiryTime > scheduleTimerExpiry)
-delete encodeImageCacheData from cacheList_
-}*/
 
 sk_sp<SkImage> RSkImageCacheManager::findImageDataInCache(const char* path) {
   std::scoped_lock lock(imageCacheLock);
@@ -158,24 +148,27 @@ sk_sp<SkImage> RSkImageCacheManager::findImageDataInCache(const char* path) {
   return imageData;
 }
 
-bool RSkImageCacheManager::imageDataInsertInCache(const char* path,sk_sp<SkImage> imageData) {
+bool RSkImageCacheManager::imageDataInsertInCache(const char* path,imageDataExpiryTime imageExpiryTimeData) {
   std::scoped_lock lock(imageCacheLock);
-  imageDataExpiryTime_.imageData = imageData;
-  imageDataExpiryTime_.expiryTime = (SkTime::GetSecs() + 1800);//convert min to sec 30 min *60 sec
-  if(imageData && evictAsNeeded()) {
-    imageCache_.insert(std::pair<std::string, imageDataExpiryTime>(path,imageDataExpiryTime_));
-    RNS_LOG_DEBUG("New Entry in Map..."<<" file :"<<path);
+  double currentTime = SkTime::GetSecs();
+  if(imageExpiryTimeData.imageData && evictAsNeeded()) {
+    imageCache_.insert(std::pair<std::string, imageDataExpiryTime>(path,imageExpiryTimeData));
+    RNS_LOG_INFO("New Entry in Map..."<<" file :"<<path<< "expiryTime :"<<imageExpiryTimeData.expiryTime);
     if(imageCache_.size()==1) {
-      scheduleTimeExpiry = imageDataExpiryTime_.expiryTime;
-      //timerRequest(scheduleTimeExpiry-currentTime,currentTime,0,timerExpiryCallback)
-      //createTimer();
-    expiryTimeCallback();
-    } else if ( imageDataExpiryTime_.expiryTime < scheduleTimeExpiry) {
-        scheduleTimeExpiry = imageDataExpiryTime_.expiryTime;
-      //  timerRequest(scheduleTimeExpiry-currentTime,currentTime,0,timerExpiryCallback)
-       // rescheduleTimer(timerRequest);
+      scheduleTimeExpiry_ = imageExpiryTimeData.expiryTime;
+      RNS_LOG_INFO("------------duration :"<<scheduleTimeExpiry_-currentTime <<"scheduleTimeExpiry: "<<scheduleTimeExpiry_<<"currentTime: "<<currentTime);
+      if(timer_ == nullptr) {
+        auto callback = std::bind(&RSkImageCacheManager::expiryTimeCallback,this);
+        timer_ = new Timer(scheduleTimeExpiry_-currentTime,0,callback,true);
+      }else {
+        timer_->reschedule( scheduleTimeExpiry_-currentTime,0);
+      }
+    } else if ( imageExpiryTimeData.expiryTime < scheduleTimeExpiry_) {
+      scheduleTimeExpiry_ = imageExpiryTimeData.expiryTime;
+      double duration = scheduleTimeExpiry_-currentTime;
+      RNS_LOG_INFO("------------duration :"<<scheduleTimeExpiry_-currentTime);
+      timer_->reschedule(duration,0);
     }
-
     return true;
   } else {
     RNS_LOG_ERROR("Insert image data to cache failed... :"<<" file :" << path);
