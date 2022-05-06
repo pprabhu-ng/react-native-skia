@@ -15,6 +15,8 @@
 #include "ReactSkia/utils/RnsLog.h"
 #include "ReactSkia/utils/RnsUtils.h"
 #include "ReactSkia/views/common/RSkConversion.h"
+#include "cjson/cJSON.h"
+#include <folly/json.h>
 namespace facebook {
 namespace react {
 
@@ -114,8 +116,11 @@ sk_sp<SkImage> RSkComponentImage::getLocalImageData(ImageSource source) {
     return nullptr;
   }
   imageData = SkImage::MakeFromEncoded(data);
-  if(imageData)
-    RSkImageCacheManager::getImageCacheManagerInstance()->imageDataInsertInCache(source.uri.c_str(), imageData);
+  if(imageData) {
+    imageDataExpiryTime_.imageData = imageData;
+    imageDataExpiryTime_.expiryTime = (SkTime::GetSecs() + 1800);//convert min to sec 30 min *60 sec
+    RSkImageCacheManager::getImageCacheManagerInstance()->imageDataInsertInCache(source.uri.c_str(), imageDataExpiryTime_);
+  }
 
 #ifdef RNS_IMAGE_CACHE_USAGE_DEBUG
     printCacheUsage();
@@ -170,7 +175,9 @@ void RSkComponentImage::processImageData(const char* path, char* response, int s
     }
     findImageData = SkImage::MakeFromEncoded(data);
       //Add in cache if image data is valid
-    if(findImageData && RSkImageCacheManager::getImageCacheManagerInstance()->imageDataInsertInCache(path, findImageData))
+    imageDataExpiryTime_.imageData = findImageData;
+    imageDataExpiryTime_.expiryTime = (SkTime::GetSecs() + 60);//convert min to sec 30 min *60 sec
+    if(findImageData && RSkImageCacheManager::getImageCacheManagerInstance()->imageDataInsertInCache(path, imageDataExpiryTime_))
       drawAndSubmit();
   }
 }
@@ -184,14 +191,24 @@ void RSkComponentImage::requestNetworkImageData(ImageSource source) {
 auto headerCallback = [&](void* curlResponse,void *userdata) -> size_t {
   CurlResponse *response = (CurlResponse *)curlResponse;
   CurlRequest * curlRequest = (CurlRequest *) userdata;
-  int cacheTime=0;
+  //cJSON* cjson_control_cache = NULL;
+  //cJSON* cjson_name = NULL;
+  folly::dynamic obj = folly::dynamic::object();
+  obj = folly::parseJson(toJson(response->headerBuffer));
+  //obj = response->headerBuffer;
+  /*int cacheTime=0;
   std::string buffer = response->headerBuffer;
   std::string delimiter = "Cache-Control: max-age";
   size_t pos = std::string::npos;
   if((pos = buffer.find(delimiter)) != std::string::npos) {
     cacheTime = stoi(buffer.substr(buffer.find(delimiter)+delimiter.size()+1,buffer.size()));
-  }
-    RNS_LOG_INFO("__-----------------headercallback hederBuffer max-age :"<< cacheTime <<"  headerBufferOffset :"<<response->headerBufferOffset);
+  }*/
+  //cjson_control_cache =cJSON_Parse( response->headerBuffer);
+  //cjson_name = cJSON_GetObjectItem(cjson_control_cache, "Cache-Control");
+  //  auto ptr = obj.get_ptr("Cache-Control");
+    //printf("\n-----------------------------cache-control:%s\n",obj["Cache-Control"].c_str());
+    //RNS_LOG_INFO("__-----------------headercallback hederBuffer max-age :"<< ptr <<"  headerBufferOffset :"<<response->headerBufferOffset);
+   // RNS_LOG_INFO("__-----------------headercallback hederBuffer max-age :"<< cjson_name <<"  headerBufferOffset :"<<response->headerBufferOffset);
     return 0;
   };
   // completioncallback lambda fuction
