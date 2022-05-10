@@ -90,9 +90,11 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
        sk_sp<SkImageFilter> imageFilter(SkImageFilters::Tile(targetRect,frameRect,nullptr));
        paint.setImageFilter(std::move(imageFilter));
     }
+
     canvas->drawImageRect(imageData,targetRect,&paint);
     if(needClipAndRestore)
         canvas->restore();
+    networkImageData_ = nullptr;
     drawBorder(canvas,frame,imageBorderMetrics,imageProps.backgroundColor);
   } else {
   /* Emitting Image Load failed Event*/
@@ -118,7 +120,7 @@ sk_sp<SkImage> RSkComponentImage::getLocalImageData(ImageSource source) {
   imageData = SkImage::MakeFromEncoded(data);
   if(imageData) {
     imageDataExpiryTime_.imageData = imageData;
-    imageDataExpiryTime_.expiryTime = (SkTime::GetSecs() + 1800);//convert min to sec 30 min *60 sec
+    imageDataExpiryTime_.expiryTime = (SkTime::GetMSecs() + 1800);//convert min to sec 30 min *60 sec
     RSkImageCacheManager::getImageCacheManagerInstance()->imageDataInsertInCache(source.uri.c_str(), imageDataExpiryTime_);
   }
 
@@ -176,8 +178,9 @@ void RSkComponentImage::processImageData(const char* path, char* response, int s
     findImageData = SkImage::MakeFromEncoded(data);
       //Add in cache if image data is valid
     imageDataExpiryTime_.imageData = findImageData;
-    imageDataExpiryTime_.expiryTime = (SkTime::GetSecs() + 60);//convert min to sec 30 min *60 sec
+    imageDataExpiryTime_.expiryTime = (SkTime::GetSecs() + 60000);//convert sec to milisecond 60 *1000 
     if(findImageData && RSkImageCacheManager::getImageCacheManagerInstance()->imageDataInsertInCache(path, imageDataExpiryTime_))
+      networkImageData_ = findImageData;
       drawAndSubmit();
   }
 }
@@ -188,27 +191,28 @@ void RSkComponentImage::requestNetworkImageData(ImageSource source) {
 
   folly::dynamic query = folly::dynamic::object();
 
-auto headerCallback = [&](void* curlResponse,void *userdata) -> size_t {
-  CurlResponse *response = (CurlResponse *)curlResponse;
-  CurlRequest * curlRequest = (CurlRequest *) userdata;
-  //cJSON* cjson_control_cache = NULL;
-  //cJSON* cjson_name = NULL;
-  folly::dynamic obj = folly::dynamic::object();
-  obj = folly::parseJson(toJson(response->headerBuffer));
-  //obj = response->headerBuffer;
-  /*int cacheTime=0;
-  std::string buffer = response->headerBuffer;
-  std::string delimiter = "Cache-Control: max-age";
-  size_t pos = std::string::npos;
-  if((pos = buffer.find(delimiter)) != std::string::npos) {
-    cacheTime = stoi(buffer.substr(buffer.find(delimiter)+delimiter.size()+1,buffer.size()));
-  }*/
-  //cjson_control_cache =cJSON_Parse( response->headerBuffer);
-  //cjson_name = cJSON_GetObjectItem(cjson_control_cache, "Cache-Control");
-  //  auto ptr = obj.get_ptr("Cache-Control");
+  auto headerCallback = [&](void* curlResponse,void *userdata) -> size_t {
+    CurlResponse *response = (CurlResponse *)curlResponse;
+    CurlRequest * curlRequest = (CurlRequest *) userdata;
+    RNS_LOG_INFO("------------headercallback");
+    //cJSON* cjson_control_cache = NULL;
+    //cJSON* cjson_name = NULL;
+    folly::dynamic obj = folly::dynamic::object();
+    obj = folly::parseJson(toJson(response->headerBuffer));
+    //obj = response->headerBuffer;
+    /*int cacheTime=0;
+    std::string buffer = response->headerBuffer;
+    std::string delimiter = "Cache-Control: max-age";
+    size_t pos = std::string::npos;
+    if((pos = buffer.find(delimiter)) != std::string::npos) {
+      cacheTime = stoi(buffer.substr(buffer.find(delimiter)+delimiter.size()+1,buffer.size()));
+    }*/
+    //cjson_control_cache =cJSON_Parse( response->headerBuffer);
+    //cjson_name = cJSON_GetObjectItem(cjson_control_cache, "Cache-Control");
+    //  auto ptr = obj.get_ptr("Cache-Control");
     //printf("\n-----------------------------cache-control:%s\n",obj["Cache-Control"].c_str());
     //RNS_LOG_INFO("__-----------------headercallback hederBuffer max-age :"<< ptr <<"  headerBufferOffset :"<<response->headerBufferOffset);
-   // RNS_LOG_INFO("__-----------------headercallback hederBuffer max-age :"<< cjson_name <<"  headerBufferOffset :"<<response->headerBufferOffset);
+    // RNS_LOG_INFO("__-----------------headercallback hederBuffer max-age :"<< cjson_name <<"  headerBufferOffset :"<<response->headerBufferOffset);
     return 0;
   };
   // completioncallback lambda fuction
