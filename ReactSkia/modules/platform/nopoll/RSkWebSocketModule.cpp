@@ -79,7 +79,9 @@ jsi::Value RSkWebSocketModule::getClose(
   int code,
   std::string reason,
   int socketID)  {
+  connectionListLock_.lock();
   WebsocketRequest*  websocketRequest =  connectionList_[socketID];
+  connectionListLock_.unlock();
   if(websocketRequest == NULL ) {
     RNS_LOG_ERROR ("websocketRequest is not valid \n");
     return jsi::Value();
@@ -91,12 +93,13 @@ jsi::Value RSkWebSocketModule::getClose(
       folly::dynamic parameters = folly::dynamic::object();
       WebsocketRequest * websocketRequest = (WebsocketRequest *)userData;
       parameters["id"] = websocketRequest->socketID;
-      parameters["code"] = code;
-      parameters["reason"] = reason;      
+      parameters["code"] = websocketRequest->nopollRequest_->closeRequestCode;
+      parameters["reason"] = websocketRequest->nopollRequest_->closeReason;
+      connectionListLock_.lock();
       connectionList_.erase(websocketRequest->socketID);
+      connectionListLock_.unlock();
       sendEventWithName(events_[1], folly::dynamic(parameters));
   };
-
   websocketRequest->nopollRequest_->nopolldelegator.NOPOLLDisconnectCallback = disconnectCallback;
   sharedNopollWebsocket_->close(websocketRequest->nopollRequest_);
   return jsi::Value();

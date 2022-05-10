@@ -57,6 +57,7 @@ class RSkWebSocketModule:  public RSkWebSocketModuleBase {
                                     "websocketMessage","websocketFailed"};
   private:
    NopollWebsocket* sharedNopollWebsocket_;
+   std::mutex connectionListLock_;
 };
 }
 }
