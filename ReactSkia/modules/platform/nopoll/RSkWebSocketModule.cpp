@@ -53,7 +53,9 @@ jsi::Value RSkWebSocketModule::getConnect(
     WebsocketRequest* websocketRequest = (WebsocketRequest*)userData;
     folly::dynamic parameters = folly::dynamic::object();
     parameters["id"] = websocketRequest->socketID;
+    connectionListLock_.lock();
     connectionList_[websocketRequest->socketID] = websocketRequest;
+    connectionListLock_.unlock();
     sendEventWithName(events_[0], folly::dynamic(parameters)); 
   };
 
@@ -108,7 +110,9 @@ jsi::Value RSkWebSocketModule::getClose(
 jsi::Value RSkWebSocketModule::send(
   std::string message,
   int socketID)  {
+  connectionListLock_.lock();
 	WebsocketRequest*  websocketRequest =  connectionList_[socketID];
+  connectionListLock_.unlock();
   if(websocketRequest == NULL ) {
     RNS_LOG_ERROR ("websocketRequest is not valid \n");
     return jsi::Value();
@@ -121,7 +125,9 @@ jsi::Value RSkWebSocketModule::send(
 jsi::Value RSkWebSocketModule::sendBinary(
   std::string base64String,
   int socketID)  {
+  connectionListLock_.lock();
 	WebsocketRequest*  websocketRequest =  connectionList_[socketID];
+  connectionListLock_.unlock();
   if(websocketRequest == NULL ) {
     RNS_LOG_ERROR ("websocketRequest is not valid \n");
     return jsi::Value();
@@ -133,7 +139,9 @@ jsi::Value RSkWebSocketModule::sendBinary(
 
 jsi::Value RSkWebSocketModule::ping(
   int socketID)  {
+  connectionListLock_.lock();
   WebsocketRequest*  websocketRequest =  connectionList_[socketID];
+  connectionListLock_.unlock();
   if(websocketRequest == NULL ) {
     RNS_LOG_ERROR ("websocketRequest is not valid \n");
     return jsi::Value();
