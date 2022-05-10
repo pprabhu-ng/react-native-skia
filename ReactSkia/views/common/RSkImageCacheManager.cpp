@@ -116,27 +116,27 @@ void printCacheUsage() {
 
 void RSkImageCacheManager::expiryTimeCallback() {
   ImageCacheMap::iterator it =imageCache_.begin();
-  double currentTime = SkTime::GetSecs();
+  double currentTime = SkTime::GetMSecs();
   double scheduleTimeExpiry = 31536000000;
-//RNS_LOG_INFO("------------expiryTimeCallback  currentTime:"<<currentTime);
+  printf("------------expiryTimeCallback  currentTime: %lf\n",currentTime);
   while(it != imageCache_.end()) {
-    RNS_LOG_INFO("----------second expiry time :"<<it->second.expiryTime<<" currentTime :"<<currentTime);
+    printf("----------second expiry time : %lf currentTime : %lf\n",it->second.expiryTime,currentTime);
     if(it->second.expiryTime <= currentTime){
-     std::cout<<"erase imageData :"<<std::endl;
-     it=imageCache_.erase(it);
+     std::cout<<"erase imageData :"<<it->first<<std::endl;
+     it = imageCache_.erase(it);
     } else{
       if (scheduleTimeExpiry > it->second.expiryTime)
         scheduleTimeExpiry = it->second.expiryTime;
-      RNS_LOG_INFO("----------expiryTimeCallback  currentTime: "<<currentTime <<" scheduleTimeExpiry :"<<scheduleTimeExpiry_);
+      printf("----------expiryTimeCallback  currentTime: %lf  scheduleTimeExpiry : %lf \n",currentTime ,scheduleTimeExpiry_);
       it++;
     }
   }
   if(imageCache_.size()){
     scheduleTimeExpiry_ = scheduleTimeExpiry;
-    RNS_LOG_INFO("----------timer reschedule :"<<scheduleTimeExpiry_-SkTime::GetSecs());
-    timer_->reschedule((scheduleTimeExpiry_ - SkTime::GetSecs()),0);
+    printf("----------timer reschedule :%lf \n",scheduleTimeExpiry_ - SkTime::GetMSecs());
+    timer_->reschedule((scheduleTimeExpiry_ - SkTime::GetMSecs()),0);
   } else {
-    scheduleTimeExpiry_=0;
+    scheduleTimeExpiry_ = 0;
   }
 }
 
@@ -144,29 +144,30 @@ sk_sp<SkImage> RSkImageCacheManager::findImageDataInCache(const char* path) {
   std::scoped_lock lock(imageCacheLock);
   sk_sp<SkImage> imageData{nullptr};
   ImageCacheMap::iterator it = imageCache_.find(path);
-  imageData= ((it != imageCache_.end()) ? it->second.imageData : nullptr);
+  imageData = ((it != imageCache_.end()) ? it->second.imageData : nullptr);
   return imageData;
 }
 
 bool RSkImageCacheManager::imageDataInsertInCache(const char* path,imageDataExpiryTime imageExpiryTimeData) {
   std::scoped_lock lock(imageCacheLock);
-  double currentTime = SkTime::GetSecs();
+  double currentTime = SkTime::GetMSecs();
   if(imageExpiryTimeData.imageData && evictAsNeeded()) {
     imageCache_.insert(std::pair<std::string, imageDataExpiryTime>(path,imageExpiryTimeData));
-    RNS_LOG_INFO("New Entry in Map..."<<" file :"<<path<< "expiryTime :"<<imageExpiryTimeData.expiryTime);
-    if(imageCache_.size()==1) {
+    RNS_LOG_INFO("New Entry in Map..."<<" file :"<<path<< "  expiryTime :"<<imageExpiryTimeData.expiryTime);
+    if(imageCache_.size() == 1) {
       scheduleTimeExpiry_ = imageExpiryTimeData.expiryTime;
-      RNS_LOG_INFO("------------duration :"<<scheduleTimeExpiry_-currentTime <<"scheduleTimeExpiry: "<<scheduleTimeExpiry_<<"currentTime: "<<currentTime);
+      printf("------------current time %f\n",SkTime::GetMSecs());
+      printf("------------duration : %lf  scheduleTimeExpiry: %lf  currentTime: %lf\n",scheduleTimeExpiry_ - currentTime,scheduleTimeExpiry_,currentTime);
       if(timer_ == nullptr) {
         auto callback = std::bind(&RSkImageCacheManager::expiryTimeCallback,this);
-        timer_ = new Timer(scheduleTimeExpiry_-currentTime,0,callback,true);
+        timer_ = new Timer(scheduleTimeExpiry_ - currentTime,0,callback,true);
       }else {
-        timer_->reschedule( scheduleTimeExpiry_-currentTime,0);
+        timer_->reschedule( scheduleTimeExpiry_ - currentTime,0);
       }
-    } else if ( imageExpiryTimeData.expiryTime < scheduleTimeExpiry_) {
+    } else if (imageExpiryTimeData.expiryTime < scheduleTimeExpiry_) {
       scheduleTimeExpiry_ = imageExpiryTimeData.expiryTime;
-      double duration = scheduleTimeExpiry_-currentTime;
-      RNS_LOG_INFO("------------duration :"<<scheduleTimeExpiry_-currentTime);
+      double duration = scheduleTimeExpiry_ - currentTime;
+      printf("------------duration : %lf",scheduleTimeExpiry_ - currentTime);
       timer_->reschedule(duration,0);
     }
     return true;

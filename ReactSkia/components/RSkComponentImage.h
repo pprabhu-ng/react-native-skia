@@ -23,6 +23,7 @@ class RSkComponentImage final : public RSkComponent {
   RnsShell::LayerInvalidateMask updateComponentProps(const ShadowView &newShadowView,bool forceUpdate) override;
  private :
   ImgProps imageProps;
+  sk_sp<SkImage> networkImageData_;
   imageDataExpiryTime imageDataExpiryTime_;
   sk_sp<SkImage> getLocalImageData(ImageSource source);
   void requestNetworkImageData(ImageSource source);
