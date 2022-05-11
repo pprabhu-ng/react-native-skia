@@ -133,10 +133,10 @@ class OnScreenKeyboard : public WindowDelegator{
         void emitOSKKeyEvent(rnsKey keyValue);
         void windowReadyToDrawCB();
 
-        bool drawHighLightOnKey(SkPoint index);
-        bool drawOSK();
-        bool drawKBLayout(OSKTypes oskType);
-        bool drawKBKeyFont(SkPoint index,SkColor color,bool onHLTile=false);
+        void drawHighLightOnKey(SkPoint index);
+        void drawOSK();
+        void drawKBLayout(OSKTypes oskType);
+        void drawKBKeyFont(SkPoint index,SkColor color,bool onHLTile=false);
 
 // Members for OSK Layout & sytling
         OSKConfig     oskConfig_;

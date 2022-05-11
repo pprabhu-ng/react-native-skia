@@ -37,66 +37,73 @@ void  WindowDelegator::createNativeWindow() {
                                                                              std::placeholders::_1);
         exposeEventID_ = NotificationCenter::defaultCenter().addListener("windowExposed",handler);
     }
-    oskWindow_ = RnsShell::Window::createNativeWindow(&RnsShell::PlatformDisplay::sharedDisplayForCompositing(),
+    window_ = RnsShell::Window::createNativeWindow(&RnsShell::PlatformDisplay::sharedDisplayForCompositing(),
                                                    SkSize::Make(windowSize_.width(),windowSize_.height()),
                                                    RnsShell::SubWindow);
-    if(oskWindow_) {
-        oskWindowContext_ = RnsShell::WCF::createContextForWindow(reinterpret_cast<GLNativeWindowType>(oskWindow_->nativeWindowHandle()),
+    if(window_) {
+        windowContext_ = RnsShell::WCF::createContextForWindow(reinterpret_cast<GLNativeWindowType>(window_->nativeWindowHandle()),
                    &RnsShell::PlatformDisplay::sharedDisplayForCompositing(), RnsShell::DisplayParams());
-        if(oskWindowContext_) {
-            oskWindowContext_->makeContextCurrent();
-            backBuffer_ = oskWindowContext_->getBackbufferSurface();
-            oskCanvas = backBuffer_->getCanvas();
+        if(windowContext_) {
+            windowContext_->makeContextCurrent();
+            backBuffer_ = windowContext_->getBackbufferSurface();
+            windowDelegatorCanvas = backBuffer_->getCanvas();
+            windowActive = true;
             if(displayPlatForm_ == RnsShell::PlatformDisplay::Type::X11) {
                 sem_post(&semReadyToDraw_);
             } else if(windowReadyTodrawCB_) windowReadyTodrawCB_();
         } else {
-          RNS_LOG_ERROR("Invalid windowContext for nativeWindowHandle : " << oskWindow_->nativeWindowHandle());
+          RNS_LOG_ERROR("Invalid windowContext for nativeWindowHandle : " << window_->nativeWindowHandle());
         }
     }
 }
 
 void WindowDelegator::closeWindow() {
-
+    RNS_LOG_TODO("Sync between rendering & Exit to be handled ");
+    windowActive = false;
     if(ownsTaskrunner_) windowTaskRunner_->stop();
 
     if(exposeEventID_) {
         NotificationCenter::defaultCenter().removeListener(exposeEventID_);
         exposeEventID_=-1;
     }
-    if(oskWindow_) {
-        oskWindow_->closeWindow();
-        delete oskWindow_;
-        oskWindow_=nullptr;
+    if(window_) {
+        window_->closeWindow();
+        delete window_;
+        window_=nullptr;
     }
     sem_destroy(&semReadyToDraw_);
-    oskCanvas=nullptr;
+    windowDelegatorCanvas=nullptr;
     windowReadyTodrawCB_=nullptr;
 }
 
 void WindowDelegator::commitDrawCall() {
-    if( ownsTaskrunner_ && windowTaskRunner_->running() )  {
-        windowTaskRunner_->dispatch([&](){ renderToDisplay(); });
+    if(!windowActive) return;
+
+    if( ownsTaskrunner_ )  {
+        if( windowTaskRunner_->running() )
+            windowTaskRunner_->dispatch([&](){ renderToDisplay(); });
     } else {
         renderToDisplay();
     }
 }
 
 inline void WindowDelegator::renderToDisplay() {
+    if(!windowActive) return;
+
     backBuffer_->flushAndSubmit();
     std::vector<SkIRect> emptyRect;// No partialUpdate handled , so passing emptyRect instead of dirtyRect
-    oskWindowContext_->swapBuffers(emptyRect);
+    windowContext_->swapBuffers(emptyRect);
 }
 
 void WindowDelegator::setWindowTittle(const char* titleString) {
-    if(oskWindow_) oskWindow_->setTitle(titleString);
+    if(window_) window_->setTitle(titleString);
 }
 
 void WindowDelegator::onExposeHandler(RnsShell::Window* window) {
 
-    if(window  == oskWindow_) {
+    if(window  == window_) {
         sem_wait(&semReadyToDraw_);
-        oskWindow_->show();
+        window_->show();
         if(exposeEventID_) {
             NotificationCenter::defaultCenter().removeListener(exposeEventID_);
             exposeEventID_=-1;
