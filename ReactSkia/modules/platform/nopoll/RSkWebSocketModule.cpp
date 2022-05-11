@@ -111,7 +111,7 @@ jsi::Value RSkWebSocketModule::send(
   std::string message,
   int socketID)  {
   connectionListLock_.lock();
-	WebsocketRequest*  websocketRequest =  connectionList_[socketID];
+  WebsocketRequest*  websocketRequest =  connectionList_[socketID];
   connectionListLock_.unlock();
   if(websocketRequest == NULL ) {
     RNS_LOG_ERROR ("websocketRequest is not valid \n");
@@ -126,7 +126,7 @@ jsi::Value RSkWebSocketModule::sendBinary(
   std::string base64String,
   int socketID)  {
   connectionListLock_.lock();
-	WebsocketRequest*  websocketRequest =  connectionList_[socketID];
+  WebsocketRequest*  websocketRequest =  connectionList_[socketID];
   connectionListLock_.unlock();
   if(websocketRequest == NULL ) {
     RNS_LOG_ERROR ("websocketRequest is not valid \n");
