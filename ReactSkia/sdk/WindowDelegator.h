@@ -27,28 +27,29 @@ class WindowDelegator {
         void setWindowTittle(const char* titleString);
         void commitDrawCall();
 
-        SkCanvas *oskCanvas{nullptr};
+        SkCanvas *windowDelegatorCanvas{nullptr};
 
     private:
-    void onExposeHandler(RnsShell::Window* window);
-    void windowWorkerThread();
-    void createNativeWindow();
-    void renderToDisplay();
+        void onExposeHandler(RnsShell::Window* window);
+        void windowWorkerThread();
+        void createNativeWindow();
+        void renderToDisplay();
 
-    std::unique_ptr<RnsShell::WindowContext> oskWindowContext_{nullptr};
-    RnsShell::Window* oskWindow_{nullptr};
-    sk_sp<SkSurface>  backBuffer_;
+        std::unique_ptr<RnsShell::WindowContext> windowContext_{nullptr};
+        RnsShell::Window* window_{nullptr};
+        sk_sp<SkSurface>  backBuffer_;
 
     /*To fulfill OpenGl requirement of create & rendering to be handled from same thread context*/
-    std::unique_ptr<RnsShell::TaskLoop> windowTaskRunner_{nullptr};
-    bool ownsTaskrunner_{false};
+        std::unique_ptr<RnsShell::TaskLoop> windowTaskRunner_{nullptr};
+        bool ownsTaskrunner_{false};
     /* members to fullfill X11 suggestion of "draw on receiving expose event to avoid data loss" */
-    sem_t semReadyToDraw_;
-    std::function<void ()> windowReadyTodrawCB_{nullptr};
+        sem_t semReadyToDraw_;
+        std::function<void ()> windowReadyTodrawCB_{nullptr};
 
-    RnsShell::PlatformDisplay::Type displayPlatForm_;
-    int exposeEventID_{-1};
-    SkSize windowSize_;
+        RnsShell::PlatformDisplay::Type displayPlatForm_;
+        int exposeEventID_{-1};
+        SkSize windowSize_;
+        bool windowActive{false};
 };
 
 
