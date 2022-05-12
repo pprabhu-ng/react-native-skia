@@ -17,9 +17,7 @@
 #include "src/image/SkImage_Base.h"
 
 #include "GLWindowContext.h"
-#include <thread>
-#include <mutex>
-std::mutex mtx1;
+
 namespace RnsShell {
 
 GLWindowContext::GLWindowContext(const DisplayParams& params)
@@ -84,15 +82,7 @@ sk_sp<SkSurface> GLWindowContext::getBackbufferSurface() {
 }
 
 void GLWindowContext::swapBuffers(std::vector<SkIRect> &damage) {
-    RNS_LOG_ERROR("From Thread : "<<std::this_thread::get_id());
     this->onSwapBuffers(damage);
-    RNS_LOG_ERROR("From Thread :  DONE"<<std::this_thread::get_id());
-}
-
-int GLWindowContext::getBufferAge() {
-    RNS_LOG_ERROR("From Thread : "<<std::this_thread::get_id());
-    return (int)this->getSwapBufferAge();
-    RNS_LOG_ERROR("From Thread :  DONE"<<std::this_thread::get_id());
 }
 
 #if USE(RNS_SHELL_PARTIAL_UPDATES)

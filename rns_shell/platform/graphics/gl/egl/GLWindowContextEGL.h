@@ -37,7 +37,6 @@ public:
     static bool isExtensionSupported(const char* extensionList, const char* extension);
 
     void onSwapBuffers(std::vector<SkIRect> &damage) override;
-    int getSwapBufferAge() override;
     void onDestroyContext() override;
 #if USE(RNS_SHELL_PARTIAL_UPDATES)
     bool onHasSwapBuffersWithDamage() override;
