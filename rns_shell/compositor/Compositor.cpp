@@ -17,7 +17,7 @@
 #ifdef RNS_SHELL_HAS_GPU_SUPPORT
 #include "GLWindowContext.h"
 #endif
-#include <thread>
+
 #include "Compositor.h"
 
 namespace RnsShell {
@@ -149,7 +149,6 @@ void Compositor::renderLayerTree() {
 #ifdef RNS_SHELL_HAS_GPU_SUPPORT
         WindowContext::grTransactionBegin();
 #endif
-         RNS_LOG_ERROR("From Thread : Flush & Submit ==> "<<std::this_thread::get_id());
         RNS_PROFILE_API_OFF("Render Tree Paint", rootLayer_.get()->paint(paintContext));
         RNS_PROFILE_API_OFF("SkSurface Flush & Submit", backBuffer_->flushAndSubmit());
 #ifdef RNS_SHELL_HAS_GPU_SUPPORT
@@ -168,7 +167,6 @@ void Compositor::renderLayerTree() {
             prevSwapTimestamp = SkTime::GetNSecs() * 1e-3;
         }
 #endif
-         RNS_LOG_ERROR("From Thread : Swap Buffer => "<<std::this_thread::get_id());
         RNS_PROFILE_API_OFF("SwapBuffers", windowContext_->swapBuffers(surfaceDamage_));
         client_.didRenderFrame();
     }
