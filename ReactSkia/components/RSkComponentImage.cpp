@@ -22,8 +22,7 @@
 #include "ReactSkia/utils/RnsLog.h"
 #include "ReactSkia/utils/RnsUtils.h"
 #include "ReactSkia/views/common/RSkConversion.h"
-#include "cjson/cJSON.h"
-#include <folly/json.h>
+
 namespace facebook {
 namespace react {
 
