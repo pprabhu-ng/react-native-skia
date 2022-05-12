@@ -40,7 +40,6 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
 
   /*First to check file entry presence . If not exist, generate imageData*/
   if(!networkImageData_){
-    RNS_LOG_INFO("------------------networkimagdta nullptr");
     if(!imageProps.sources.empty()){
       imageData = RSkImageCacheManager::getImageCacheManagerInstance()->findImageDataInCache(imageProps.sources[0].uri.c_str());
       if(!imageData) {
