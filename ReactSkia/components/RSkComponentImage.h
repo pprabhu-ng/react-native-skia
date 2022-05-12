@@ -1,3 +1,9 @@
+/*
+* Copyright (C) 1994-2022 OpenTV, Inc. and Nagravision S.A.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
 #pragma once
 
 #include "include/core/SkRect.h"
@@ -8,6 +14,7 @@
 #include "ReactSkia/views/common/RSkImageCacheManager.h"
 
 #define DEFAULT_IMAGE_FILTER_QUALITY kLow_SkFilterQuality /*Skia's Defualt is kNone_SkFilterQuality*/
+#define DEFAULT_MAX_CACHE_EXPIRY_TIME 1800000 // 30mins in seconds 1800000
 
 namespace facebook {
 namespace react {
@@ -25,6 +32,9 @@ class RSkComponentImage final : public RSkComponent {
   ImgProps imageProps;
   sk_sp<SkImage> networkImageData_;
   imageDataExpiryTime imageDataExpiryTime_;
+  bool canCacheData_{true};
+  double cacheExpiryTime_{DEFAULT_MAX_CACHE_EXPIRY_TIME};
+
   sk_sp<SkImage> getLocalImageData(ImageSource source);
   void requestNetworkImageData(ImageSource source);
 

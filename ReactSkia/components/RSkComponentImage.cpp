@@ -1,3 +1,10 @@
+/*
+* Copyright (C) 1994-2022 OpenTV, Inc. and Nagravision S.A.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
 #include "include/core/SkPaint.h"
 #include "include/core/SkClipOp.h"
 #include "include/core/SkImageFilter.h"
@@ -33,17 +40,22 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
   auto const &imageProps = *std::static_pointer_cast<ImageProps const>(component.props);
 
   /*First to check file entry presence . If not exist, generate imageData*/
-  if(!imageProps.sources.empty()){
-    imageData = RSkImageCacheManager::getImageCacheManagerInstance()->findImageDataInCache(imageProps.sources[0].uri.c_str());
-    if(!imageData) {
-      if (imageProps.sources[0].type == ImageSource::Type::Local) {
-        imageData = getLocalImageData(imageProps.sources[0]);
-      } else if(imageProps.sources[0].type == ImageSource::Type::Remote) {
-        requestNetworkImageData(imageProps.sources[0]);
+  if(!networkImageData_){
+    RNS_LOG_INFO("------------------networkimagdta nullptr");
+    if(!imageProps.sources.empty()){
+      imageData = RSkImageCacheManager::getImageCacheManagerInstance()->findImageDataInCache(imageProps.sources[0].uri.c_str());
+      if(!imageData) {
+        if (imageProps.sources[0].type == ImageSource::Type::Local) {
+          imageData = getLocalImageData(imageProps.sources[0]);
+        } else if(imageProps.sources[0].type == ImageSource::Type::Remote) {
+          requestNetworkImageData(imageProps.sources[0]);
+        }
       }
     }
   }
   auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
+  if(networkImageData_)
+    imageData = networkImageData_;
   if(imageData)
     /* Emitting Load completed Event*/
     imageEventEmitter->onLoad();
@@ -94,8 +106,8 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
     canvas->drawImageRect(imageData,targetRect,&paint);
     if(needClipAndRestore)
         canvas->restore();
-    networkImageData_ = nullptr;
     drawBorder(canvas,frame,imageBorderMetrics,imageProps.backgroundColor);
+    networkImageData_ = nullptr;
   } else {
   /* Emitting Image Load failed Event*/
     RNS_LOG_ERROR("Image not loaded :"<<imageProps.sources[0].uri.c_str());
@@ -120,7 +132,7 @@ sk_sp<SkImage> RSkComponentImage::getLocalImageData(ImageSource source) {
   imageData = SkImage::MakeFromEncoded(data);
   if(imageData) {
     imageDataExpiryTime_.imageData = imageData;
-    imageDataExpiryTime_.expiryTime = (SkTime::GetMSecs() + 1800);//convert min to sec 30 min *60 sec
+    imageDataExpiryTime_.expiryTime = (SkTime::GetMSecs() + 1800000);//convert min to millisecond 30 min *60 sec *1000
     RSkImageCacheManager::getImageCacheManagerInstance()->imageDataInsertInCache(source.uri.c_str(), imageDataExpiryTime_);
   }
 
@@ -178,11 +190,29 @@ void RSkComponentImage::processImageData(const char* path, char* response, int s
     findImageData = SkImage::MakeFromEncoded(data);
       //Add in cache if image data is valid
     imageDataExpiryTime_.imageData = findImageData;
-    imageDataExpiryTime_.expiryTime = (SkTime::GetSecs() + 60000);//convert sec to milisecond 60 *1000 
-    if(findImageData && RSkImageCacheManager::getImageCacheManagerInstance()->imageDataInsertInCache(path, imageDataExpiryTime_))
-      networkImageData_ = findImageData;
-      drawAndSubmit();
+    imageDataExpiryTime_.expiryTime = (SkTime::GetMSecs() + cacheExpiryTime_);//convert sec to milisecond 60 *1000
+    if(findImageData && canCacheData_)
+      RSkImageCacheManager::getImageCacheManagerInstance()->imageDataInsertInCache(path, imageDataExpiryTime_);
+    networkImageData_ = findImageData;
+    drawAndSubmit();
   }
+}
+
+inline bool shouldCacheData(std::string cacheControlData) {
+  if(cacheControlData.find("no-store") != std::string::npos) return false;
+  else if(cacheControlData.find("no-cache") != std::string::npos) return false;
+  else if(cacheControlData.find("max-age=0") != std::string::npos) return false;
+
+  return true;
+}
+
+inline double getCacheMaxAgeDuration(std::string cacheControlData) {
+  size_t maxAgePos = cacheControlData.find("max-age");
+  if(maxAgePos != std::string::npos) {
+    size_t maxAgeEndPos = cacheControlData.find(';',maxAgePos);
+    return std::stoi(cacheControlData.substr(maxAgePos+8,maxAgeEndPos));
+  }
+  return DEFAULT_MAX_CACHE_EXPIRY_TIME;
 }
 
 void RSkComponentImage::requestNetworkImageData(ImageSource source) {
@@ -191,30 +221,33 @@ void RSkComponentImage::requestNetworkImageData(ImageSource source) {
 
   folly::dynamic query = folly::dynamic::object();
 
-  auto headerCallback = [&](void* curlResponse,void *userdata) -> size_t {
-    CurlResponse *response = (CurlResponse *)curlResponse;
-    CurlRequest * curlRequest = (CurlRequest *) userdata;
-    RNS_LOG_INFO("------------headercallback");
-    //cJSON* cjson_control_cache = NULL;
-    //cJSON* cjson_name = NULL;
-    folly::dynamic obj = folly::dynamic::object();
-    obj = folly::parseJson(toJson(response->headerBuffer));
-    //obj = response->headerBuffer;
-    /*int cacheTime=0;
-    std::string buffer = response->headerBuffer;
-    std::string delimiter = "Cache-Control: max-age";
-    size_t pos = std::string::npos;
-    if((pos = buffer.find(delimiter)) != std::string::npos) {
-      cacheTime = stoi(buffer.substr(buffer.find(delimiter)+delimiter.size()+1,buffer.size()));
-    }*/
-    //cjson_control_cache =cJSON_Parse( response->headerBuffer);
-    //cjson_name = cJSON_GetObjectItem(cjson_control_cache, "Cache-Control");
-    //  auto ptr = obj.get_ptr("Cache-Control");
-    //printf("\n-----------------------------cache-control:%s\n",obj["Cache-Control"].c_str());
-    //RNS_LOG_INFO("__-----------------headercallback hederBuffer max-age :"<< ptr <<"  headerBufferOffset :"<<response->headerBufferOffset);
-    // RNS_LOG_INFO("__-----------------headercallback hederBuffer max-age :"<< cjson_name <<"  headerBufferOffset :"<<response->headerBufferOffset);
+  //Before network request, reset the cache info with default values
+  canCacheData_ = true;
+  cacheExpiryTime_ = DEFAULT_MAX_CACHE_EXPIRY_TIME;
+
+  // headercallback lambda fuction
+  auto headerCallback =  [&](void* curlresponseData,void *userdata)->bool {
+    CurlResponse *responseData =  (CurlResponse *)curlresponseData;
+    CurlRequest *curlRequest = (CurlRequest *) userdata;
+
+    double responseMaxAgeTime = DEFAULT_MAX_CACHE_EXPIRY_TIME;
+    double requestMaxAgeTime = DEFAULT_MAX_CACHE_EXPIRY_TIME;
+    // Parse server response headers and retrieve caching details
+    auto responseCacheControlData = responseData->headerBuffer.find("Cache-Control");
+    if(responseCacheControlData != responseData->headerBuffer.items().end()) {
+      std::string responseCacheControlString = responseCacheControlData->second.asString();
+      canCacheData_ = shouldCacheData(responseCacheControlString);
+      if(canCacheData_) responseMaxAgeTime = getCacheMaxAgeDuration(responseCacheControlString);
+    }
+
+    // TODO : Parse request headers and retrieve caching details
+
+    cacheExpiryTime_ = std::min(std::min(responseMaxAgeTime,requestMaxAgeTime),static_cast<double>(DEFAULT_MAX_CACHE_EXPIRY_TIME));
+    RNS_LOG_DEBUG("url [" << responseData->responseurl << "] canCacheData[" << canCacheData_ << "] cacheExpiryTime[" << cacheExpiryTime_ << "]");
     return 0;
   };
+
+
   // completioncallback lambda fuction
   auto completionCallback =  [&](void* curlresponseData,void *userdata)->bool {
     CurlResponse *responseData =  (CurlResponse *)curlresponseData;
