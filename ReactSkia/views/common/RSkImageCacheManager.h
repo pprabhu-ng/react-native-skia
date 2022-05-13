@@ -20,12 +20,12 @@ using namespace rns::sdk;
 namespace facebook {
 namespace react {
 
-typedef struct imageDataExpiryTime {
+typedef struct decodedimageCacheData {
   sk_sp<SkImage> imageData;
   double expiryTime;
-}imageDataExpiryTime;
+}decodedimageCacheData;
 
-typedef facebook::better::map <string,imageDataExpiryTime> ImageCacheMap;
+typedef better::map <string,decodedimageCacheData> ImageCacheMap;
 
 class RSkImageCacheManager {
  public:
@@ -33,7 +33,7 @@ class RSkImageCacheManager {
   static RSkImageCacheManager* getImageCacheManagerInstance();
   static void init();
   sk_sp<SkImage> findImageDataInCache(const char* path);
-  bool imageDataInsertInCache(const char* path,imageDataExpiryTime imageExpiryTimeData);
+  bool imageDataInsertInCache(const char* path,decodedimageCacheData imageExpiryTimeData);
  private:
   static std::mutex mutex_;
   static RSkImageCacheManager *imageCacheManagerInstance_;
@@ -44,7 +44,6 @@ class RSkImageCacheManager {
   void getCacheUsage(size_t usageArr[]);
   bool evictAsNeeded();
   void expiryTimeCallback();
- // int setSmallestTargetDuration();
 #ifdef RNS_IMAGE_CACHE_USAGE_DEBUG
   void printCacheUsage();
 #endif

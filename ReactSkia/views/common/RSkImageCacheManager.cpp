@@ -145,22 +145,22 @@ sk_sp<SkImage> RSkImageCacheManager::findImageDataInCache(const char* path) {
   return imageData;
 }
 
-bool RSkImageCacheManager::imageDataInsertInCache(const char* path,imageDataExpiryTime imageExpiryTimeData) {
+bool RSkImageCacheManager::imageDataInsertInCache(const char* path,decodedimageCacheData imageCacheData) {
   std::scoped_lock lock(imageCacheLock);
   double currentTime = SkTime::GetMSecs();
-  if(imageExpiryTimeData.imageData && evictAsNeeded()) {
-    imageCache_.insert(std::pair<std::string, imageDataExpiryTime>(path,imageExpiryTimeData));
-    RNS_LOG_INFO("New Entry in Map..."<<" file :"<<path<< "  expiryTime :"<<imageExpiryTimeData.expiryTime);
+  if(imageCacheData.imageData && evictAsNeeded()) {
+    imageCache_.insert(std::pair<std::string, decodedimageCacheData>(path,imageCacheData));
+    RNS_LOG_INFO("New Entry in Map..."<<" file :"<<path<< "  expiryTime :"<<imageCacheData.expiryTime);
     if(imageCache_.size() == 1) {
-      scheduleTimeExpiry_ = imageExpiryTimeData.expiryTime;
+      scheduleTimeExpiry_ = imageCacheData.expiryTime;
       if(timer_ == nullptr) {
         auto callback = std::bind(&RSkImageCacheManager::expiryTimeCallback,this);
         timer_ = new Timer(scheduleTimeExpiry_ - currentTime,0,callback,true);
       }else {
         timer_->reschedule( scheduleTimeExpiry_ - currentTime,0);
       }
-    } else if (imageExpiryTimeData.expiryTime < scheduleTimeExpiry_) {
-      scheduleTimeExpiry_ = imageExpiryTimeData.expiryTime;
+    } else if (imageCacheData.expiryTime < scheduleTimeExpiry_) {
+      scheduleTimeExpiry_ = imageCacheData.expiryTime;
       double duration = scheduleTimeExpiry_ - currentTime;
       timer_->reschedule(duration,0);
     }

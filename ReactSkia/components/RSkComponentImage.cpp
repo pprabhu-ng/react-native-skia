@@ -39,21 +39,21 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
   auto const &imageProps = *std::static_pointer_cast<ImageProps const>(component.props);
 
   /*First to check file entry presence . If not exist, generate imageData*/
-  if(!networkImageData_){
-    if(!imageProps.sources.empty()){
-      imageData = RSkImageCacheManager::getImageCacheManagerInstance()->findImageDataInCache(imageProps.sources[0].uri.c_str());
-      if(!imageData) {
-        if (imageProps.sources[0].type == ImageSource::Type::Local) {
-          imageData = getLocalImageData(imageProps.sources[0]);
-        } else if(imageProps.sources[0].type == ImageSource::Type::Remote) {
-          requestNetworkImageData(imageProps.sources[0]);
-        }
+  if(networkImageData_){
+    imageData = networkImageData_;
+    goto drawImage;
+  } else if(!imageProps.sources.empty()){
+    imageData = RSkImageCacheManager::getImageCacheManagerInstance()->findImageDataInCache(imageProps.sources[0].uri.c_str());
+    if(!imageData) {
+      if (imageProps.sources[0].type == ImageSource::Type::Local) {
+        imageData = getLocalImageData(imageProps.sources[0]);
+      } else if(imageProps.sources[0].type == ImageSource::Type::Remote) {
+        requestNetworkImageData(imageProps.sources[0]);
       }
     }
   }
+  drawImage:
   auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
-  if(networkImageData_)
-    imageData = networkImageData_;
   if(imageData)
     /* Emitting Load completed Event*/
     imageEventEmitter->onLoad();
@@ -117,6 +117,7 @@ sk_sp<SkImage> RSkComponentImage::getLocalImageData(ImageSource source) {
   sk_sp<SkImage> imageData{nullptr};
   sk_sp<SkData> data;
   string path;
+  decodedimageCacheData imageCacheData;
   path = generateUriPath(source.uri.c_str());
   if(!path.c_str()) {
     RNS_LOG_ERROR("Invalid File");
@@ -129,9 +130,9 @@ sk_sp<SkImage> RSkComponentImage::getLocalImageData(ImageSource source) {
   }
   imageData = SkImage::MakeFromEncoded(data);
   if(imageData) {
-    imageDataExpiryTime_.imageData = imageData;
-    imageDataExpiryTime_.expiryTime = (SkTime::GetMSecs() + 1800000);//convert min to millisecond 30 min *60 sec *1000
-    RSkImageCacheManager::getImageCacheManagerInstance()->imageDataInsertInCache(source.uri.c_str(), imageDataExpiryTime_);
+    imageCacheData.imageData = imageData;
+    imageCacheData.expiryTime = (SkTime::GetMSecs() + DEFAULT_MAX_CACHE_EXPIRY_TIME);//convert min to millisecond 30 min *60 sec *1000
+    RSkImageCacheManager::getImageCacheManagerInstance()->imageDataInsertInCache(source.uri.c_str(), imageCacheData);
   }
 
 #ifdef RNS_IMAGE_CACHE_USAGE_DEBUG
@@ -175,9 +176,10 @@ void RSkComponentImage::drawAndSubmit() {
 
 // callback for remoteImageData
 void RSkComponentImage::processImageData(const char* path, char* response, int size) {
+  decodedimageCacheData imageCacheData;
   // Responce callback from network. Get image data, insert in Cache and call Onpaint
-  sk_sp<SkImage> findImageData = RSkImageCacheManager::getImageCacheManagerInstance()->findImageDataInCache(path);
-  if(findImageData) {
+  sk_sp<SkImage> remoteImageData = RSkImageCacheManager::getImageCacheManagerInstance()->findImageDataInCache(path);
+  if(remoteImageData) {
     drawAndSubmit();
   } else {
     sk_sp<SkData> data = SkData::MakeWithCopy(response,size);
@@ -185,13 +187,14 @@ void RSkComponentImage::processImageData(const char* path, char* response, int s
       RNS_LOG_ERROR("Unable to make SkData for path : " << path);
       return;
     }
-    findImageData = SkImage::MakeFromEncoded(data);
-      //Add in cache if image data is valid
-    imageDataExpiryTime_.imageData = findImageData;
-    imageDataExpiryTime_.expiryTime = (SkTime::GetMSecs() + cacheExpiryTime_);//convert sec to milisecond 60 *1000
-    if(findImageData && canCacheData_)
-      RSkImageCacheManager::getImageCacheManagerInstance()->imageDataInsertInCache(path, imageDataExpiryTime_);
-    networkImageData_ = findImageData;
+    remoteImageData = SkImage::MakeFromEncoded(data);
+    //Add in cache if image data is valid
+    if(remoteImageData && canCacheData_){
+      imageCacheData.imageData = remoteImageData;
+      imageCacheData.expiryTime = (SkTime::GetMSecs() + cacheExpiryTime_);//convert sec to milisecond 60 *1000
+      RSkImageCacheManager::getImageCacheManagerInstance()->imageDataInsertInCache(path, imageCacheData);
+    }
+    networkImageData_ = remoteImageData;
     drawAndSubmit();
   }
 }

@@ -14,23 +14,26 @@
  
  const SimpleViewApp = React.Node = () => {
  var useCases =10;
-    var timerValue=10000;
-    const [UseCaseCount, toggleViewState] = useState(true);
+ var timerValue=10000;
 
-    const timer = setTimeout(()=>{
+ const [UseCaseCount, toggleViewState] = useState(true);
+ const timer = setTimeout(()=>{
             toggleViewState((UseCaseCount+1)%useCases);
         }, timerValue)
 
-      var subViewWidth=150;
-      var subViewHeight=300;
  const renderMainView = () => {
 
    if(UseCaseCount == 1)
    {
        return (
-        
+        <>
+        <View
+        style={{  justifyContent: 'center',
+                       alignItems: 'center',}}>
          <View
-             style={{  width: 300,
+             style={{  justifyContent: 'center',
+                       alignItems: 'center',
+                       width: 300,
                        height: 300,
                        margin:10,
                        backgroundColor:'cornsilk',
@@ -45,14 +48,21 @@
            style={{ color: '#fff', fontSize: 30,
                        textAlign: 'center', marginTop: 32,color:'black' }}>
           Local Image</Text>
-        </View>)
+        </View>
+        </View>
+        </>)
    }
    else if(UseCaseCount ==2)
    {
        return (
         <>
         <View
-            style={{ width: 300,
+        style={{  justifyContent: 'center',
+                       alignItems: 'center',}}>
+        <View
+            style={{ justifyContent: 'center',
+                     alignItems: 'center',
+                     width: 300,
                      height: 300,
                      margin:10,
                      backgroundColor:'cornsilk',  
@@ -61,13 +71,12 @@
                 source={{uri: 'https://pngimg.com/uploads/lion/lion_PNG23269.png'}}
                 style={{ width: 200,
                          height: 200,
-                         
-                         
                }}/>
             <Text
            style={{ color: '#fff', fontSize: 30,
                        textAlign: 'center', marginTop: 32,color:'black' }}>
           Network Image</Text>   
+        </View>
         </View>
   </>)
 
@@ -77,11 +86,14 @@
        return (
          <>
       <View
-          style={{
-                  flexDirection:'row',
+          style={{ justifyContent: 'center',
+                   alignItems: 'center',
+                   flexDirection:'row',
           }}>
          <View
-             style={{  width: 300,
+             style={{  justifyContent: 'center',
+                       alignItems: 'center',
+                       width: 300,
                        height: 300,
                        margin:10,
                        backgroundColor:'cornsilk',
@@ -94,11 +106,12 @@
 
         </View>
         <View
-            style={{ width: 300,
+            style={{ justifyContent: 'center',
+                     alignItems: 'center',
+                     width: 300,
                      height: 300,
                      margin:10,
                      backgroundColor:'cornsilk',
-                     
             }}>
             <Image
                 source={{uri: 'https://png.pngtree.com/png-clipart/20210801/original/pngtree-resolution-logo-720p-tags-png-image_6578799.jpg  ',}}
@@ -111,6 +124,8 @@
       style={{
                   flex:0.5,
                   flexDirection:'row',
+                  justifyContent: 'center',
+                  alignItems: 'center',
           }}>
       <Text
            style={{ color: '#fff', fontSize: 30,
@@ -124,12 +139,14 @@
        return (
           <>
       <View
-          style={{
-                  flex:0.5,
-                  flexDirection:'row',
+          style={{ justifyContent: 'center',
+                   alignItems: 'center',
+                   flexDirection:'row',
           }}>
          <View
-             style={{  width: 300,
+             style={{  justifyContent: 'center',
+                       alignItems: 'center',
+                       width: 300,
                        height: 300,
                        backgroundColor:'cornsilk',
          }}>
@@ -140,9 +157,11 @@
             }}/>
         </View>
         <View
-            style={{ width: 300,
+            style={{ justifyContent: 'center',
+                     alignItems: 'center',
+                     width: 300,
                      height: 300,
-                     marginLeft:10,
+                     margin:10,
                      backgroundColor:'cornsilk',
                      
             }}>
@@ -154,8 +173,9 @@
         </View>
     </View>
     <View 
-      style={{
-                  flexDirection:'row',
+      style={{  justifyContent: 'center',
+                alignItems: 'center',
+                flexDirection:'row',
           }}>
       <Text
            style={{ color: '#fff', fontSize:30,
@@ -169,11 +189,14 @@
        return (
          <>
       <View
-          style={{
-                  flexDirection:'row',
+          style={{ justifyContent: 'center',
+                   alignItems: 'center',
+                   flexDirection:'row',
           }}>
          <View
-             style={{  width: 300,
+             style={{  justifyContent: 'center',
+                       alignItems: 'center',
+                       width: 300,
                        height: 300,
                        margin:10,
                        backgroundColor:'cornsilk',
@@ -185,7 +208,9 @@
             }}/>
         </View>
         <View
-            style={{ width: 300,
+            style={{ justifyContent: 'center',
+                     alignItems: 'center',
+                     width: 300,
                      height: 300,
                      margin:10,
                      backgroundColor:'cornsilk',
@@ -199,8 +224,9 @@
         </View>
     </View>
     <View 
-      style={{
-                  flexDirection:'row',
+      style={{ justifyContent: 'center',
+               alignItems: 'center',
+               flexDirection:'row',
           }}>
       <Text
            style={{ color: '#fff', fontSize: 30,
@@ -214,11 +240,14 @@
        return (
          <>
       <View
-          style={{
-                  flexDirection:'row',
+          style={{ justifyContent: 'center',
+                   alignItems: 'center',
+                   flexDirection:'row',
           }}>
          <View
-             style={{  width: 300,
+             style={{  justifyContent: 'center',
+                       alignItems: 'center',
+                       width: 300,
                        height: 300,
                        margin:10,
                        backgroundColor:'cornsilk',
@@ -230,9 +259,11 @@
             }}/>
         </View>
         <View
-            style={{ width: 300,
+            style={{ justifyContent: 'center',
+                     alignItems: 'center',
+                     width: 300,
                      height: 300,
-                     marginLeft:10,
+                     margin:10,
                      backgroundColor:'cornsilk',
                      
             }}>
@@ -244,8 +275,9 @@
         </View>
     </View>
     <View 
-      style={{
-                  flexDirection:'row',
+      style={{ justifyContent: 'center',
+               alignItems: 'center',
+               flexDirection:'row',
           }}>
       <Text
            style={{ color: '#fff', fontSize: 30,
@@ -259,11 +291,14 @@
        return (
          <>
       <View
-          style={{
-                  flexDirection:'row',
+          style={{ justifyContent: 'center',
+                   alignItems: 'center',
+                   flexDirection:'row',
           }}>
          <View
-             style={{  width: 300,
+             style={{  justifyContent: 'center',
+                       alignItems: 'center',
+                       width: 300,
                        height: 300,
                        margin:10,
                        backgroundColor:'cornsilk',
@@ -275,9 +310,11 @@
             }}/>
         </View>
         <View
-            style={{ width: 300,
+            style={{ justifyContent: 'center',
+                     alignItems: 'center',
+                     width: 300,
                      height: 300,
-                     marginLeft:10,
+                     margin:10,
                      backgroundColor:'cornsilk',
                      
             }}>
@@ -289,14 +326,15 @@
         </View>
     </View>
     <View 
-      style={{
-                  flex:0.5,
-                  flexDirection:'row',
+      style={{  justifyContent: 'center',
+                alignItems: 'center',
+                flex:0.5,
+                flexDirection:'row',
           }}>
       <Text
            style={{ color: '#fff', fontSize: 30,
                        textAlign: 'center', marginTop: 32,color:'black' }}>
-          Local Image  + Network Image max-age less than 5min </Text> 
+          Local Image  + Network Image max-age less than 30 min </Text> 
     </View>
   </>)
    }
@@ -305,11 +343,14 @@
        return (
          <>
       <View
-          style={{
-                  flexDirection:'row',
+          style={{ justifyContent: 'center',
+                   alignItems: 'center',
+                   flexDirection:'row',
           }}>
          <View
-             style={{  width: 300,
+             style={{  justifyContent: 'center',
+                       alignItems: 'center',
+                       width: 300,
                        height: 300,
                        margin:10,
                        backgroundColor:'cornsilk',
@@ -321,9 +362,11 @@
             }}/>
         </View>
         <View
-            style={{ width: 300,
+            style={{ justifyContent: 'center',
+                     alignItems: 'center',
+                     width: 300,
                      height: 300,
-                     marginLeft:10,
+                     margin:10,
                      backgroundColor:'cornsilk',
                      
             }}>
@@ -335,14 +378,15 @@
         </View>
     </View>
     <View 
-      style={{
+      style={{    justifyContent: 'center',
+                  alignItems: 'center',
                   flex:0.5,
                   flexDirection:'row',
           }}>
       <Text
            style={{ color: '#fff', fontSize: 30,
                        textAlign: 'center', marginTop: 32,color:'black' }}>
-          Local Image  + Network Image max-age = 5min </Text> 
+          Local Image  + Network Image max-age = 30 min </Text> 
     </View>
   </>)
    }
@@ -351,11 +395,14 @@
        return (
          <>
       <View
-          style={{
-                  flexDirection:'row',
+          style={{ justifyContent: 'center',
+                   alignItems: 'center',
+                   flexDirection:'row',
           }}>
          <View
-             style={{  width: 300,
+             style={{  justifyContent: 'center',
+                       alignItems: 'center',
+                       width: 300,
                        height: 300,
                        margin:10,
                        backgroundColor:'cornsilk',
@@ -367,9 +414,11 @@
             }}/>
         </View>
         <View
-            style={{ width: 300,
+            style={{ justifyContent: 'center',
+                     alignItems: 'center',
+                     width: 300,
                      height: 300,
-                     marginLeft:10,
+                     margin:10,
                      backgroundColor:'cornsilk',
                      
             }}>
@@ -381,29 +430,34 @@
         </View>
     </View>
     <View 
-      style={{
+      style={{    justifyContent: 'center',
+                  alignItems: 'center',
                   flexDirection:'row',
           }}>
       <Text
            style={{ color: '#fff', fontSize: 30,
                        textAlign: 'center', marginTop: 32,color:'black' }}>
-          Local Image  + Network Image max-age greater than 5min </Text> 
+          Local Image  + Network Image max-age greater than 30 min </Text> 
     </View>
   </>)
    }
        else
    {
        return (
-        <View
+       <>
+         <View
+            style={{
+            justifyContent: 'center',
+            alignItems: 'center',}}>
+          <View
             style={{
             justifyContent: 'center',
             alignItems: 'center',
             borderWidth: 2,
-           // backgroundColor: 'darksalmon',
             height: 500,
             width: 500,
             margin:10,
-         }}>
+           }}>
             <Image
                 style={{ width:300, height: 300, backgroundColor: 'gray', }}
                source={require('react-native/Libraries/NewAppScreen/components/logo.png')}/>
@@ -411,7 +465,9 @@
                 style={{ color: '#fff', fontSize: 46,
                 textAlign: 'center', marginTop: 32,color:'black' }}>
                 React Native loves Skia</Text>
-        </View>)
+          </View>
+         </View>
+       </>)
     }
   }
   return (

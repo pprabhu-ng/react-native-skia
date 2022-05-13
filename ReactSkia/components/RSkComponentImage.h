@@ -31,7 +31,6 @@ class RSkComponentImage final : public RSkComponent {
  private :
   ImgProps imageProps;
   sk_sp<SkImage> networkImageData_;
-  imageDataExpiryTime imageDataExpiryTime_;
   bool canCacheData_{true};
   double cacheExpiryTime_{DEFAULT_MAX_CACHE_EXPIRY_TIME};
 
