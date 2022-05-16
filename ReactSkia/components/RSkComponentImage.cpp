@@ -39,31 +39,35 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
   auto const &imageProps = *std::static_pointer_cast<ImageProps const>(component.props);
 
   /*First to check file entry presence . If not exist, generate imageData*/
-  if(networkImageData_){
-    imageData = networkImageData_;
-    goto drawImage;
-  } else if(!imageProps.sources.empty()){
-    imageData = RSkImageCacheManager::getImageCacheManagerInstance()->findImageDataInCache(imageProps.sources[0].uri.c_str());
-    if(!imageData) {
-      if (imageProps.sources[0].type == ImageSource::Type::Local) {
-        imageData = getLocalImageData(imageProps.sources[0]);
-      } else if(imageProps.sources[0].type == ImageSource::Type::Remote) {
-        requestNetworkImageData(imageProps.sources[0]);
+  do{
+    if(networkImageData_) {
+      imageData = networkImageData_;
+      break;
+    }
+    if(!imageProps.sources.empty()) {
+      imageData = RSkImageCacheManager::getImageCacheManagerInstance()->findImageDataInCache(imageProps.sources[0].uri.c_str());
+      if(!imageData) {
+        if (imageProps.sources[0].type == ImageSource::Type::Local) {
+          imageData = getLocalImageData(imageProps.sources[0]);
+        } else if(imageProps.sources[0].type == ImageSource::Type::Remote) {
+          requestNetworkImageData(imageProps.sources[0]);
+        }
       }
     }
-  }
-  drawImage:
+  }while(0);
+
   auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
-  if(imageData)
-    /* Emitting Load completed Event*/
+  if(imageData) {
+    // Emitting Load completed Event
     imageEventEmitter->onLoad();
+  }
   Rect frame = component.layoutMetrics.frame;
   SkRect frameRect = SkRect::MakeXYWH(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
   auto const &imageBorderMetrics=imageProps.resolveBorderMetrics(component.layoutMetrics);
   /* Draw order 1.Shadow 2. Background 3.Image Shadow 4. Image 5.Border*/
   bool contentShadow = false;
   bool needClipAndRestore =false;
-  if(layer()->shadowOpacity && layer()->shadowFilter){
+  if(layer()->shadowFilter) {
     contentShadow=drawShadow(canvas,frame,imageBorderMetrics,imageProps.backgroundColor,layer()->shadowOpacity,layer()->shadowFilter);
   }
   drawBackground(canvas,frame,imageBorderMetrics,imageProps.backgroundColor);
@@ -200,9 +204,9 @@ void RSkComponentImage::processImageData(const char* path, char* response, int s
 }
 
 inline bool shouldCacheData(std::string cacheControlData) {
-  if(cacheControlData.find("no-store") != std::string::npos) return false;
-  else if(cacheControlData.find("no-cache") != std::string::npos) return false;
-  else if(cacheControlData.find("max-age=0") != std::string::npos) return false;
+  if(cacheControlData.find(NO_STORE) != std::string::npos) return false;
+  else if(cacheControlData.find(NO_CACHE) != std::string::npos) return false;
+  else if(cacheControlData.find(MAX_AGE) != std::string::npos) return false;
 
   return true;
 }

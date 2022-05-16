@@ -15,7 +15,9 @@
 
 #define DEFAULT_IMAGE_FILTER_QUALITY kLow_SkFilterQuality /*Skia's Defualt is kNone_SkFilterQuality*/
 #define DEFAULT_MAX_CACHE_EXPIRY_TIME 1800000 // 30mins in seconds 1800000
-
+#define NO_CACHE "no-cache"
+#define NO_STORE "no-store"
+#define MAX_AGE "max-age=0"
 namespace facebook {
 namespace react {
 
