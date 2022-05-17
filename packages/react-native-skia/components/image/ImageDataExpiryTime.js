@@ -1,5 +1,16 @@
 /**
- * Sample React Native App
+ * goto server directory there are 6 sever directory.
+ * $ cd <path of source code>//src/packages/react-native-skia/components/image/server
+ *
+ * start 6 server for no-cache,no-store,max-age=0,max-age is greter than 30min
+ * max-age less than 30 min and max-age=30 min.
+ *
+ * start server exmple:
+ * $ cd sever1
+ * $ python3 pythonServer.py
+ *
+ * you have to start other 5 server
+ *
  */
  
  import * as React from 'react';
@@ -13,8 +24,10 @@
  import { useState } from 'react';
  
  const SimpleViewApp = React.Node = () => {
- var useCases =10;
- var timerValue=10000;
+ var useCases = 10;
+ var timerValue = 10000;
+ /*give your machin ip address to ipAddress varible*/
+ var ipAddress = '10.0.2.15';
 
  const [UseCaseCount, toggleViewState] = useState(true);
  const timer = setTimeout(()=>{
@@ -22,7 +35,6 @@
         }, timerValue)
 
  const renderMainView = () => {
-
    if(UseCaseCount == 1)
    {
        return (
@@ -166,7 +178,7 @@
                      
             }}>
             <Image
-                source={{uri: 'http://10.0.2.15:8001/gangster_PNG70.png'}}
+                source={{uri: 'http://'+ipAddress+':8001/gangster_PNG70.png'}}
                 style={{ width: 200,
                          height: 200,      
                }}/>
@@ -217,7 +229,7 @@
                      
             }}>
             <Image
-                source={{uri: 'http://10.0.2.15:8002/ninja_PNG10.png'}}
+                source={{uri: 'http://'+ipAddress+':8002/ninja_PNG10.png'}}
                 style={{ width: 200,
                          height: 200,      
                }}/>
@@ -268,7 +280,7 @@
                      
             }}>
             <Image
-                source={{uri: 'http://10.0.2.15:8003/2022_year_PNG23.png'}}
+                source={{uri: 'http://'+ipAddress+':8003/2022_year_PNG23.png'}}
                 style={{ width: 200,
                          height: 200,       
                }}/>
@@ -319,7 +331,7 @@
                      
             }}>
             <Image
-                source={{uri:'http://10.0.2.15:8004/football_PNG52796.png'}}
+                source={{uri:'http://'+ipAddress+':8004/football_PNG52796.png'}}
                 style={{ width: 200,
                          height: 200,
                }}/>
@@ -371,7 +383,7 @@
                      
             }}>
             <Image
-                source={{uri: 'http://10.0.2.15:8005/robot_PNG94.png'}}
+                source={{uri: 'http://'+ipAddress+':8005/robot_PNG94.png'}}
                 style={{ width: 200,
                          height: 200,      
                }}/>
@@ -423,7 +435,7 @@
                      
             }}>
             <Image
-                source={{uri: 'http://10.0.2.15:8006/github_PNG75.png'}}
+                source={{uri: 'http://'+ipAddress+':8006/github_PNG75.png'}}
                 style={{ width: 200,
                          height: 200,    
                }}/>

@@ -33,7 +33,7 @@ class RSkImageCacheManager {
   static RSkImageCacheManager* getImageCacheManagerInstance();
   static void init();
   sk_sp<SkImage> findImageDataInCache(const char* path);
-  bool imageDataInsertInCache(const char* path,decodedimageCacheData imageExpiryTimeData);
+  bool imageDataInsertInCache(const char* path,decodedimageCacheData imageCacheData);
  private:
   static std::mutex mutex_;
   static RSkImageCacheManager *imageCacheManagerInstance_;

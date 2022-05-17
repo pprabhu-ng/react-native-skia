@@ -38,33 +38,33 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
   auto component = getComponentData();
   auto const &imageProps = *std::static_pointer_cast<ImageProps const>(component.props);
 
-  /*First to check file entry presence . If not exist, generate imageData*/
-  do{
+  //First to check file entry presence. If not exist, generate imageData.
+  do {
     if(networkImageData_) {
       imageData = networkImageData_;
       break;
     }
-    if(!imageProps.sources.empty()) {
-      imageData = RSkImageCacheManager::getImageCacheManagerInstance()->findImageDataInCache(imageProps.sources[0].uri.c_str());
-      if(!imageData) {
-        if (imageProps.sources[0].type == ImageSource::Type::Local) {
-          imageData = getLocalImageData(imageProps.sources[0]);
-        } else if(imageProps.sources[0].type == ImageSource::Type::Remote) {
-          requestNetworkImageData(imageProps.sources[0]);
-        }
-      }
+    if(imageProps.sources.empty())
+      break;
+    imageData = RSkImageCacheManager::getImageCacheManagerInstance()->findImageDataInCache(imageProps.sources[0].uri.c_str());
+    if(imageData)
+      break;
+    if (imageProps.sources[0].type == ImageSource::Type::Local) {
+      imageData = getLocalImageData(imageProps.sources[0]);
+    } else if(imageProps.sources[0].type == ImageSource::Type::Remote) {
+      requestNetworkImageData(imageProps.sources[0]);
     }
-  }while(0);
+  } while(0);
 
   auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
-  if(imageData) {
-    // Emitting Load completed Event
+  // Emitting Load completed Event
+  if(imageData)
     imageEventEmitter->onLoad();
-  }
+
   Rect frame = component.layoutMetrics.frame;
   SkRect frameRect = SkRect::MakeXYWH(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
   auto const &imageBorderMetrics=imageProps.resolveBorderMetrics(component.layoutMetrics);
-  /* Draw order 1.Shadow 2. Background 3.Image Shadow 4. Image 5.Border*/
+  // Draw order 1.Shadow 2. Background 3.Image Shadow 4. Image 5.Border
   bool contentShadow = false;
   bool needClipAndRestore =false;
   if(layer()->shadowFilter) {
@@ -204,9 +204,9 @@ void RSkComponentImage::processImageData(const char* path, char* response, int s
 }
 
 inline bool shouldCacheData(std::string cacheControlData) {
-  if(cacheControlData.find(NO_STORE) != std::string::npos) return false;
-  else if(cacheControlData.find(NO_CACHE) != std::string::npos) return false;
-  else if(cacheControlData.find(MAX_AGE) != std::string::npos) return false;
+  if(cacheControlData.find(RNS_NO_CACHE_STR) != std::string::npos) return false;
+  else if(cacheControlData.find(RNS_NO_STORE_STR) != std::string::npos) return false;
+  else if(cacheControlData.find(RNS_MAX_AGE_0_STR) != std::string::npos) return false;
 
   return true;
 }
@@ -236,7 +236,6 @@ void RSkComponentImage::requestNetworkImageData(ImageSource source) {
     CurlRequest *curlRequest = (CurlRequest *) userdata;
 
     double responseMaxAgeTime = DEFAULT_MAX_CACHE_EXPIRY_TIME;
-    double requestMaxAgeTime = DEFAULT_MAX_CACHE_EXPIRY_TIME;
     // Parse server response headers and retrieve caching details
     auto responseCacheControlData = responseData->headerBuffer.find("Cache-Control");
     if(responseCacheControlData != responseData->headerBuffer.items().end()) {
@@ -247,7 +246,7 @@ void RSkComponentImage::requestNetworkImageData(ImageSource source) {
 
     // TODO : Parse request headers and retrieve caching details
 
-    cacheExpiryTime_ = std::min(std::min(responseMaxAgeTime,requestMaxAgeTime),static_cast<double>(DEFAULT_MAX_CACHE_EXPIRY_TIME));
+    cacheExpiryTime_ = std::min(std::min(responseMaxAgeTime,static_cast<double>(DEFAULT_MAX_CACHE_EXPIRY_TIME)),static_cast<double>(DEFAULT_MAX_CACHE_EXPIRY_TIME));
     RNS_LOG_DEBUG("url [" << responseData->responseurl << "] canCacheData[" << canCacheData_ << "] cacheExpiryTime[" << cacheExpiryTime_ << "]");
     return 0;
   };
