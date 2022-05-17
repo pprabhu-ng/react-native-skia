@@ -14,7 +14,7 @@
 #include "ReactSkia/views/common/RSkImageCacheManager.h"
 
 #define DEFAULT_IMAGE_FILTER_QUALITY kLow_SkFilterQuality /*Skia's Defualt is kNone_SkFilterQuality*/
-#define DEFAULT_MAX_CACHE_EXPIRY_TIME 1800000 // 30mins in seconds 1800000
+#define DEFAULT_MAX_CACHE_EXPIRY_TIME 1800000 // 30mins in milliseconds 1800000
 #define RNS_NO_CACHE_STR "no-cache"
 #define RNS_NO_STORE_STR "no-store"
 #define RNS_MAX_AGE_0_STR "max-age=0"
