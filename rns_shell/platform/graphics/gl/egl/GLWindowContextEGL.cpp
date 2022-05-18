@@ -205,7 +205,7 @@ GLWindowContextEGL::GLWindowContextEGL(GLNativeWindowType window, EGLConfig conf
     this->initializeContext();
 
 #if !defined(GOOGLE_STRIP_LOG) || (GOOGLE_STRIP_LOG <= INFO)
-    EGLint swapBehaviour = 0;
+    EGLint swapBehaviour = EGL_BUFFER_PRESERVED;
     eglQuerySurface(platformDisplay_.eglDisplay(), glSurface_, EGL_SWAP_BEHAVIOR, &swapBehaviour);
     RNS_LOG_DEBUG("GLWindowContextEGL constructed with WH(" << width_ << " x " << height_ << ") SampleCount & StencilBits : [" << sampleCount_ << "," << stencilBits_ <<
                   "], SWAP_BEHAVIOR : " << ((swapBehaviour==EGL_BUFFER_PRESERVED)?"EGL_BUFFER_PRESERVED":"EGL_BUFFER_DESTROYED"));
