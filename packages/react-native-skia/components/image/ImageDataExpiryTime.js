@@ -1,15 +1,12 @@
 /**
- * goto server directory there are 6 sever directory.
+ * goto server directory.
  * $ cd <path of source code>//src/packages/react-native-skia/components/image/server
  *
- * start 6 server for no-cache,no-store,max-age=0,max-age is greter than 30min
+ * start 6 server for no-cache, no-store, max-age=0, max-age is greter than 30min,
  * max-age less than 30 min and max-age=30 min.
  *
  * start server exmple:
- * $ cd sever1
- * $ python3 pythonServer.py
- *
- * you have to start other 5 server
+ * $ python3 <ServerName>.py
  *
  */
  
