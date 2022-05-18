@@ -65,6 +65,7 @@ private:
 #if USE(WPE_RENDERER)
     void destroyWPETarget();
 #endif
+    int32_t getBufferAge();
     bool makeContextCurrent() override;
     void swapInterval();
 

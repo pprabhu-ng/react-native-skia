@@ -37,12 +37,6 @@
 #include "PlatformDisplay.h"
 #include "WindowContext.h"
 
-#if USE(EGL)
-typedef EGLNativeWindowType GLNativeWindowType;
-#else
-typedef uint64_t GLNativeWindowType;
-#endif
-
 namespace RnsShell {
 
 class GLWindowContext : public WindowContext {

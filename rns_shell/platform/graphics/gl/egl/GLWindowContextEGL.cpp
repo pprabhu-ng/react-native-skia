@@ -204,7 +204,12 @@ GLWindowContextEGL::GLWindowContextEGL(GLNativeWindowType window, EGLConfig conf
     sampleCount_ = std::max(sampleCount_, 1);
     this->initializeContext();
 
-    RNS_LOG_DEBUG("GLWindowContextEGL constructed with WH(" << width_ << " x " << height_ << "SampleCount & StencilBits : " << sampleCount_ << "," << stencilBits_);
+#if !defined(GOOGLE_STRIP_LOG) || (GOOGLE_STRIP_LOG <= INFO)
+    EGLint swapBehaviour = 0;
+    eglQuerySurface(platformDisplay_.eglDisplay(), glSurface_, EGL_SWAP_BEHAVIOR, &swapBehaviour);
+    RNS_LOG_DEBUG("GLWindowContextEGL constructed with WH(" << width_ << " x " << height_ << ") SampleCount & StencilBits : [" << sampleCount_ << "," << stencilBits_ <<
+                  "], SWAP_BEHAVIOR : " << ((swapBehaviour==EGL_BUFFER_PRESERVED)?"EGL_BUFFER_PRESERVED":"EGL_BUFFER_DESTROYED"));
+#endif
 }
 
 std::unique_ptr<GLWindowContextEGL> GLWindowContextEGL::createWindowContext(GLNativeWindowType window, PlatformDisplay& platformDisplay, const DisplayParams& params, EGLContext sharingContext) {
@@ -347,7 +352,6 @@ sk_sp<const GrGLInterface> GLWindowContextEGL::onInitializeContext() {
         glViewport(0, 0, width_, height_);
     }
 
-
 #if USE(RNS_SHELL_PARTIAL_UPDATES) &&  USE(RNS_SHELL_COPY_BUFFERS)
     eglInitializeOffscreenFrameBuffer();
 #endif
@@ -419,6 +423,13 @@ void GLWindowContextEGL::onSwapBuffers(std::vector<SkIRect> &damage) {
         Performance::takeSamples(end - start);
 #endif
     }
+}
+
+int32_t GLWindowContextEGL::getBufferAge() {
+  EGLint bufferAge = 0;
+  eglQuerySurface(platformDisplay_.eglDisplay(), glSurface_, EGL_BUFFER_AGE_EXT, &bufferAge);
+  RNS_LOG_DEBUG("Buffer Age of CUrrent backBuffer of surface : " << bufferAge);
+  return bufferAge;
 }
 
 void GLWindowContextEGL::swapInterval() {
