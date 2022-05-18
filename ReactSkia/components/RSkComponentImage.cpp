@@ -44,11 +44,11 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
       imageData = networkImageData_;
       break;
     }
-    if(imageProps.sources.empty())
-      break;
+    if(imageProps.sources.empty()) break;
+
     imageData = RSkImageCacheManager::getImageCacheManagerInstance()->findImageDataInCache(imageProps.sources[0].uri.c_str());
-    if(imageData)
-      break;
+    if(imageData) break;
+
     if (imageProps.sources[0].type == ImageSource::Type::Local) {
       imageData = getLocalImageData(imageProps.sources[0]);
     } else if(imageProps.sources[0].type == ImageSource::Type::Remote) {
@@ -58,8 +58,7 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
 
   auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
   // Emitting Load completed Event
-  if(imageData)
-    imageEventEmitter->onLoad();
+  if(imageData) imageEventEmitter->onLoad();
 
   Rect frame = component.layoutMetrics.frame;
   SkRect frameRect = SkRect::MakeXYWH(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
@@ -212,7 +211,7 @@ inline bool shouldCacheData(std::string cacheControlData) {
 }
 
 inline double getCacheMaxAgeDuration(std::string cacheControlData) {
-  size_t maxAgePos = cacheControlData.find("max-age");
+  size_t maxAgePos = cacheControlData.find(RNS_MAX_AGE_STR);
   if(maxAgePos != std::string::npos) {
     size_t maxAgeEndPos = cacheControlData.find(';',maxAgePos);
     return std::stoi(cacheControlData.substr(maxAgePos+8,maxAgeEndPos));
@@ -246,7 +245,7 @@ void RSkComponentImage::requestNetworkImageData(ImageSource source) {
 
     // TODO : Parse request headers and retrieve caching details
 
-    cacheExpiryTime_ = std::min(std::min(responseMaxAgeTime,static_cast<double>(DEFAULT_MAX_CACHE_EXPIRY_TIME)),static_cast<double>(DEFAULT_MAX_CACHE_EXPIRY_TIME));
+    cacheExpiryTime_ = std::min(responseMaxAgeTime,static_cast<double>(DEFAULT_MAX_CACHE_EXPIRY_TIME));
     RNS_LOG_DEBUG("url [" << responseData->responseurl << "] canCacheData[" << canCacheData_ << "] cacheExpiryTime[" << cacheExpiryTime_ << "]");
     return 0;
   };

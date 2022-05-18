@@ -18,6 +18,7 @@
 #define RNS_NO_CACHE_STR "no-cache"
 #define RNS_NO_STORE_STR "no-store"
 #define RNS_MAX_AGE_0_STR "max-age=0"
+#define RNS_MAX_AGE_STR "max-age"
 namespace facebook {
 namespace react {
 
