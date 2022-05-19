@@ -6,7 +6,10 @@ import SampleVODPage from './SampleVODPage';
 
 const windowSize = Dimensions.get('window');
 const localContentData = require('./dataContent.json');
-let fetchServerData = !true;
+let fetchServerData = true;
+let serverIp = "192.168.0.7:";
+let serverPort = "9081";
+
 const TextInputBlock = (props) => {
     let [tiState,setTiState] = useState({borderColor:'black',shadowOpacity:0});
     const onFocus = () => {
@@ -36,13 +39,12 @@ const SampleLoginPage = () => {
     let [requestStatus,setRequestStatus] = useState({text:"SIGN IN"});
     let [content,setContent] = useState([]);
     let [spinValue] = useState(new Animated.Value(0));
-    let [serverIp,setServerIp] = useState("http://192.168.47.118:9081");
     let usrRef = useRef();
     let pswdRef = useRef();
 
     const startFetchVODData = () => {
        var request = new XMLHttpRequest();
-       request.open('GET',serverIp+'/dataContent.json');
+       request.open('GET',serverIp+serverPort+'/dataContent.json');
        request.responseType = "json"
        request.timeout = 10
        request.onreadystatechange = (e) => {
