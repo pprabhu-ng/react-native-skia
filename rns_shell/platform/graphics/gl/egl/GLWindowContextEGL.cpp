@@ -28,6 +28,12 @@ static const char* gEGLAPIName = "OpenGL";
 static const EGLenum gEGLAPIVersion = EGL_OPENGL_API;
 #endif
 
+#if defined(EGL_KHR_partial_update) && EGL_KHR_partial_update
+static PFNEGLSETDAMAGEREGIONKHRPROC eglSetDamageRegion = nullptr;
+#else
+static void* eglSetDamageRegion = nullptr;
+#endif
+
 #if defined(EGL_EXT_swap_buffers_with_damage) && EGL_EXT_swap_buffers_with_damage
 static PFNEGLSWAPBUFFERSWITHDAMAGEEXTPROC eglSwapBuffersWithDamage = nullptr;
 #else
@@ -425,13 +431,6 @@ void GLWindowContextEGL::onSwapBuffers(std::vector<SkIRect> &damage) {
     }
 }
 
-int32_t GLWindowContextEGL::getBufferAge() {
-  EGLint bufferAge = 0;
-  eglQuerySurface(platformDisplay_.eglDisplay(), glSurface_, EGL_BUFFER_AGE_EXT, &bufferAge);
-  RNS_LOG_DEBUG("Buffer Age of CUrrent backBuffer of surface : " << bufferAge);
-  return bufferAge;
-}
-
 void GLWindowContextEGL::swapInterval() {
     EGLDisplay display = platformDisplay_.eglDisplay();
     const char* extensions = eglQueryString(display, EGL_EXTENSIONS);
@@ -439,9 +438,12 @@ void GLWindowContextEGL::swapInterval() {
     if (isExtensionSupported(extensions, "EGL_EXT_buffer_age")) {
         RNS_LOG_INFO("EGL_EXT_buffer_age extenstion supported....");
 
+#if defined(EGL_KHR_partial_update) && EGL_KHR_partial_update
         if (isExtensionSupported(extensions, "EGL_KHR_partial_update")) {
             RNS_LOG_INFO("EGL_KHR_partial_update extenstion supported....");
+            eglSetDamageRegion = reinterpret_cast<PFNEGLSETDAMAGEREGIONKHRPROC>(eglGetProcAddress("eglSetDamageRegionKHR"));
         }
+#endif
 
 #if defined(EGL_EXT_swap_buffers_with_damage) && EGL_EXT_swap_buffers_with_damage
         if (isExtensionSupported(extensions, "EGL_EXT_swap_buffers_with_damage")) {
@@ -472,6 +474,13 @@ std::vector<EGLint> GLWindowContextEGL::rectsToInts(EGLDisplay display, EGLSurfa
         res.push_back(r.height());
     }
     return res;
+}
+
+int32_t GLWindowContextEGL::getBufferAge() {
+  EGLint bufferAge = 0;
+  eglQuerySurface(platformDisplay_.eglDisplay(), glSurface_, EGL_BUFFER_AGE_EXT, &bufferAge);
+  RNS_LOG_ERROR("Buffer Age of Current backBuffer of surface : " << bufferAge);
+  return bufferAge;
 }
 
 bool GLWindowContextEGL::onHasSwapBuffersWithDamage() {

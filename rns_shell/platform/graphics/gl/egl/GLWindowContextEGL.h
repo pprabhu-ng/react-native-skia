@@ -41,6 +41,7 @@ public:
 #if USE(RNS_SHELL_PARTIAL_UPDATES)
     bool onHasSwapBuffersWithDamage() override;
     bool onHasBufferCopy() override;
+    int32_t getBufferAge() override;
 #endif
 protected:
     sk_sp<const GrGLInterface> onInitializeContext() override;
@@ -65,7 +66,6 @@ private:
 #if USE(WPE_RENDERER)
     void destroyWPETarget();
 #endif
-    int32_t getBufferAge();
     bool makeContextCurrent() override;
     void swapInterval();
 
