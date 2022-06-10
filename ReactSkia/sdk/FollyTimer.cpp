@@ -28,6 +28,20 @@ Timer::Timer(double duration,
 
 }
 
+Timer::~Timer(){
+  timerCallback_.cb = nullptr;
+
+  if(timerCallback_.isScheduled()) {
+    timerThread_.getEventBase()->runInEventBaseThreadAndWait(
+      [this]() {
+         HHWheelTimer& wheelTimer = timerThread_.getEventBase()->timer();
+         wheelTimer.cancelAll();
+      }
+    );
+  }
+  timerThread_.getEventBase()->terminateLoopSoon();
+}
+
 void Timer::start() {
   RNS_LOG_DEBUG("["<< this << "] Schedule timer for duration:" << targetDuration_ << " ms");
 
