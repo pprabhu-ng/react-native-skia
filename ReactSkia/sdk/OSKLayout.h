@@ -10,12 +10,17 @@
 
 #include "RNSKeyCodeMapping.h"
 
+using namespace OSK;
+
 /*
-Position Configuration mentioned in this file is for 1280*720 screen.
+Position Configuration mentioned in this file should be for 1280*720 screen.
 For other Screen Size, it will be scaled accordingly in SW w.r.t 1280*720.
 */
 static SkSize baseScreenSize{1280,720};
 
+#define LOWER_TO_UPPER_CASE_OFFSET 32
+
+//Max Partition or Group, OSK Layout can Handle. Each Group Get it function/Purpose w.r.t Layout.
 enum partitionID {
     GROUP1,
     GROUP2,
@@ -23,8 +28,6 @@ enum partitionID {
     GROUP4,
     MAX_GROUP=GROUP4
 };
-
-#define LOWER_TO_UPPER_CASE_OFFSET 32
 
 /* KeyBoard Layout for Alpha Numeric KeyBoard */
 
