@@ -26,6 +26,7 @@
 namespace facebook {
 namespace react {
 
+using namespace OSK;
 using namespace RSkDrawUtils;
 using namespace skia::textlayout;
 
