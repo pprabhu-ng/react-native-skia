@@ -31,6 +31,8 @@ Timer::Timer(double duration,
 Timer::~Timer(){
   timerCallback_.cb = nullptr;
 
+  /* wheelTimer cancelAll requires to be called from the same thread which scheduled it,so wait until cancel is done here*/
+  /* TODO : Check with latest folly version if this cancellation is required here */
   if(timerCallback_.isScheduled()) {
     timerThread_.getEventBase()->runInEventBaseThreadAndWait(
       [this]() {
@@ -39,7 +41,6 @@ Timer::~Timer(){
       }
     );
   }
-  timerThread_.getEventBase()->terminateLoopSoon();
 }
 
 void Timer::start() {
