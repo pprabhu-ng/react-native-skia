@@ -224,6 +224,7 @@ SharedScrollLayer ScrollLayer::Create(Client& layerClient) {
 ScrollLayer::ScrollLayer(Client& layerClient)
     : INHERITED(layerClient,LAYER_TYPE_SCROLL) {
     RNS_LOG_DEBUG("Scroll Layer Constructed(" << this << ") with ID : " << layerId());
+    partialUpdateFrame_.setEmpty();
 }
 
 bool ScrollLayer::setContentSize(SkISize contentSize) {
@@ -323,8 +324,8 @@ void ScrollLayer::prePaint(PaintContext& context, bool forceLayout) {
     /* If child requires paint,then self needs to paint,so set invalidate self*/
     if(bitmapSurfaceDamage_.size() != 0) {
        /* Clear area before paint */
-        scrollCanvas_->clear(backgroundColor);
-        invalidate(static_cast<LayerInvalidateMask>(invalidateMask_|LayerPaintInvalidate));
+       scrollCanvas_->clear(backgroundColor);
+       //invalidate(static_cast<LayerInvalidateMask>(invalidateMask_|LayerPaintInvalidate));
     }
 
     preRoll(context, forceLayout);
@@ -339,6 +340,24 @@ void ScrollLayer::prePaint(PaintContext& context, bool forceLayout) {
         if(scrollBarFrame != SkIRect::MakeEmpty()) context.damageRect.push_back(scrollBarFrame);
     }
 #endif//ENABLE_FEATURE_SCROLL_INDICATOR
+
+    if(invalidateMask_ == LayerInvalidateNone ) {
+       RNS_LOG_INFO("[" << this <<"] Scroll Layer damageRect list size:" << bitmapSurfaceDamage_.size() << "  visibleRect ["
+                        << visibleRect.x()  << "," <<  visibleRect.y() << "," << visibleRect.width() << "," << visibleRect.height() << "]");
+       for(auto &list : bitmapSurfaceDamage_) {
+          //Check if any damageRect intersect with the visible area and add intersected area to main damageRect list
+           if(dummy.intersect(visibleRect,list)) {
+               SkIRect screenDirtyRect = list.makeOffset(-scrollOffsetX,-scrollOffsetY).makeOffset(absFrame_.x(),absFrame_.y());
+               RNS_LOG_INFO("[" << this << "] Bitmap list rect [" << list.x() << "," << list.y() << "," << list.width() << "," << list.height()
+                            << "] absFrame rect [" << absFrame_.x() << "," << absFrame_.y()
+                            << "] screenDirtyRect [" << screenDirtyRect.x() << "," << screenDirtyRect.y() << "," << screenDirtyRect.width()
+                            << "," << screenDirtyRect.height() << "]");
+
+               context.damageRect.push_back(screenDirtyRect);
+               partialUpdateFrame_.join(screenDirtyRect);
+          }
+       }
+    }
 
     invalidateMask_ = LayerInvalidateNone;
     forceBitmapReset_ = false;
@@ -360,10 +379,18 @@ void ScrollLayer::paintSelf(PaintContext& context) {
         shadowPicture()->playback(context.canvas);
     }
 
-    RNS_LOG_INFO("Draw scroll bitmap offset X["<< scrollOffsetX_ << "] Y[" << scrollOffsetY_ << "]");
-    SkRect srcRect = SkRect::MakeXYWH(scrollOffsetX_,scrollOffsetY_,frame_.width(),frame_.height());
-    SkRect dstRect = SkRect::Make(frame_);
+    SkRect srcRect = partialUpdateFrame_.isEmpty() ? SkRect::MakeXYWH(scrollOffsetX,scrollOffsetY,frame_.width(),frame_.height()) :
+                                                     SkRect::Make(partialUpdateFrame_.makeOffset(-absFrame_.x(),-absFrame_.y()).makeOffset(scrollOffsetX,scrollOffsetY));
+    SkRect dstRect = partialUpdateFrame_.isEmpty() ? SkRect::Make(frame_) : SkRect::Make(partialUpdateFrame_);
+
+
+    RNS_LOG_INFO("[" << this <<"] Draw scroll bitmap offset X["<< scrollOffsetX << "] Y[" << scrollOffsetY << "] srcRect XYWH["
+                     << srcRect.x() << "," << srcRect.y() << "," << srcRect.width() << "," << srcRect.height() << "] dstRect XYWH["
+                     << dstRect.x() << "," << dstRect.y() << "," << dstRect.width() << "," << dstRect.height() << "]");
+    context.canvas->save();
+    context.canvas->clipRect(SkRect::Make(absFrame_));
     context.canvas->drawBitmapRect(scrollBitmap_,srcRect,dstRect,NULL);
+    context.canvas->restore();
 
 #if ENABLE(FEATURE_SCROLL_INDICATOR)
     scrollbar_.paint(context.canvas);
@@ -415,6 +442,7 @@ void ScrollLayer::paint(PaintContext& context) {
     scrollCanvas_->restore();
     bitmapSurfaceDamage_.clear();
     clipBound_ = SkRect::MakeEmpty();
+    partialUpdateFrame_.setEmpty();
 
 }
 }   // namespace RnsShell

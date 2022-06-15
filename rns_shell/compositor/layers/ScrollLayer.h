@@ -94,6 +94,7 @@ private:
     std::unique_ptr<SkCanvas> scrollCanvas_;
     std::vector<SkIRect> bitmapSurfaceDamage_;
     SkRect clipBound_;
+    SkIRect partialUpdateFrame_;
 
     sk_sp<SkPicture> shadowPicture_;
     sk_sp<SkPicture> borderPicture_;
