@@ -224,7 +224,6 @@ SharedScrollLayer ScrollLayer::Create(Client& layerClient) {
 ScrollLayer::ScrollLayer(Client& layerClient)
     : INHERITED(layerClient,LAYER_TYPE_SCROLL) {
     RNS_LOG_DEBUG("Scroll Layer Constructed(" << this << ") with ID : " << layerId());
-    partialUpdateFrame_.setEmpty();
 }
 
 bool ScrollLayer::setContentSize(SkISize contentSize) {
@@ -449,7 +448,5 @@ void ScrollLayer::paint(PaintContext& context) {
     scrollCanvas_->restore();
     bitmapSurfaceDamage_.clear();
     clipBound_ = SkRect::MakeEmpty();
-    partialUpdateFrame_.setEmpty();
-
 }
 }   // namespace RnsShell
