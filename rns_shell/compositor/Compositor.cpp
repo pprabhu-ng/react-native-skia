@@ -85,7 +85,7 @@ SkRect Compositor::beginClip(PaintContext& context) {
 
     SkPath clipPath = SkPath();
     for (auto& rect : context.damageRect) {
-        RNS_LOG_INFO("Add Damage " << rect.x() << " " << rect.y() << " " << rect.width() << " " << rect.height());
+        RNS_LOG_DEBUG("Add Damage " << rect.x() << " " << rect.y() << " " << rect.width() << " " << rect.height());
         clipPath.addRect(rect.left(), rect.top(), rect.right(), rect.bottom());
     }
 
@@ -142,9 +142,7 @@ void Compositor::renderLayerTree() {
             nullptr, // GrDirectContext
         };
         RNS_PROFILE_API_OFF("Render Tree Pre-Paint", rootLayer_.get()->prePaint(paintContext));
-	RNS_LOG_INFO("MAIN BeginClip START");
         clipBound = beginClip(paintContext);
-	RNS_LOG_INFO("MAIN BeginClip END");
         /* Check if paint required*/
         if(!rootLayer_.get()->needsPainting(paintContext)) return;
 #ifdef RNS_SHELL_HAS_GPU_SUPPORT

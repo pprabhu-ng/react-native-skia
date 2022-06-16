@@ -252,6 +252,8 @@ void ScrollLayer::setScrollPosition(SkPoint scrollPos) {
 void ScrollLayer::bitmapConfigure() {
     if(forceBitmapReset_) {
        scrollBitmap_.reset();
+       //If reset bitmap,need to update the layer frame.So we force the update here by setting the mask.
+       invalidate(LayerPaintInvalidate);
     }
     if(scrollBitmap_.drawsNothing()) {
        /* contentSize vs frame size,whichever is max is used for bitmap size allocation*/
@@ -267,6 +269,12 @@ void ScrollLayer::bitmapConfigure() {
 }
 
 void ScrollLayer::prePaint(PaintContext& context, bool forceLayout) {
+    RNS_LOG_INFO("LayerId (" << layerId_ << ") Parent DamageList XYWH BEFORE ==============\n");
+    for (auto& rect : context.damageRect) {
+        RNS_LOG_INFO("[" << rect.x() << " " << rect.y() << " " << rect.width() << " " << rect.height() << "]");
+    }
+    RNS_LOG_INFO("==============\n");
+
     //Adjust absolute Layout frame and dirty rects
     bool forceChildrenLayout = (forceLayout || (invalidateMask_ & LayerLayoutInvalidate));
 
@@ -311,7 +319,6 @@ void ScrollLayer::prePaint(PaintContext& context, bool forceLayout) {
                 recycleChildList[index] = layer;
             }
         }
-
         index++;
     }
 
@@ -321,10 +328,10 @@ void ScrollLayer::prePaint(PaintContext& context, bool forceLayout) {
 
     clipBound_ = Compositor::beginClip(bitmapPaintContext);
 
-    /* If child requires paint,then self needs to paint,so set invalidate self*/
     if(bitmapSurfaceDamage_.size() != 0) {
        /* Clear area before paint */
        scrollCanvas_->clear(backgroundColor);
+       // We dont have to force update the layer,as we now handle only partial update of this layer too.
        //invalidate(static_cast<LayerInvalidateMask>(invalidateMask_|LayerPaintInvalidate));
     }
 
@@ -341,27 +348,32 @@ void ScrollLayer::prePaint(PaintContext& context, bool forceLayout) {
     }
 #endif//ENABLE_FEATURE_SCROLL_INDICATOR
 
+    // If self has update, we anyways update the whole frame
+    // So only if self does not have update, check if any children update is available and update damage rect list accordingly
     if(invalidateMask_ == LayerInvalidateNone ) {
-       RNS_LOG_INFO("[" << this <<"] Scroll Layer damageRect list size:" << bitmapSurfaceDamage_.size() << "  visibleRect ["
-                        << visibleRect.x()  << "," <<  visibleRect.y() << "," << visibleRect.width() << "," << visibleRect.height() << "]");
+       RNS_LOG_DEBUG("[" << this <<"] Scroll Layer damageRect list size:" << bitmapSurfaceDamage_.size());
+       //Calculate the screen frame for the child dirty frame and add to damageRect list
        for(auto &list : bitmapSurfaceDamage_) {
-          //Check if any damageRect intersect with the visible area and add intersected area to main damageRect list
-           if(dummy.intersect(visibleRect,list)) {
-               SkIRect screenDirtyRect = list.makeOffset(-scrollOffsetX,-scrollOffsetY).makeOffset(absFrame_.x(),absFrame_.y());
-               RNS_LOG_INFO("[" << this << "] Bitmap list rect [" << list.x() << "," << list.y() << "," << list.width() << "," << list.height()
+           SkIRect screenDirtyRect = list.makeOffset(-scrollOffsetX,-scrollOffsetY).makeOffset(absFrame_.x(),absFrame_.y());
+           RNS_LOG_DEBUG("[" << this << "] Bitmap list rect [" << list.x() << "," << list.y() << "," << list.width() << "," << list.height()
                             << "] absFrame rect [" << absFrame_.x() << "," << absFrame_.y()
                             << "] screenDirtyRect [" << screenDirtyRect.x() << "," << screenDirtyRect.y() << "," << screenDirtyRect.width()
                             << "," << screenDirtyRect.height() << "]");
 
-               context.damageRect.push_back(screenDirtyRect);
-               partialUpdateFrame_.join(screenDirtyRect);
-          }
+           if(dummy.intersect(screenDirtyRect,absFrame_)) addDamageRect(context,screenDirtyRect);
        }
     }
 
     invalidateMask_ = LayerInvalidateNone;
     forceBitmapReset_ = false;
     recycleChildList.clear();
+
+
+    RNS_LOG_INFO("LayerId (" << layerId_ << ") Parent DamageList XYWH AFTER ==============\n");
+    for (auto& rect : context.damageRect) {
+        RNS_LOG_INFO("[" << rect.x() << " " << rect.y() << " " << rect.width() << " " << rect.height() << "]");
+    }
+    RNS_LOG_INFO("==============\n");
 }
 
 void ScrollLayer::paintSelf(PaintContext& context) {
@@ -379,18 +391,13 @@ void ScrollLayer::paintSelf(PaintContext& context) {
         shadowPicture()->playback(context.canvas);
     }
 
-    SkRect srcRect = partialUpdateFrame_.isEmpty() ? SkRect::MakeXYWH(scrollOffsetX,scrollOffsetY,frame_.width(),frame_.height()) :
-                                                     SkRect::Make(partialUpdateFrame_.makeOffset(-absFrame_.x(),-absFrame_.y()).makeOffset(scrollOffsetX,scrollOffsetY));
-    SkRect dstRect = partialUpdateFrame_.isEmpty() ? SkRect::Make(frame_) : SkRect::Make(partialUpdateFrame_);
+    SkRect srcRect = SkRect::MakeXYWH(scrollOffsetX,scrollOffsetY,frame_.width(),frame_.height());
+    SkRect dstRect = SkRect::Make(frame_);
+    RNS_LOG_DEBUG("[" << this <<"] Draw scroll bitmap offset X["<< scrollOffsetX << "] Y[" << scrollOffsetY
+                << "] srcRect XYWH[" << srcRect.x() << "," << srcRect.y() << "," << srcRect.width() << "," << srcRect.height()
+                << "] dstRect XYWH[" << dstRect.x() << "," << dstRect.y() << "," << dstRect.width() << "," << dstRect.height() << "]");
 
-
-    RNS_LOG_INFO("[" << this <<"] Draw scroll bitmap offset X["<< scrollOffsetX << "] Y[" << scrollOffsetY << "] srcRect XYWH["
-                     << srcRect.x() << "," << srcRect.y() << "," << srcRect.width() << "," << srcRect.height() << "] dstRect XYWH["
-                     << dstRect.x() << "," << dstRect.y() << "," << dstRect.width() << "," << dstRect.height() << "]");
-    context.canvas->save();
-    context.canvas->clipRect(SkRect::Make(absFrame_));
     context.canvas->drawBitmapRect(scrollBitmap_,srcRect,dstRect,NULL);
-    context.canvas->restore();
 
 #if ENABLE(FEATURE_SCROLL_INDICATOR)
     scrollbar_.paint(context.canvas);
