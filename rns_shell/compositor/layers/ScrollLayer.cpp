@@ -251,8 +251,6 @@ void ScrollLayer::setScrollPosition(SkPoint scrollPos) {
 void ScrollLayer::bitmapConfigure() {
     if(forceBitmapReset_) {
        scrollBitmap_.reset();
-       //If reset bitmap,need to update the layer frame.So we force the update here by setting the mask.
-       invalidate(LayerPaintInvalidate);
     }
     if(scrollBitmap_.drawsNothing()) {
        /* contentSize vs frame size,whichever is max is used for bitmap size allocation*/
@@ -343,7 +341,7 @@ void ScrollLayer::prePaint(PaintContext& context, bool forceLayout) {
     //if hide scrollbar,add its absframe to damage rect list
     if(context.supportPartialUpdate) {
         SkIRect scrollBarFrame = scrollbar_.getScrollBarAbsFrame(absoluteFrame());
-        if(scrollBarFrame != SkIRect::MakeEmpty()) context.damageRect.push_back(scrollBarFrame);
+        if(scrollBarFrame != SkIRect::MakeEmpty()) addDamageRect(context,scrollBarFrame);
     }
 #endif//ENABLE_FEATURE_SCROLL_INDICATOR
 
@@ -351,7 +349,7 @@ void ScrollLayer::prePaint(PaintContext& context, bool forceLayout) {
     // So only if self does not have update, check if any children update is available and update damage rect list accordingly
     if(invalidateMask_ == LayerInvalidateNone) {
        RNS_LOG_DEBUG("[" << this <<"] Scroll Layer damageRect list size:" << bitmapSurfaceDamage_.size());
-       //Calculate the screen frame for the child dirty frame and add to damageRect list
+       //Calculate the screen frame for the child dirty frame and add intersected area to parent damageRect list
        for(auto &list : bitmapSurfaceDamage_) {
            SkIRect screenDirtyRect = list.makeOffset(-scrollOffsetX,-scrollOffsetY).makeOffset(absFrame_.x(),absFrame_.y());
            RNS_LOG_DEBUG("[" << this << "] Bitmap list rect [" << list.x() << "," << list.y() << "," << list.width() << "," << list.height()
@@ -359,9 +357,7 @@ void ScrollLayer::prePaint(PaintContext& context, bool forceLayout) {
                             << "] screenDirtyRect [" << screenDirtyRect.x() << "," << screenDirtyRect.y() << "," << screenDirtyRect.width()
                             << "," << screenDirtyRect.height() << "]");
 
-           if(screenDirtyRect.intersect(absFrame_)) {
-	       addDamageRect(context,screenDirtyRect);
-	   }
+           if(screenDirtyRect.intersect(absFrame_))  addDamageRect(context,screenDirtyRect);
        }
     }
 
