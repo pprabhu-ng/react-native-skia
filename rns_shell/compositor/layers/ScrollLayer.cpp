@@ -351,7 +351,7 @@ void ScrollLayer::prePaint(PaintContext& context, bool forceLayout) {
        RNS_LOG_DEBUG("[" << this <<"] Scroll Layer damageRect list size:" << bitmapSurfaceDamage_.size());
        //Calculate the screen frame for the child dirty frame and add intersected area to parent damageRect list
        for(auto &list : bitmapSurfaceDamage_) {
-           SkIRect screenDirtyRect = list.makeOffset(-scrollOffsetX,-scrollOffsetY).makeOffset(absFrame_.x(),absFrame_.y());
+           SkIRect screenDirtyRect = list.makeOffset(-scrollOffsetX_,-scrollOffsetY_).makeOffset(absFrame_.x(),absFrame_.y());
            RNS_LOG_DEBUG("[" << this << "] Bitmap list rect [" << list.x() << "," << list.y() << "," << list.width() << "," << list.height()
                             << "] absFrame rect [" << absFrame_.x() << "," << absFrame_.y()
                             << "] screenDirtyRect [" << screenDirtyRect.x() << "," << screenDirtyRect.y() << "," << screenDirtyRect.width()
@@ -388,9 +388,9 @@ void ScrollLayer::paintSelf(PaintContext& context) {
         shadowPicture()->playback(context.canvas);
     }
 
-    SkRect srcRect = SkRect::MakeXYWH(scrollOffsetX,scrollOffsetY,frame_.width(),frame_.height());
+    SkRect srcRect = SkRect::MakeXYWH(scrollOffsetX_,scrollOffsetY_,frame_.width(),frame_.height());
     SkRect dstRect = SkRect::Make(frame_);
-    RNS_LOG_DEBUG("[" << this <<"] Draw scroll bitmap offset X["<< scrollOffsetX << "] Y[" << scrollOffsetY
+    RNS_LOG_DEBUG("[" << this <<"] Draw scroll bitmap offset X["<< scrollOffsetX_ << "] Y[" << scrollOffsetY_
                 << "] srcRect XYWH[" << srcRect.x() << "," << srcRect.y() << "," << srcRect.width() << "," << srcRect.height()
                 << "] dstRect XYWH[" << dstRect.x() << "," << dstRect.y() << "," << dstRect.width() << "," << dstRect.height() << "]");
 
