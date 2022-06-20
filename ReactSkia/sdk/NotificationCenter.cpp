@@ -26,7 +26,7 @@
 #include "NotificationCenter.h"
 
 static std::unique_ptr<NotificationCenter> defaultCenter_;
-static std::unique_ptr<NotificationCenter> OSKCenter_;//OnScreenKeyboard Notification center
+static std::unique_ptr<NotificationCenter> subWindowCenter_;//SubWindow Notification center
 
 void NotificationCenter::removeListener(unsigned int listener_id) {
     std::lock_guard<std::mutex> lock(mutex);
@@ -54,11 +54,11 @@ void NotificationCenter::initializeDefault() {
         defaultCenter_ = std::make_unique<NotificationCenter>();
 }
 
-NotificationCenter& NotificationCenter::OSKCenter() {
-    return *OSKCenter_;
+NotificationCenter& NotificationCenter::subWindowCenter() {
+    return *subWindowCenter_;
 }
 
-void NotificationCenter::initializeOSKCenter() {
-    if(OSKCenter_.get() == nullptr)
-        OSKCenter_ = std::make_unique<NotificationCenter>();
+void NotificationCenter::initializeSubWindowCenter() {
+    if(subWindowCenter_.get() == nullptr)
+        subWindowCenter_ = std::make_unique<NotificationCenter>();
 }

@@ -26,7 +26,7 @@
 namespace facebook {
 namespace react {
 
-using namespace OSK;
+using namespace rns::sdk;
 using namespace RSkDrawUtils;
 using namespace skia::textlayout;
 
@@ -75,13 +75,6 @@ void RSkComponentTextInput::drawTextInput(SkCanvas *canvas,
   Rect frame = layout.frame;
   ParagraphStyle paraStyle;
   float yOffset;
-
-  //cursor
-  int position = 0;
-  SkRect cursorRect;
-  std::vector<TextBox> rects;
-
-  OnScreenKeyboard::updatePlaceHolderString(displayString_);
 
   // setParagraphStyle
   textLayout.paraStyle.setMaxLines(NUMBER_OF_LINES);
@@ -188,31 +181,7 @@ void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool keyRepeat, boo
   textInputMetrics.contentOffset.x = frame.origin.x;
   textInputMetrics.contentOffset.y = frame.origin.y;
   if (isInEditingMode_ == false && eventKeyType == RNS_KEY_Select ) {
-    RNS_LOG_DEBUG("[onHandleKey] onfocus need to here"<<textInputMetrics.text);
-    textInputMetrics.contentSize.width = paragraph_->getMaxIntrinsicWidth();
-    textInputMetrics.contentSize.height = paragraph_->getHeight();
-    textInputEventEmitter->onFocus(textInputMetrics);
-    isInEditingMode_ = true;
-    if (!caretHidden_ || textInputProps.clearTextOnFocus ) {
-      privateVarProtectorMutex.lock();
-      if(textInputProps.clearTextOnFocus && !displayString_.empty()){
-        displayString_.clear();
-        cursor_.locationFromEnd = 0;
-        cursor_.end = 0;
-      }
-      privateVarProtectorMutex.unlock();
-      drawAndSubmit();
-    }
-    /*
-       TODO:Launching with default configuration for now.
-            Need to parse & pass properties :
-         1. keyboardType [oskType]
-         2. returnKeyType [returnKeyLabel]
-         3. keyboardAppearance [oskTheme]
-         4. enablesReturnKeyAutomatically [enablesReturnKeyAutomatically]
-         5. placeholder [placeHolderName]
-    */
-    OnScreenKeyboard::launch();
+      requestForEditingMode();
   } else if (isInEditingMode_) {
     // Logic to update the textinput string.
     // Requirement: Textinput is in Editing mode.
@@ -275,7 +244,7 @@ void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool keyRepeat, boo
         std::swap( inputQueue, empty );
         inputQueueMutex.unlock();
         eventCount_++;
-	resignFromEditingMode();
+        resignFromEditingMode();
       }
       return;
     }
@@ -345,10 +314,7 @@ void RSkComponentTextInput::processEventKey (rnsKey eventKeyType,bool* stopPropa
         case RNS_KEY_Select:
           eventCount_++;
           *stopPropagation = true;
-          if (!caretHidden_) {
-            drawAndSubmit();
-          }
-          OnScreenKeyboard::exit();
+          resignFromEditingMode();
           return;
         case RNS_KEY_Caps_Lock:
         case RNS_KEY_Shift_L:
@@ -544,7 +510,15 @@ void RSkComponentTextInput::requestForEditingMode(bool isFlushDisplay){
        drawAndSubmit(isFlushDisplay);
     }
   }
-  //TODO:Launching with default configuration for now.
+  /*
+     TODO:Launching with default configuration for now.
+          Need to parse & pass properties :
+       1. keyboardType [oskType]
+       2. returnKeyType [returnKeyLabel]
+       3. keyboardAppearance [oskTheme]
+       4. enablesReturnKeyAutomatically [enablesReturnKeyAutomatically]
+       5. placeholder [placeHolderName]
+  */
   OnScreenKeyboard::launch();
   RNS_LOG_DEBUG("[requestForEditingMode] END");
 }
@@ -571,8 +545,8 @@ void RSkComponentTextInput::resignFromEditingMode(bool isFlushDisplay) {
   textInputEventEmitter->onBlur(textInputMetrics);
   if (!caretHidden_) {
     drawAndSubmit(isFlushDisplay);
-    OnScreenKeyboard::exit();
   }
+  OnScreenKeyboard::exit();
   RNS_LOG_DEBUG("[requestForEditingMode] *** END ***");
 }
 

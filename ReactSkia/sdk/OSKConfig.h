@@ -4,8 +4,11 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-#ifndef OSK_CONFIG_H
-#define OSK_CONFIG_H
+
+#pragma once
+
+namespace rns {
+namespace sdk {
 
 // Dark Theme configuration
 #define OSK_DARK_THEME_BACKGROUND_COLOR       SkColorSetARGB(0xFF, 0x34, 0x34, 0x34) //Dark Gray
@@ -34,4 +37,8 @@
 #define OSK_KB_VERTICAL_OFFSET                0.3
 //Fail Safe Configurations
 #define DRAW_FONT_FAILURE_INDICATOR  "??"
-#endif //OSK_CONFIG_H
+
+} // namespace sdk
+} // namespace rns
+
+
