@@ -141,14 +141,14 @@ void Compositor::renderLayerTree() {
             clipBound, // After prePaint we need to update this with beginClip
             nullptr, // GrDirectContext
         };
-        RNS_PROFILE_API_OFF("Render Tree Pre-Paint", rootLayer_.get()->prePaint(paintContext));
+        RNS_PROFILE_API_ON("Render Tree Pre-Paint", rootLayer_.get()->prePaint(paintContext));
         clipBound = beginClip(paintContext);
         /* Check if paint required*/
         if(!rootLayer_.get()->needsPainting(paintContext)) return;
 #ifdef RNS_SHELL_HAS_GPU_SUPPORT
         WindowContext::grTransactionBegin();
 #endif
-        RNS_PROFILE_API_OFF("Render Tree Paint", rootLayer_.get()->paint(paintContext));
+        RNS_PROFILE_API_ON("Render Tree Paint", rootLayer_.get()->paint(paintContext));
         RNS_PROFILE_API_OFF("SkSurface Flush & Submit", backBuffer_->flushAndSubmit());
 #ifdef RNS_SHELL_HAS_GPU_SUPPORT
         WindowContext::grTransactionEnd();

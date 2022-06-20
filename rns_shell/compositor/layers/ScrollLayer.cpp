@@ -349,7 +349,7 @@ void ScrollLayer::prePaint(PaintContext& context, bool forceLayout) {
 
     // If self has update, we anyways update the whole frame
     // So only if self does not have update, check if any children update is available and update damage rect list accordingly
-    if(invalidateMask_ == LayerInvalidateNone ) {
+    if(invalidateMask_ == LayerInvalidateNone) {
        RNS_LOG_DEBUG("[" << this <<"] Scroll Layer damageRect list size:" << bitmapSurfaceDamage_.size());
        //Calculate the screen frame for the child dirty frame and add to damageRect list
        for(auto &list : bitmapSurfaceDamage_) {
@@ -359,7 +359,9 @@ void ScrollLayer::prePaint(PaintContext& context, bool forceLayout) {
                             << "] screenDirtyRect [" << screenDirtyRect.x() << "," << screenDirtyRect.y() << "," << screenDirtyRect.width()
                             << "," << screenDirtyRect.height() << "]");
 
-           if(dummy.intersect(screenDirtyRect,absFrame_)) addDamageRect(context,screenDirtyRect);
+           if(screenDirtyRect.intersect(absFrame_)) {
+	       addDamageRect(context,screenDirtyRect);
+	   }
        }
     }
 
@@ -376,7 +378,7 @@ void ScrollLayer::prePaint(PaintContext& context, bool forceLayout) {
 }
 
 void ScrollLayer::paintSelf(PaintContext& context) {
-#if !defined(GOOGLE_STRIP_LOG) || (GOOGLE_STRIP_LOG <= INFO)
+#if 1 // || !defined(GOOGLE_STRIP_LOG) || (GOOGLE_STRIP_LOG <= INFO)
     RNS_GET_TIME_STAMP_US(start);
 #endif
     /* Paint self algorithm */
@@ -408,9 +410,9 @@ void ScrollLayer::paintSelf(PaintContext& context) {
         borderPicture()->playback(context.canvas);
     }
 
-#if !defined(GOOGLE_STRIP_LOG) || (GOOGLE_STRIP_LOG <= INFO)
+#if 1 //|| !defined(GOOGLE_STRIP_LOG) || (GOOGLE_STRIP_LOG <= INFO)
     RNS_GET_TIME_STAMP_US(end);
-    RNS_LOG_TRACE("Layer (" << layerId_ << ") took " <<  (end - start) << " us to paint self");
+    RNS_LOG_TRACE("Scroll Layer (" << layerId_ << ") took " <<  (end - start) << " us to paint self");
 #endif
 }
 
