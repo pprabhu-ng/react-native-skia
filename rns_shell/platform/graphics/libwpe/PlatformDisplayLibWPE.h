@@ -21,6 +21,7 @@ class Display {
 public:
     struct wpe_view_backend* viewBackend() const { return viewBackend_; }
 
+    Display(){};
     struct Screen {
         int     width;
         int     height;
@@ -28,6 +29,7 @@ public:
     Screen screen() { return screen_;}
     void setScreenSize(int w, int h) { screen_.width = w; screen_.height = h;}
 private:
+    ~Display(){};
     struct wpe_view_backend* viewBackend_ = { nullptr };
     Screen screen_;
 };

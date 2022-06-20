@@ -204,7 +204,7 @@ bool WindowLibWPE::initWindow(PlatformDisplay *platformDisplay,SkSize dimension,
     // add to hashtable of windows
     gWindowMap.add(this);
 
-    if((this->winType == MainWindow ) && (WindowLibWPE::mainApp_))// TODO Only for main window
+    if((this->winType == MainWindow ) && (WindowLibWPE::mainApp_))
         WindowLibWPE::mainApp_->sizeChanged(viewWidth_, viewHeight_);
 
     return true;
@@ -266,11 +266,7 @@ void WindowLibWPE::setRequestedDisplayParams(const DisplayParams& params, bool a
 }
 
 void WindowLibWPE::onKey(rnsKey eventKeyType, rnsKeyAction eventKeyAction){
-    if(winType == SubWindow)
-        NotificationCenter::OSKCenter().emit("onHWKeyEvent", eventKeyType, eventKeyAction);
-    else
-        NotificationCenter::defaultCenter().emit("onHWKeyEvent", eventKeyType, eventKeyAction);
-    return;
+    NotificationCenter::defaultCenter().emit("onHWKeyEvent", eventKeyType, eventKeyAction);
 }
 
 }   // namespace RnsShell

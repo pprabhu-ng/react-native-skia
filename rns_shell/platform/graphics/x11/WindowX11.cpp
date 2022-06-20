@@ -347,11 +347,7 @@ void WindowX11::onExpose() {
 }
 
 void WindowX11::onKey(rnsKey eventKeyType, rnsKeyAction eventKeyAction){
-    if(winType == SubWindow)
-       NotificationCenter::OSKCenter().emit("onHWKeyEvent", eventKeyType, eventKeyAction);
-    else
-       NotificationCenter::defaultCenter().emit("onHWKeyEvent", eventKeyType, eventKeyAction);
-    return;
+    NotificationCenter::defaultCenter().emit("onHWKeyEvent", eventKeyType, eventKeyAction);
 }
 
 }   // namespace RnsShell
