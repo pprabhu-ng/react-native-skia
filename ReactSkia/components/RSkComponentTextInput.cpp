@@ -76,13 +76,6 @@ void RSkComponentTextInput::drawTextInput(SkCanvas *canvas,
   ParagraphStyle paraStyle;
   float yOffset;
 
-  //cursor
-  int position = 0;
-  SkRect cursorRect;
-  std::vector<TextBox> rects;
-
-  OnScreenKeyboard::updatePlaceHolderString(displayString_);
-
   // setParagraphStyle
   textLayout.paraStyle.setMaxLines(NUMBER_OF_LINES);
   textLayout.paraStyle.setEllipsis(u"\u2026");
@@ -188,21 +181,7 @@ void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool keyRepeat, boo
   textInputMetrics.contentOffset.x = frame.origin.x;
   textInputMetrics.contentOffset.y = frame.origin.y;
   if (isInEditingMode_ == false && eventKeyType == RNS_KEY_Select ) {
-    RNS_LOG_DEBUG("[onHandleKey] onfocus need to here"<<textInputMetrics.text);
-    textInputMetrics.contentSize.width = paragraph_->getMaxIntrinsicWidth();
-    textInputMetrics.contentSize.height = paragraph_->getHeight();
-    textInputEventEmitter->onFocus(textInputMetrics);
-    isInEditingMode_ = true;
-    if (!caretHidden_ || textInputProps.clearTextOnFocus ) {
-      privateVarProtectorMutex.lock();
-      if(textInputProps.clearTextOnFocus && !displayString_.empty()){
-        displayString_.clear();
-        cursor_.locationFromEnd = 0;
-        cursor_.end = 0;
-      }
-      privateVarProtectorMutex.unlock();
-      drawAndSubmit();
-    }
+      requestForEditingMode();
     /*
        TODO:Launching with default configuration for now.
             Need to parse & pass properties :
@@ -276,6 +255,7 @@ void RSkComponentTextInput::onHandleKey(rnsKey eventKeyType, bool keyRepeat, boo
         inputQueueMutex.unlock();
         eventCount_++;
 	resignFromEditingMode();
+	OnScreenKeyboard::exit();
       }
       return;
     }
@@ -345,9 +325,7 @@ void RSkComponentTextInput::processEventKey (rnsKey eventKeyType,bool* stopPropa
         case RNS_KEY_Select:
           eventCount_++;
           *stopPropagation = true;
-          if (!caretHidden_) {
-            drawAndSubmit();
-          }
+	  resignFromEditingMode();
           OnScreenKeyboard::exit();
           return;
         case RNS_KEY_Caps_Lock:
