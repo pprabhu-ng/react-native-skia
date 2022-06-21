@@ -131,8 +131,7 @@ bool WindowLibWPE::initRenderTarget(wpe_view_backend* viewBackend, wpe_renderer_
     if(!dimension.isEmpty()) {
        viewWidth_ =  dimension.width();
        viewHeight_ = dimension.height();
-    }
-    else if( viewWidth_ <= 0 || viewHeight_ <= 0) {
+    } else if( viewWidth_ <= 0 || viewHeight_ <= 0) {
         RNS_LOG_ERROR("Invalid View Size.. using default width and height");
         viewWidth_ = 1280;
         viewHeight_ = 720;
@@ -267,6 +266,7 @@ void WindowLibWPE::setRequestedDisplayParams(const DisplayParams& params, bool a
 
 void WindowLibWPE::onKey(rnsKey eventKeyType, rnsKeyAction eventKeyAction){
     NotificationCenter::defaultCenter().emit("onHWKeyEvent", eventKeyType, eventKeyAction);
+    return;
 }
 
 }   // namespace RnsShell

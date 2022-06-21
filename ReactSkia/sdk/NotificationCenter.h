@@ -70,10 +70,6 @@ class NotificationCenter {
         static NotificationCenter& defaultCenter();
         static void initializeDefault();
 
-        //Notification center to handle OnScreenKeyboard events
-        static NotificationCenter& OSKCenter();
-        static void initializeOSKCenter();
-
         template <typename... Args>
         unsigned int addListener(std::string eventName, std::function<void (Args...)> cb);
 

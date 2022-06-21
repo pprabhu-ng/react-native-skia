@@ -26,7 +26,6 @@
 #include "include/private/SkTHash.h"
 
 #include "ReactSkia/sdk/NotificationCenter.h"
-#include "ReactSkia/sdk/OnScreenKeyBoard.h"
 #include "ReactSkia/utils/RnsLog.h"
 
 #include "Application.h"
@@ -41,6 +40,7 @@ static bool platformInitialize(char **argv) {
 
     TaskLoop::initializeMain();
     NotificationCenter::initializeDefault();
+
 #if PLATFORM(LIBWPE) || USE(WEP_RENDERER)
     wpe_renderer_host_create_client(); // Has to be called before wpe_loader_init
     wpe_loader_init(wpe_loader_get_loaded_implementation_library_name());

@@ -136,8 +136,7 @@ bool WindowX11::initWindow(PlatformDisplay *platformDisplay,SkSize dimension,Win
     if(!dimension.isEmpty()) {
        initialWidth =  dimension.width();
        initialHeight = dimension.height();
-    }
-    else if(ScreenCount(display) > 0 && (screen = ScreenOfDisplay(display, 0))) {
+    } else if(ScreenCount(display) > 0 && (screen = ScreenOfDisplay(display, 0))) {
         initialWidth = screen->width;
         initialHeight = screen->height;
     }
@@ -348,6 +347,7 @@ void WindowX11::onExpose() {
 
 void WindowX11::onKey(rnsKey eventKeyType, rnsKeyAction eventKeyAction){
     NotificationCenter::defaultCenter().emit("onHWKeyEvent", eventKeyType, eventKeyAction);
+    return;
 }
 
 }   // namespace RnsShell

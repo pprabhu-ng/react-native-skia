@@ -19,7 +19,6 @@ namespace RnsShell {
 
 class Display {
 public:
-    struct wpe_view_backend* viewBackend() const { return viewBackend_; }
 
     Display(){};
     struct Screen {
@@ -30,7 +29,6 @@ public:
     void setScreenSize(int w, int h) { screen_.width = w; screen_.height = h;}
 private:
     ~Display(){};
-    struct wpe_view_backend* viewBackend_ = { nullptr };
     Screen screen_;
 };
 

@@ -25,7 +25,7 @@ void TaskLoop::run() {
     eventBase_.loopForever();
 }
 
-void TaskLoop::waitUntilRunning(){
+void TaskLoop::waitUntilRunning() {
     eventBase_.waitUntilRunning();
 }
 
