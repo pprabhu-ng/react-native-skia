@@ -5,6 +5,8 @@
  * found in the LICENSE file.
  */
 
+#define NEED_OSK_CONVERSION_SUPPORT /* To Enable RSK to OSK sdk value conversion in RSkConversion.h*/
+
 #include "include/core/SkPaint.h"
 #include "ReactSkia/components/RSkComponentTextInput.h"
 #include "ReactSkia/components/RSkComponent.h"
@@ -416,7 +418,7 @@ RnsShell::LayerInvalidateMask  RSkComponentTextInput::updateComponentProps(const
       && ((placeholderString_) != (textInputProps.placeholder))
       &&(!textInputProps.value.has_value())) {
 
-    placeholderString_ = textInputProps.placeholder.c_str();
+    oskLaunchConfig_.placeHolderName=placeholderString_ = textInputProps.placeholder.c_str();
     if(!displayString_.size()) {
       mask |= LayerPaintInvalidate;
     }
@@ -450,6 +452,14 @@ RnsShell::LayerInvalidateMask  RSkComponentTextInput::updateComponentProps(const
     caretHidden_ = true;
   }
   hasToSetFocus_ = forceUpdate && textInputProps.autoFocus ? true :false;
+
+/* Fetch OnSCreenKeyBoard Props*/
+  showSoftInputOnFocus_=textInputProps.traits.showSoftInputOnFocus;
+  oskLaunchConfig_.type=RSkToOSKKeyboardType(textInputProps.traits.keyboardType);
+  oskLaunchConfig_.theme=RSkToOSKKeyboardTheme(textInputProps.traits.keyboardAppearance);
+  oskLaunchConfig_.returnKeyLabel=RSkToOSKReturnKeyType(textInputProps.traits.returnKeyType);
+  oskLaunchConfig_.enablesReturnKeyAutomatically=textInputProps.traits.enablesReturnKeyAutomatically;
+ 
   return (RnsShell::LayerInvalidateMask)mask;
 }
 
@@ -510,16 +520,7 @@ void RSkComponentTextInput::requestForEditingMode(bool isFlushDisplay){
        drawAndSubmit(isFlushDisplay);
     }
   }
-  /*
-     TODO:Launching with default configuration for now.
-          Need to parse & pass properties :
-       1. keyboardType [oskType]
-       2. returnKeyType [returnKeyLabel]
-       3. keyboardAppearance [oskTheme]
-       4. enablesReturnKeyAutomatically [enablesReturnKeyAutomatically]
-       5. placeholder [placeHolderName]
-  */
-  OnScreenKeyboard::launch();
+  if(showSoftInputOnFocus_) OnScreenKeyboard::launch(oskLaunchConfig_);
   RNS_LOG_DEBUG("[requestForEditingMode] END");
 }
 
@@ -546,7 +547,7 @@ void RSkComponentTextInput::resignFromEditingMode(bool isFlushDisplay) {
   if (!caretHidden_) {
     drawAndSubmit(isFlushDisplay);
   }
-  OnScreenKeyboard::exit();
+  if(showSoftInputOnFocus_) OnScreenKeyboard::exit();
   RNS_LOG_DEBUG("[requestForEditingMode] *** END ***");
 }
 

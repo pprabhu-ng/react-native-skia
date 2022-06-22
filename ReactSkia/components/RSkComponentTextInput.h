@@ -11,6 +11,7 @@
 #include "react/renderer/components/textinput/TextInputShadowNode.h"
 #include "react/renderer/components/textinput/TextInputEventEmitter.h"
 #include "ReactSkia/components/RSkComponent.h"
+#include "ReactSkia/sdk/OnScreenKeyBoard.h"
 #include "ReactSkia/textlayoutmanager/RSkTextLayoutManager.h"
 
 
@@ -40,6 +41,8 @@ class RSkComponentTextInput final : public RSkComponent {
   bool isTextInputInFocus_=false;
   bool secureTextEntry_=false;
   bool hasToSetFocus_=false;
+  bool showSoftInputOnFocus_=true;//To decide OnScreen KeyBoard to be used or not
+
   int eventCount_;
   int maxLength_;
   std::string displayString_{}; // Text to be displayed on screen
@@ -47,6 +50,7 @@ class RSkComponentTextInput final : public RSkComponent {
   SharedColor placeholderColor_;  // Placeholder Text Color
   SharedColor selectionColor_;
   struct cursor cursor_;
+  rns::sdk::OSKConfig oskLaunchConfig_;
   SkPaint cursorPaint_;
   std::shared_ptr<skia::textlayout::Paragraph> paragraph_;
   void drawAndSubmit(bool isFlushDisplay=true);
