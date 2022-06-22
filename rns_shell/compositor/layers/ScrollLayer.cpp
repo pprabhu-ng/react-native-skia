@@ -266,12 +266,6 @@ void ScrollLayer::bitmapConfigure() {
 }
 
 void ScrollLayer::prePaint(PaintContext& context, bool forceLayout) {
-    RNS_LOG_INFO("LayerId (" << layerId_ << ") Parent DamageList XYWH BEFORE ==============\n");
-    for (auto& rect : context.damageRect) {
-        RNS_LOG_INFO("[" << rect.x() << " " << rect.y() << " " << rect.width() << " " << rect.height() << "]");
-    }
-    RNS_LOG_INFO("==============\n");
-
     //Adjust absolute Layout frame and dirty rects
     bool forceChildrenLayout = (forceLayout || (invalidateMask_ & LayerLayoutInvalidate));
 
@@ -316,6 +310,7 @@ void ScrollLayer::prePaint(PaintContext& context, bool forceLayout) {
                 recycleChildList[index] = layer;
             }
         }
+
         index++;
     }
 
@@ -348,12 +343,12 @@ void ScrollLayer::prePaint(PaintContext& context, bool forceLayout) {
     // If self has update, we anyways update the whole frame
     // So only if self does not have update, check if any children update is available and update damage rect list accordingly
     if(invalidateMask_ == LayerInvalidateNone) {
-       RNS_LOG_DEBUG("[" << this <<"] Scroll Layer damageRect list size:" << bitmapSurfaceDamage_.size());
+       RNS_LOG_TRACE("Scroll Layer (" << layerId_ << ") damageRect list size:" << bitmapSurfaceDamage_.size());
        //Calculate the screen frame for the child dirty frame and add intersected area to parent damageRect list
-       for(auto &list : bitmapSurfaceDamage_) {
-           SkIRect screenDirtyRect = list.makeOffset(-scrollOffsetX_,-scrollOffsetY_).makeOffset(absFrame_.x(),absFrame_.y());
-           RNS_LOG_DEBUG("[" << this << "] Bitmap list rect [" << list.x() << "," << list.y() << "," << list.width() << "," << list.height()
-                            << "] absFrame rect [" << absFrame_.x() << "," << absFrame_.y()
+       for(auto &rect : bitmapSurfaceDamage_) {
+           SkIRect screenDirtyRect = rect.makeOffset(-scrollOffsetX_,-scrollOffsetY_).makeOffset(absFrame_.x(),absFrame_.y());
+           RNS_LOG_DEBUG("Scroll Layer (" << layerId_ << ") damage rect [" << rect.x() << "," << rect.y() << "," << rect.width() << "," << rect.height()
+                            << "] absFrame point [" << absFrame_.x() << "," << absFrame_.y()
                             << "] screenDirtyRect [" << screenDirtyRect.x() << "," << screenDirtyRect.y() << "," << screenDirtyRect.width()
                             << "," << screenDirtyRect.height() << "]");
 
@@ -364,17 +359,10 @@ void ScrollLayer::prePaint(PaintContext& context, bool forceLayout) {
     invalidateMask_ = LayerInvalidateNone;
     forceBitmapReset_ = false;
     recycleChildList.clear();
-
-
-    RNS_LOG_INFO("LayerId (" << layerId_ << ") Parent DamageList XYWH AFTER ==============\n");
-    for (auto& rect : context.damageRect) {
-        RNS_LOG_INFO("[" << rect.x() << " " << rect.y() << " " << rect.width() << " " << rect.height() << "]");
-    }
-    RNS_LOG_INFO("==============\n");
 }
 
 void ScrollLayer::paintSelf(PaintContext& context) {
-#if 1 // || !defined(GOOGLE_STRIP_LOG) || (GOOGLE_STRIP_LOG <= INFO)
+#if !defined(GOOGLE_STRIP_LOG) || (GOOGLE_STRIP_LOG <= INFO)
     RNS_GET_TIME_STAMP_US(start);
 #endif
     /* Paint self algorithm */
@@ -388,12 +376,9 @@ void ScrollLayer::paintSelf(PaintContext& context) {
         shadowPicture()->playback(context.canvas);
     }
 
+    RNS_LOG_INFO("Draw scroll bitmap offset X["<< scrollOffsetX_ << "] Y[" << scrollOffsetY_ << "]");
     SkRect srcRect = SkRect::MakeXYWH(scrollOffsetX_,scrollOffsetY_,frame_.width(),frame_.height());
     SkRect dstRect = SkRect::Make(frame_);
-    RNS_LOG_DEBUG("[" << this <<"] Draw scroll bitmap offset X["<< scrollOffsetX_ << "] Y[" << scrollOffsetY_
-                << "] srcRect XYWH[" << srcRect.x() << "," << srcRect.y() << "," << srcRect.width() << "," << srcRect.height()
-                << "] dstRect XYWH[" << dstRect.x() << "," << dstRect.y() << "," << dstRect.width() << "," << dstRect.height() << "]");
-
     context.canvas->drawBitmapRect(scrollBitmap_,srcRect,dstRect,NULL);
 
 #if ENABLE(FEATURE_SCROLL_INDICATOR)
@@ -406,7 +391,7 @@ void ScrollLayer::paintSelf(PaintContext& context) {
         borderPicture()->playback(context.canvas);
     }
 
-#if 1 //|| !defined(GOOGLE_STRIP_LOG) || (GOOGLE_STRIP_LOG <= INFO)
+#if !defined(GOOGLE_STRIP_LOG) || (GOOGLE_STRIP_LOG <= INFO)
     RNS_GET_TIME_STAMP_US(end);
     RNS_LOG_TRACE("Scroll Layer (" << layerId_ << ") took " <<  (end - start) << " us to paint self");
 #endif
@@ -435,7 +420,7 @@ void ScrollLayer::paint(PaintContext& context) {
     // First paint children and then self
     for (auto& layer : children()) {
         if(layer->needsPainting(bitmapPaintContext)) {
-            RNS_LOG_DEBUG("Layer needs paint [" << layer->getBounds().x() <<"," << layer->getBounds().y() << "," << layer->getBounds().width() <<"," << layer->getBounds().height() << "]");
+            RNS_LOG_DEBUG("Scroll Layer needs paint [" << layer->getBounds().x() <<"," << layer->getBounds().y() << "," << layer->getBounds().width() <<"," << layer->getBounds().height() << "]");
             layer->paint(bitmapPaintContext);
         }
     }
