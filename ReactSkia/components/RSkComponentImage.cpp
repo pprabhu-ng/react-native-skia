@@ -37,7 +37,7 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
   string path;
   auto component = getComponentData();
   auto const &imageProps = *std::static_pointer_cast<ImageProps const>(component.props);
-
+  auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
   //First to check file entry presence. If not exist, generate imageData.
   do {
     if(networkImageData_) {
@@ -45,20 +45,21 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
       break;
     }
     if(imageProps.sources.empty()) break;
-
     imageData = RSkImageCacheManager::getImageCacheManagerInstance()->findImageDataInCache(imageProps.sources[0].uri.c_str());
     if(imageData) break;
 
     if (imageProps.sources[0].type == ImageSource::Type::Local) {
       imageData = getLocalImageData(imageProps.sources[0]);
+      if (!imageData) {
+        RNS_LOG_ERROR("Image Data not present ");
+        imageEventEmitter->onError();
+        imageEventEmitter->onLoadEnd();
+        hasToTriggerEvent_ = false;
+      }
     } else if(imageProps.sources[0].type == ImageSource::Type::Remote) {
       requestNetworkImageData(imageProps.sources[0]);
     }
   } while(0);
-
-  auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
-  // Emitting Load completed Event
-  if(imageData) imageEventEmitter->onLoad();
 
   Rect frame = component.layoutMetrics.frame;
   SkRect frameRect = SkRect::MakeXYWH(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
@@ -107,12 +108,18 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
     canvas->drawImageRect(imageData,targetRect,&paint);
     if(needClipAndRestore)
         canvas->restore();
-    drawBorder(canvas,frame,imageBorderMetrics,imageProps.backgroundColor);
     networkImageData_ = nullptr;
+    drawBorder(canvas,frame,imageBorderMetrics,imageProps.backgroundColor);
+    if(hasToTriggerEvent_) {
+     // Emitting Load completed Event
+      imageEventEmitter->onLoad();
+      imageEventEmitter->onLoadEnd();
+      hasToTriggerEvent_ = false;
+    }
   } else {
   /* Emitting Image Load failed Event*/
-    RNS_LOG_ERROR("Image not loaded :"<<imageProps.sources[0].uri.c_str());
-    imageEventEmitter->onError();
+    if(imageProps.sources[0].type != ImageSource::Type::Remote)
+      RNS_LOG_ERROR("Image not loaded :"<<imageProps.sources[0].uri.c_str());
   }
 }
 
@@ -121,6 +128,8 @@ sk_sp<SkImage> RSkComponentImage::getLocalImageData(ImageSource source) {
   sk_sp<SkData> data;
   string path;
   decodedimageCacheData imageCacheData;
+  auto component = getComponentData();
+  auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
   path = generateUriPath(source.uri.c_str());
   if(!path.c_str()) {
     RNS_LOG_ERROR("Invalid File");
@@ -156,6 +165,7 @@ RnsShell::LayerInvalidateMask RSkComponentImage::updateComponentProps(const Shad
     auto component = getComponentData();
     auto const &oldimageProps = *std::static_pointer_cast<ImageProps const>(component.props);
     RnsShell::LayerInvalidateMask updateMask=RnsShell::LayerInvalidateNone;
+    auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
 
     if((forceUpdate) || (oldimageProps.resizeMode != newimageProps.resizeMode)) {
       imageProps.resizeMode = newimageProps.resizeMode;
@@ -164,6 +174,12 @@ RnsShell::LayerInvalidateMask RSkComponentImage::updateComponentProps(const Shad
     if((forceUpdate) || (oldimageProps.tintColor != newimageProps.tintColor )) {
       /* TODO : Needs implementation*/
       imageProps.tintColor = RSkColorFromSharedColor(newimageProps.tintColor,SK_ColorTRANSPARENT);
+    }
+    string oldSourceUri = oldimageProps.sources[0].uri.c_str();
+    string newSourceUri = newimageProps.sources[0].uri.c_str();
+    if((forceUpdate) || (oldSourceUri.compare(newSourceUri) != 0)) {
+      hasToTriggerEvent_ = true;
+      imageEventEmitter->onLoadStart();
     }
     return updateMask;
 }
@@ -253,9 +269,18 @@ void RSkComponentImage::requestNetworkImageData(ImageSource source) {
 
   // completioncallback lambda fuction
   auto completionCallback =  [&](void* curlresponseData,void *userdata)->bool {
+    auto component = getComponentData();
+    auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
     CurlResponse *responseData =  (CurlResponse *)curlresponseData;
     CurlRequest * curlRequest = (CurlRequest *) userdata;
-    processImageData(responseData->responseurl,responseData->responseBuffer,responseData->contentSize);
+    if(!responseData->responseBuffer) {
+      imageEventEmitter->onError();
+      imageEventEmitter->onLoadEnd();
+      hasToTriggerEvent_ = false;
+    }
+    else{
+      processImageData(responseData->responseurl,responseData->responseBuffer,responseData->contentSize);
+    }
     delete curlRequest;
     return 0;
   };
