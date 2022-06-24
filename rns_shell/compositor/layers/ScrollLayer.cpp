@@ -426,7 +426,7 @@ void ScrollLayer::paint(PaintContext& context) {
     clipBound_ = Compositor::beginClip(bitmapPaintContext);
 
     if(bitmapSurfaceDamage_.size() != 0) {
-       /* Clear clipped area with background color before paint */
+       /* Clear clipped area with background color before painting the children*/
        scrollCanvas_->clear(backgroundColor);
     }
 
