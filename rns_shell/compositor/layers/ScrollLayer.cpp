@@ -242,7 +242,7 @@ bool ScrollLayer::setContentSize(SkISize contentSize) {
 void ScrollLayer::setScrollPosition(SkPoint scrollPos) {
     scrollOffsetX_ = scrollPos.x();
     scrollOffsetY_ = scrollPos.y();
-    RNS_LOG_DEBUG("Set ScrollOffset :" << scrollOffsetX_ << "," << scrollOffsetY_);
+    RNS_LOG_DEBUG("Scroll Layer (" << layerId_ << ") Set ScrollOffset :" << scrollOffsetX_ << "," << scrollOffsetY_);
 #if ENABLE(FEATURE_SCROLL_INDICATOR)
     scrollbar_.setScrollBarOffset(scrollPos);
 #endif
@@ -268,6 +268,13 @@ void ScrollLayer::bitmapConfigure() {
 void ScrollLayer::prePaint(PaintContext& context, bool forceLayout) {
     //Adjust absolute Layout frame and dirty rects
     bool forceChildrenLayout = (forceLayout || (invalidateMask_ & LayerLayoutInvalidate));
+
+#if !defined(GOOGLE_STRIP_LOG) || (GOOGLE_STRIP_LOG <= INFO)
+    RNS_LOG_TRACE("Scroll Layer (" << layerId_ << ") Parent damagelist before(" << forceChildrenLayout << ") ============");
+    for(auto &rect : context.damageRect)
+        RNS_LOG_TRACE("[" << rect.x() << "," <<  rect.y() << "," << rect.width() << "," << rect.height() << "]");
+    RNS_LOG_TRACE("====================================");
+#endif
 
     bitmapConfigure();
     scrollCanvas_->save();
@@ -303,7 +310,7 @@ void ScrollLayer::prePaint(PaintContext& context, bool forceLayout) {
         /* 1. bitmap size is updated */
         /* 2. child has update and intersects with visible Area */
         /* 3. child bounds is not calculated (happens when new child is added runtime)*/
-        if(forceBitmapReset_ || (dummy.intersect(visibleRect,layer->getBounds()) && layer->requireInvalidate(false)) || layer->getBounds().isEmpty()){
+        if(forceBitmapReset_ || dummy.intersect(visibleRect,layer->getBounds()) || layer->getBounds().isEmpty()){
             RNS_LOG_DEBUG("Layer needs prePaint [" << layer->getBounds().x() <<"," << layer->getBounds().y() << "," << layer->getBounds().width() <<"," << layer->getBounds().height() << "]");
             layer->prePaint(bitmapPaintContext,forceChildrenLayout);
             if(layer->invalidateMask_ & LayerRemoveInvalidate) {
@@ -356,6 +363,13 @@ void ScrollLayer::prePaint(PaintContext& context, bool forceLayout) {
        }
     }
 
+#if !defined(GOOGLE_STRIP_LOG) || (GOOGLE_STRIP_LOG <= INFO)
+    RNS_LOG_TRACE("Scroll Layer (" << layerId_ << ") Parent damagelist after ============");
+    for(auto &rect : context.damageRect)
+        RNS_LOG_TRACE("[" << rect.x() << "," <<  rect.y() << "," << rect.width() << "," << rect.height() << "]");
+    RNS_LOG_TRACE("====================================");
+#endif
+
     invalidateMask_ = LayerInvalidateNone;
     forceBitmapReset_ = false;
     recycleChildList.clear();
@@ -376,7 +390,7 @@ void ScrollLayer::paintSelf(PaintContext& context) {
         shadowPicture()->playback(context.canvas);
     }
 
-    RNS_LOG_INFO("Draw scroll bitmap offset X["<< scrollOffsetX_ << "] Y[" << scrollOffsetY_ << "]");
+    RNS_LOG_INFO("Scroll Layer (" << layerId_ << ") Draw scroll bitmap offset X["<< scrollOffsetX_ << "] Y[" << scrollOffsetY_ << "]");
     SkRect srcRect = SkRect::MakeXYWH(scrollOffsetX_,scrollOffsetY_,frame_.width(),frame_.height());
     SkRect dstRect = SkRect::Make(frame_);
     context.canvas->drawBitmapRect(scrollBitmap_,srcRect,dstRect,NULL);
@@ -386,7 +400,7 @@ void ScrollLayer::paintSelf(PaintContext& context) {
 #endif
 
     if(borderPicture()) {
-        RNS_LOG_DEBUG("SkPicture ( "  << borderPicture_ << " )For " <<
+        RNS_LOG_DEBUG("Scroll Layer (" << layerId_ << ") SkPicture ( "  << borderPicture_ << " )For " <<
                 borderPicture()->approximateOpCount() << " operations and size : " << borderPicture()->approximateBytesUsed());
         borderPicture()->playback(context.canvas);
     }
@@ -420,7 +434,7 @@ void ScrollLayer::paint(PaintContext& context) {
     // First paint children and then self
     for (auto& layer : children()) {
         if(layer->needsPainting(bitmapPaintContext)) {
-            RNS_LOG_DEBUG("Scroll Layer needs paint [" << layer->getBounds().x() <<"," << layer->getBounds().y() << "," << layer->getBounds().width() <<"," << layer->getBounds().height() << "]");
+            RNS_LOG_DEBUG("Layer needs paint [" << layer->getBounds().x() <<"," << layer->getBounds().y() << "," << layer->getBounds().width() <<"," << layer->getBounds().height() << "]");
             layer->paint(bitmapPaintContext);
         }
     }
