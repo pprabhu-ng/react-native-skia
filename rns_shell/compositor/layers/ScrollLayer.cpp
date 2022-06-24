@@ -308,7 +308,7 @@ void ScrollLayer::prePaint(PaintContext& context, bool forceLayout) {
 
         /* Prepaint children in below conditions */
         /* 1. bitmap size is updated */
-        /* 2. child has update and intersects with visible Area */
+        /* 2. child intersects with visible Area */
         /* 3. child bounds is not calculated (happens when new child is added runtime)*/
         if(forceBitmapReset_ || dummy.intersect(visibleRect,layer->getBounds()) || layer->getBounds().isEmpty()){
             RNS_LOG_DEBUG("Layer needs prePaint [" << layer->getBounds().x() <<"," << layer->getBounds().y() << "," << layer->getBounds().width() <<"," << layer->getBounds().height() << "]");
