@@ -76,13 +76,14 @@ void ScrollLayer::ScrollBar::updateScrollLayerLayout(SkISize scrollContentSize, 
 }
 
 SkIRect ScrollLayer::ScrollBar::getScrollBarAbsFrame(SkIRect scrollAbsFrame) {
-    // If scroll bar needs to be cleared,we provide valid abs frame else empty
-    if (mask_ == LayerRemoveInvalidate) {
+    // If scroll bar needs invalidate(paint/remove),we provide valid abs frame else empty
+    if (mask_ != LayerInvalidateNone) {
         SkIRect barAbsFrame = barFrame_;
         barAbsFrame.offset(scrollAbsFrame.x() + barOffsetTranslate_.x(),scrollAbsFrame.y() + barOffsetTranslate_.y());
         RNS_LOG_DEBUG("["<< this << "] Bar Abs frame XYWH[" << barAbsFrame.x() << "," << barAbsFrame.y() << "," << barAbsFrame.width() << "," << barAbsFrame.height() << "]");
 
-        showScrollBar(false);
+        //We set the mask to none,so we dont process dirty rect again once bar is removed
+        if(mask_ == LayerRemoveInvalidate) showScrollBar(false);
         return barAbsFrame;
     }
     return SkIRect::MakeEmpty();
@@ -325,22 +326,13 @@ void ScrollLayer::prePaint(PaintContext& context, bool forceLayout) {
     for(auto recycleChildIter = recycleChildList.rbegin();recycleChildIter != recycleChildList.rend();++recycleChildIter)
         removeChild(recycleChildIter->second.get(),recycleChildIter->first);
 
-    clipBound_ = Compositor::beginClip(bitmapPaintContext);
-
-    if(bitmapSurfaceDamage_.size() != 0) {
-       /* Clear area before paint */
-       scrollCanvas_->clear(backgroundColor);
-       // We dont have to force update the layer,as we now handle only partial update of this layer too.
-       //invalidate(static_cast<LayerInvalidateMask>(invalidateMask_|LayerPaintInvalidate));
-    }
-
     preRoll(context, forceLayout);
 
 #if ENABLE(FEATURE_SCROLL_INDICATOR)
     //Update scroll bar with scroll layer layout info
     if((invalidateMask_ & LayerLayoutInvalidate) == LayerLayoutInvalidate) scrollbar_.updateScrollLayerLayout(contentSize_,getFrame());
 
-    //if hide scrollbar,add its absframe to damage rect list
+    //if scrollbar needs update(paint/remove),add its absframe to damage rect list
     if(context.supportPartialUpdate) {
         SkIRect scrollBarFrame = scrollbar_.getScrollBarAbsFrame(absoluteFrame());
         if(scrollBarFrame != SkIRect::MakeEmpty()) addDamageRect(context,scrollBarFrame);
@@ -430,6 +422,13 @@ void ScrollLayer::paint(PaintContext& context) {
             clipBound_, // combined clip bounds from surfaceDamage
             nullptr, // GrDirectContext
     };
+
+    clipBound_ = Compositor::beginClip(bitmapPaintContext);
+
+    if(bitmapSurfaceDamage_.size() != 0) {
+       /* Clear clipped area with background color before paint */
+       scrollCanvas_->clear(backgroundColor);
+    }
 
     // First paint children and then self
     for (auto& layer : children()) {
