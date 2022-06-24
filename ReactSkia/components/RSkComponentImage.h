@@ -44,6 +44,7 @@ class RSkComponentImage final : public RSkComponent {
   inline string generateUriPath(string path);
   void drawAndSubmit();
   void processImageData(const char* path, char* response, int size);
+  void didSendEvent(bool didSuccess);
 
  protected:
   void OnPaint(SkCanvas *canvas) override;

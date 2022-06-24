@@ -37,7 +37,6 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
   string path;
   auto component = getComponentData();
   auto const &imageProps = *std::static_pointer_cast<ImageProps const>(component.props);
-  auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
   //First to check file entry presence. If not exist, generate imageData.
   do {
     if(networkImageData_) {
@@ -52,9 +51,7 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
       imageData = getLocalImageData(imageProps.sources[0]);
       if (!imageData) {
         RNS_LOG_ERROR("Image Data not present ");
-        imageEventEmitter->onError();
-        imageEventEmitter->onLoadEnd();
-        hasToTriggerEvent_ = false;
+        didSendEvent(false);
       }
     } else if(imageProps.sources[0].type == ImageSource::Type::Remote) {
       requestNetworkImageData(imageProps.sources[0]);
@@ -112,9 +109,7 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
     drawBorder(canvas,frame,imageBorderMetrics,imageProps.backgroundColor);
     if(hasToTriggerEvent_) {
      // Emitting Load completed Event
-      imageEventEmitter->onLoad();
-      imageEventEmitter->onLoadEnd();
-      hasToTriggerEvent_ = false;
+      didSendEvent(hasToTriggerEvent_);
     }
   } else {
   /* Emitting Image Load failed Event*/
@@ -207,6 +202,9 @@ void RSkComponentImage::processImageData(const char* path, char* response, int s
       return;
     }
     remoteImageData = SkImage::MakeFromEncoded(data);
+    if(!remoteImageData) {
+      didSendEvent(false);
+    }
     //Add in cache if image data is valid
     if(remoteImageData && canCacheData_){
       imageCacheData.imageData = remoteImageData;
@@ -269,16 +267,11 @@ void RSkComponentImage::requestNetworkImageData(ImageSource source) {
 
   // completioncallback lambda fuction
   auto completionCallback =  [&](void* curlresponseData,void *userdata)->bool {
-    auto component = getComponentData();
-    auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
     CurlResponse *responseData =  (CurlResponse *)curlresponseData;
     CurlRequest * curlRequest = (CurlRequest *) userdata;
     if(!responseData->responseBuffer) {
-      imageEventEmitter->onError();
-      imageEventEmitter->onLoadEnd();
-      hasToTriggerEvent_ = false;
-    }
-    else{
+      didSendEvent(false);
+    } else {
       processImageData(responseData->responseurl,responseData->responseBuffer,responseData->contentSize);
     }
     delete curlRequest;
@@ -288,7 +281,20 @@ void RSkComponentImage::requestNetworkImageData(ImageSource source) {
   curlRequest->curldelegator.delegatorData = curlRequest;
   curlRequest->curldelegator.CURLNetworkingHeaderCallback = headerCallback;
   curlRequest->curldelegator.CURLNetworkingCompletionCallback=completionCallback;
-  sharedCurlNetworking->sendRequest(curlRequest,query);
+  if(hasToTriggerEvent_) sharedCurlNetworking->sendRequest(curlRequest,query);
+}
+
+void RSkComponentImage::didSendEvent(bool didSuccess) {
+  auto component = getComponentData();
+  auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
+
+  if(didSuccess)
+    imageEventEmitter->onLoad();
+  else
+    imageEventEmitter->onError();
+
+  imageEventEmitter->onLoadEnd();
+  hasToTriggerEvent_ = false;
 }
 
 } // namespace react
