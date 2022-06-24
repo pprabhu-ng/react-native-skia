@@ -51,7 +51,7 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
       imageData = getLocalImageData(imageProps.sources[0]);
       if (!imageData) {
         RNS_LOG_ERROR("Image Data not present ");
-        didSendEvent(false);
+        sendEvents(false);
       }
     } else if(imageProps.sources[0].type == ImageSource::Type::Remote) {
       requestNetworkImageData(imageProps.sources[0]);
@@ -109,7 +109,7 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
     drawBorder(canvas,frame,imageBorderMetrics,imageProps.backgroundColor);
     if(hasToTriggerEvent_) {
      // Emitting Load completed Event
-      didSendEvent(hasToTriggerEvent_);
+      sendEvents(hasToTriggerEvent_);
     }
   } else {
   /* Emitting Image Load failed Event*/
@@ -123,8 +123,6 @@ sk_sp<SkImage> RSkComponentImage::getLocalImageData(ImageSource source) {
   sk_sp<SkData> data;
   string path;
   decodedimageCacheData imageCacheData;
-  auto component = getComponentData();
-  auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
   path = generateUriPath(source.uri.c_str());
   if(!path.c_str()) {
     RNS_LOG_ERROR("Invalid File");
@@ -203,7 +201,7 @@ void RSkComponentImage::processImageData(const char* path, char* response, int s
     }
     remoteImageData = SkImage::MakeFromEncoded(data);
     if(!remoteImageData) {
-      didSendEvent(false);
+      sendEvents(false);
     }
     //Add in cache if image data is valid
     if(remoteImageData && canCacheData_){
@@ -270,7 +268,7 @@ void RSkComponentImage::requestNetworkImageData(ImageSource source) {
     CurlResponse *responseData =  (CurlResponse *)curlresponseData;
     CurlRequest * curlRequest = (CurlRequest *) userdata;
     if(!responseData->responseBuffer) {
-      didSendEvent(false);
+      sendEvents(false);
     } else {
       processImageData(responseData->responseurl,responseData->responseBuffer,responseData->contentSize);
     }
@@ -284,11 +282,11 @@ void RSkComponentImage::requestNetworkImageData(ImageSource source) {
   if(hasToTriggerEvent_) sharedCurlNetworking->sendRequest(curlRequest,query);
 }
 
-void RSkComponentImage::didSendEvent(bool didSuccess) {
+void RSkComponentImage::sendEvents(bool hasToSendLoadEvent) {
   auto component = getComponentData();
   auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
 
-  if(didSuccess)
+  if(hasToSendLoadEvent)
     imageEventEmitter->onLoad();
   else
     imageEventEmitter->onError();
