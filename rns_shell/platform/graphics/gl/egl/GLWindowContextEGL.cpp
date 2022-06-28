@@ -12,14 +12,12 @@
 #include "egl/GLWindowContextEGL.h"
 
 #include "Performance.h"
-#include <thread>
-#include <mutex>
 
 #if USE(EGL)
 
 using RnsShell::DisplayParams;
 using RnsShell::GLWindowContext;
-std::mutex mtx;
+
 namespace RnsShell {
 
 #if USE(OPENGL_ES)
@@ -146,8 +144,10 @@ bool GLWindowContextEGL::isExtensionSupported(const char* extensionList, const c
 EGLContext GLWindowContextEGL::createContextForEGLVersion(PlatformDisplay& platformDisplay, EGLConfig config, EGLContext sharingContext) {
     static EGLint contextAttributes[7];
     static bool contextAttributesInitialized = false;
+
     if (!contextAttributesInitialized) {
         contextAttributesInitialized = true;
+
 #if USE(OPENGL_ES)
         contextAttributes[0] = EGL_CONTEXT_CLIENT_VERSION;
         contextAttributes[1] = 2;
@@ -188,6 +188,7 @@ EGLContext GLWindowContextEGL::createContextForEGLVersion(PlatformDisplay& platf
         contextAttributes[0] = EGL_NONE;
 #endif //OPENGL_ES
     }
+
     return eglCreateContext(platformDisplay.eglDisplay(), config, sharingContext, contextAttributes);
 }
 
@@ -218,12 +219,13 @@ GLWindowContextEGL::GLWindowContextEGL(GLNativeWindowType window, EGLConfig conf
 }
 
 std::unique_ptr<GLWindowContextEGL> GLWindowContextEGL::createWindowContext(GLNativeWindowType window, PlatformDisplay& platformDisplay, const DisplayParams& params, EGLContext sharingContext) {
- EGLDisplay display = platformDisplay.eglDisplay();
+    EGLDisplay display = platformDisplay.eglDisplay();
     EGLConfig config;
     if (!getEGLConfig(display, &config, WindowSurface)) {
         RNS_LOG_ERROR("Cannot obtain EGL window context configuration : " << eglErrorString());
         return nullptr;
     }
+
     EGLContext context = createContextForEGLVersion(platformDisplay, config, sharingContext);
     if (context == EGL_NO_CONTEXT) {
         RNS_LOG_ERROR("Cannot create EGL window context : " << eglErrorString());
@@ -264,14 +266,16 @@ std::unique_ptr<GLWindowContextEGL> GLWindowContextEGL::createWindowContext(GLNa
 }
 
 std::unique_ptr<WindowContext> GLWindowContextEGL::createContext(GLNativeWindowType window, PlatformDisplay& platformDisplay, const DisplayParams& params) {
- if (platformDisplay.eglDisplay() == EGL_NO_DISPLAY) {
+    if (platformDisplay.eglDisplay() == EGL_NO_DISPLAY) {
         RNS_LOG_ERROR("Cannot create EGL context: invalid display : " << eglErrorString());
         return nullptr;
     }
+
     if (eglBindAPI(gEGLAPIVersion) == EGL_FALSE) {
         RNS_LOG_ERROR("Cannot create EGL context: error binding " << gEGLAPIName << " API : " << eglErrorString());
         return nullptr;
     }
+
     EGLContext eglSharingContext = platformDisplay.sharingGLContext() ? platformDisplay.sharingGLContext() : createSharingContext(platformDisplay);
     auto context = window ? createWindowContext(window, platformDisplay, params, eglSharingContext) : nullptr;
     if (!context) {
@@ -397,15 +401,7 @@ bool GLWindowContextEGL::makeContextCurrent() {
 
     return res;
 }
-int GLWindowContextEGL::getSwapBufferAge() {
 
-     EGLint age;
- eglQuerySurface(platformDisplay_.eglDisplay(), glSurface_, EGL_BUFFER_AGE_KHR, &age );
- EGLint value;
- eglQuerySurface(platformDisplay_.eglDisplay(), glSurface_, EGL_SWAP_BEHAVIOR, &value);
- printf("\033[22;34m%s +%d  EGL_SWAP_BEHAVIOR : %x Buffer age %d \033[22;0m\n", __FILE__, __LINE__,  value, age);
- return (int)age;
-}
 void GLWindowContextEGL::onSwapBuffers(std::vector<SkIRect> &damage) {
     if (glContext_ && glSurface_) {
 #if !defined(GOOGLE_STRIP_LOG) || (GOOGLE_STRIP_LOG <= INFO)
@@ -420,22 +416,19 @@ void GLWindowContextEGL::onSwapBuffers(std::vector<SkIRect> &damage) {
 #if USE(RNS_SHELL_COPY_BUFFERS) // Partial updates can still be supported with offscreen buffer drawing, if enabled
             eglBlitAndSwapBuffers();
 #else
-     eglSwapBuffers(platformDisplay_.eglDisplay(), glSurface_); // Partial update disabled
+            eglSwapBuffers(platformDisplay_.eglDisplay(), glSurface_); // Partial update disabled
 #endif //RNS_SHELL_COPY_BUFFERS
         }
 #else
         RNS_UNUSED(damage);
-        #eeeeeeeeeeeeee
-        eglSwapBuffers(platformDisplay_.eglDisplay(), glSurface_); // Partial update disabled
+        eglSwapBuffers(platformDisplay_.eglDisplay(), glSurface_);
 #endif // RNS_SHELL_PARTIAL_UPDATES
 
 #if !defined(GOOGLE_STRIP_LOG) || (GOOGLE_STRIP_LOG <= INFO)
         RNS_GET_TIME_STAMP_US(end);
         Performance::takeSamples(end - start);
 #endif
-
     }
-            RNS_LOG_ERROR("From Thread : "<<std::this_thread::get_id()<<" Instance : "<<this <<" Gl Surface : "<< glSurface_);
 }
 
 void GLWindowContextEGL::swapInterval() {

@@ -137,8 +137,10 @@ void RSkComponentTextInput::OnPaint(SkCanvas *canvas) {
     if (secureTextEntry_) {
       std::string secureTextString(displayString_);
       data.layoutManager->buildText(textLayout, textInputProps.backgroundColor, textInputProps.paragraphAttributes, textAttributes, secureTextString.replace( secureTextString.begin(), secureTextString.end(), secureTextString.size(), '*'), true);
+      OnScreenKeyboard::updatePlaceHolderString(secureTextString,(cursor_.end - cursor_.locationFromEnd));
     } else {
       data.layoutManager->buildText(textLayout, textInputProps.backgroundColor, textInputProps.paragraphAttributes, textAttributes, displayString_, true);
+      OnScreenKeyboard::updatePlaceHolderString(displayString_,(cursor_.end - cursor_.locationFromEnd));
     }
   }
   drawShadow(canvas, frame, borderMetrics, textInputProps.backgroundColor, layer()->shadowOpacity, layer()->shadowFilter);

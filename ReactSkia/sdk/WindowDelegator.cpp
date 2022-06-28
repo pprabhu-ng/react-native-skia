@@ -11,11 +11,11 @@
 namespace rns {
 namespace sdk {
 
-void WindowDelegator::createWindow(SkSize windowSize,std::function<void ()> windowReadyCB,bool runOnTaskRunner) {
+void WindowDelegator::createWindow(SkSize windowSize,std::function<void ()> windowReadyCB,std::function<void ()>faileSafeCB,bool runOnTaskRunner) {
 
   windowSize_=windowSize;
   windowReadyTodrawCB_=windowReadyCB;
-  displayPlatForm_=RnsShell::PlatformDisplay::sharedDisplayForCompositing().type();
+  faileSafeCB_=faileSafeCB;
 
   if(runOnTaskRunner) {
     ownsTaskrunner_ = runOnTaskRunner;
@@ -32,6 +32,8 @@ void WindowDelegator::createWindow(SkSize windowSize,std::function<void ()> wind
 
 void  WindowDelegator::createNativeWindow() {
 
+  displayPlatForm_=RnsShell::PlatformDisplay::sharedDisplayForCompositing().type();
+
   if(displayPlatForm_ == RnsShell::PlatformDisplay::Type::X11) {
     /*For X11 draw should be done after expose event received*/
     sem_init(&semReadyToDraw_,0,0);
@@ -40,6 +42,7 @@ void  WindowDelegator::createNativeWindow() {
                                                                          std::placeholders::_1);
     exposeEventID_ = NotificationCenter::defaultCenter().addListener("windowExposed",handler);
   }
+  sem_init(&semRenderingDone_,0,0);
   window_ = RnsShell::Window::createNativeWindow(&RnsShell::PlatformDisplay::sharedDisplayForCompositing(),
                                                  SkSize::Make(windowSize_.width(),windowSize_.height()),
                                                  RnsShell::SubWindow);
@@ -63,6 +66,7 @@ void  WindowDelegator::createNativeWindow() {
 void WindowDelegator::closeWindow() {
   RNS_LOG_TODO("Sync between rendering & Exit to be handled ");
   windowActive = false;
+  std::scoped_lock lock(renderCtrlMutex);
   if(ownsTaskrunner_) windowTaskRunner_->stop();
 
   if(exposeEventID_) {
@@ -73,29 +77,42 @@ void WindowDelegator::closeWindow() {
     window_->closeWindow();
     delete window_;
     window_=nullptr;
+    windowContext_ = nullptr;
+    backBuffer_ = nullptr;
   }
   sem_destroy(&semReadyToDraw_);
+  sem_destroy(&semRenderingDone_);
   windowDelegatorCanvas=nullptr;
   windowReadyTodrawCB_=nullptr;
 }
 
-void WindowDelegator::commitDrawCall() {
+void WindowDelegator::commitDrawCall(bool blockRenderCall) {
   if(!windowActive) return;
 
   if( ownsTaskrunner_ )  {
-    if( windowTaskRunner_->running() )
-      windowTaskRunner_->dispatch([&](){ renderToDisplay(); });
+    if( windowTaskRunner_->running() ) {
+      windowTaskRunner_->dispatch([&](){ renderToDisplay(blockRenderCall); });
+      if(blockRenderCall)sem_wait(&semRenderingDone_);
+    }
   } else {
-    renderToDisplay();
+    renderToDisplay(false);
   }
 }
 
-inline void WindowDelegator::renderToDisplay() {
+inline void WindowDelegator::renderToDisplay(bool signalOnCompletion) {
   if(!windowActive) return;
 
-  backBuffer_->flushAndSubmit();
-  std::vector<SkIRect> emptyRect;// No partialUpdate handled , so passing emptyRect instead of dirtyRect
-  windowContext_->swapBuffers(emptyRect);
+  std::scoped_lock lock(renderCtrlMutex);
+  int bufferAge=windowContext_->bufferAge();
+  if((bufferAge != 1) && (faileSafeCB_)) {
+    faileSafeCB_();
+  }
+  if(backBuffer_)  backBuffer_->flushAndSubmit();
+  if(windowContext_) {
+    std::vector<SkIRect> emptyRect;// No partialUpdate handled , so passing emptyRect instead of dirtyRect
+    windowContext_->swapBuffers(emptyRect);
+  }
+  if(signalOnCompletion) sem_post(&semRenderingDone_);
 }
 
 void WindowDelegator::setWindowTittle(const char* titleString) {
@@ -107,7 +124,7 @@ void WindowDelegator::onExposeHandler(RnsShell::Window* window) {
   if(window  == window_) {
     sem_wait(&semReadyToDraw_);
     window_->show();
-    if(exposeEventID_) {
+    if(exposeEventID_ != -1) {
       NotificationCenter::defaultCenter().removeListener(exposeEventID_);
       exposeEventID_=-1;
     }
