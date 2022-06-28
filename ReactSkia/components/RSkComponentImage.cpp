@@ -49,10 +49,6 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
 
     if (imageProps.sources[0].type == ImageSource::Type::Local) {
       imageData = getLocalImageData(imageProps.sources[0]);
-      if (!imageData) {
-        RNS_LOG_ERROR("Image Data not present ");
-        sendErrorEvents();
-      }
     } else if(imageProps.sources[0].type == ImageSource::Type::Remote) {
       requestNetworkImageData(imageProps.sources[0]);
     }
@@ -111,8 +107,14 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
     sendSuccessEvents();
   } else {
   /* Emitting Image Load failed Event*/
-    if(imageProps.sources[0].type != ImageSource::Type::Remote)
+    if(imageProps.sources[0].type != ImageSource::Type::Remote) {
+      if(!hasToTriggerEvent_) {
+        auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
+        imageEventEmitter->onLoadStart();
+      }
+      sendErrorEvents();
       RNS_LOG_ERROR("Image not loaded :"<<imageProps.sources[0].uri.c_str());
+    }
   }
 }
 
@@ -137,6 +139,12 @@ sk_sp<SkImage> RSkComponentImage::getLocalImageData(ImageSource source) {
     imageCacheData.expiryTime = (SkTime::GetMSecs() + DEFAULT_MAX_CACHE_EXPIRY_TIME);//convert min to millisecond 30 min *60 sec *1000
     RSkImageCacheManager::getImageCacheManagerInstance()->imageDataInsertInCache(source.uri.c_str(), imageCacheData);
   }
+    if(!hasToTriggerEvent_) {
+    auto component = getComponentData();
+    auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
+    imageEventEmitter->onLoadStart();
+    hasToTriggerEvent_ = true;
+  }
 
 #ifdef RNS_IMAGE_CACHE_USAGE_DEBUG
     printCacheUsage();
@@ -156,7 +164,6 @@ RnsShell::LayerInvalidateMask RSkComponentImage::updateComponentProps(const Shad
     auto component = getComponentData();
     auto const &oldimageProps = *std::static_pointer_cast<ImageProps const>(component.props);
     RnsShell::LayerInvalidateMask updateMask=RnsShell::LayerInvalidateNone;
-    auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
 
     if((forceUpdate) || (oldimageProps.resizeMode != newimageProps.resizeMode)) {
       imageProps.resizeMode = newimageProps.resizeMode;
@@ -169,6 +176,7 @@ RnsShell::LayerInvalidateMask RSkComponentImage::updateComponentProps(const Shad
     string oldSourceUri = oldimageProps.sources[0].uri.c_str();
     string newSourceUri = newimageProps.sources[0].uri.c_str();
     if((forceUpdate) || (oldSourceUri.compare(newSourceUri) != 0)) {
+      auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
       hasToTriggerEvent_ = true;
       imageEventEmitter->onLoadStart();
     }
@@ -200,6 +208,7 @@ void RSkComponentImage::processImageData(const char* path, char* response, int s
     remoteImageData = SkImage::MakeFromEncoded(data);
     if(!remoteImageData) {
       sendErrorEvents();
+      return;
     }
     //Add in cache if image data is valid
     if(remoteImageData && canCacheData_){
@@ -232,8 +241,6 @@ inline double getCacheMaxAgeDuration(std::string cacheControlData) {
 void RSkComponentImage::requestNetworkImageData(ImageSource source) {
   auto sharedCurlNetworking = CurlNetworking::sharedCurlNetworking();
   CurlRequest *curlRequest = new CurlRequest(nullptr,source.uri.c_str(),0,"GET");
-  auto component = getComponentData();
-  auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
 
   folly::dynamic query = folly::dynamic::object();
 
@@ -267,7 +274,7 @@ void RSkComponentImage::requestNetworkImageData(ImageSource source) {
   auto completionCallback =  [&](void* curlresponseData,void *userdata)->bool {
     CurlResponse *responseData =  (CurlResponse *)curlresponseData;
     CurlRequest * curlRequest = (CurlRequest *) userdata;
-    if(!responseData->responseBuffer) {
+    if(responseData && curlRequest && !responseData->responseBuffer) {
       sendErrorEvents();
     } else {
       processImageData(responseData->responseurl,responseData->responseBuffer,responseData->contentSize);
@@ -280,6 +287,8 @@ void RSkComponentImage::requestNetworkImageData(ImageSource source) {
   curlRequest->curldelegator.CURLNetworkingHeaderCallback = headerCallback;
   curlRequest->curldelegator.CURLNetworkingCompletionCallback=completionCallback;
   if(!hasToTriggerEvent_) {
+    auto component = getComponentData();
+    auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
     imageEventEmitter->onLoadStart();
     hasToTriggerEvent_ = true;
   }
@@ -296,10 +305,9 @@ inline void RSkComponentImage::sendErrorEvents() {
 }
 
 inline void RSkComponentImage::sendSuccessEvents() {
-  auto component = getComponentData();
-  auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
-
   if(hasToTriggerEvent_) {
+    auto component = getComponentData();
+    auto imageEventEmitter = std::static_pointer_cast<ImageEventEmitter const>(component.eventEmitter);
     imageEventEmitter->onLoad();
     imageEventEmitter->onLoadEnd();
     hasToTriggerEvent_ = false;
