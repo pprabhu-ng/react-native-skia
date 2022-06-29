@@ -5,8 +5,6 @@
  * found in the LICENSE file.
  */
 
-#define NEED_OSK_CONVERSION_SUPPORT /* To Enable RSK to OSK sdk value conversion in RSkConversion.h*/
-
 #include "include/core/SkPaint.h"
 #include "ReactSkia/components/RSkComponentTextInput.h"
 #include "ReactSkia/components/RSkComponent.h"
@@ -15,6 +13,7 @@
 #include "ReactSkia/sdk/OnScreenKeyBoard.h"
 #include "ReactSkia/views/common/RSkDrawUtils.h"
 #include "ReactSkia/views/common/RSkConversion.h"
+#include "ReactSkia/views/common/RSkSdkConversion.h"
 #include "rns_shell/compositor/layers/PictureLayer.h"
 
 #include <string.h>
@@ -455,9 +454,9 @@ RnsShell::LayerInvalidateMask  RSkComponentTextInput::updateComponentProps(const
 
 /* Fetch OnSCreenKeyBoard Props*/
   showSoftInputOnFocus_=textInputProps.traits.showSoftInputOnFocus;
-  oskLaunchConfig_.type=RSkToOSKKeyboardType(textInputProps.traits.keyboardType);
-  oskLaunchConfig_.theme=RSkToOSKKeyboardTheme(textInputProps.traits.keyboardAppearance);
-  oskLaunchConfig_.returnKeyLabel=RSkToOSKReturnKeyType(textInputProps.traits.returnKeyType);
+  oskLaunchConfig_.type=RSkToSdkOSKeyboardType(textInputProps.traits.keyboardType);
+  oskLaunchConfig_.theme=RSkToSdkOSKeyboardTheme(textInputProps.traits.keyboardAppearance);
+  oskLaunchConfig_.returnKeyLabel=RSkToSdkOSKReturnKeyType(textInputProps.traits.returnKeyType);
   oskLaunchConfig_.enablesReturnKeyAutomatically=textInputProps.traits.enablesReturnKeyAutomatically;
  
   return (RnsShell::LayerInvalidateMask)mask;

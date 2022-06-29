@@ -53,37 +53,5 @@ inline facebook::react::Size RCTSizeFromSkSize(const SkSize &size) {
   return {size.width(), size.height()};
 }
 inline bool isOpaque(float opacity) {
-  return (opacity == MAX_8BIT) ? true:false;
+return (opacity == MAX_8BIT) ? true:false;
 }
-
-#ifdef NEED_OSK_CONVERSION_SUPPORT
-
-inline rns::sdk::OSKTypes RSkToOSKKeyboardType(facebook::react::KeyboardType keyBoardType) {
-  switch(keyBoardType) {
-    case facebook::react::KeyboardType::Numeric:
-      return rns::sdk::OSKTypes::OSK_NUMERIC_KB;
-    default:
-      return rns::sdk::OSKTypes::OSK_ALPHA_NUMERIC_KB;
-  }
-}
-
-inline rns::sdk::OSKThemes RSkToOSKKeyboardTheme(facebook::react::KeyboardAppearance keyBoardTheme) {
-  switch(keyBoardTheme) {
-    case facebook::react::KeyboardAppearance::Light:
-      return rns::sdk::OSKThemes::OSK_LIGHT_THEME;
-    default:
-      return rns::sdk::OSKThemes::OSK_DARK_THEME;
-  }
-}
-
-inline rns::sdk::OSKReturnKeyType RSkToOSKReturnKeyType(facebook::react::ReturnKeyType returnKeyType) {
-  switch(returnKeyType) {
-    case facebook::react::ReturnKeyType::Search:
-      return rns::sdk::OSKReturnKeyType::OSK_RETURN_KEY_SEARCH;
-    default:
-      return rns::sdk::OSKReturnKeyType::OSK_RETURN_KEY_DEFAULT;
-  }
-}
-
-#endif /*NEED_OSK_CONVERSION_SUPPORT*/
-

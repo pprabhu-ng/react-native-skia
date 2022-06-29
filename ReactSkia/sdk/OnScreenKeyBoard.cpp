@@ -249,7 +249,7 @@ inline void OnScreenKeyboard::drawKBKeyFont(SkPoint index,SkColor color,bool onH
     bool needsCanvasRestore{false};
     if(oskLayout_.keyInfo->at(rowIndex).at(keyIndex).keyType == KEY_TYPE_FUNCTION) {
      /*TempFix: Search Icon Presented properly only by "DejaVu Sans Mono/monospace" family. So hardcoding it
-       Enchancement : When more icon needs custom handling, custom options to be specified in functionKeyMap to handle in a genric way
+       NOTE : When more icon needs custom handling, custom options to be specified in functionKeyMap to handle in a genric way
      */
       char* fontFamily=nullptr;
       if(!strcmp(keyName,"return")) {
@@ -277,6 +277,10 @@ inline void OnScreenKeyboard::drawKBKeyFont(SkPoint index,SkColor color,bool onH
           /*Current Search icon used needs a flip to be alligned with rest of the icons*/
           if(!strcmp(keyName,"search")) {
             SkRect bounds;
+            /*NOTE:: TBD-On extending supports for return keys, decision to be taken whether
+                     draw co-ordiantes for any other return keys (other than deafult) to be done
+                     here while drawing or can calculate during LAyout creation and maintained seperately
+            */
             font.measureText(uniChar.c_str(), uniChar.size(), SkTextEncoding::kUTF8, &bounds);
             textX = oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile.x() + ((oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile.width() - bounds.width() )/2);
             textY = oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile.y() + ((oskLayout_.keyPos->at(rowIndex).at(keyIndex).highlightTile.height() + bounds.height()) /2);
