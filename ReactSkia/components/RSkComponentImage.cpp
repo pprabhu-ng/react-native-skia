@@ -9,7 +9,7 @@
 #include "include/core/SkClipOp.h"
 #include "include/core/SkImageFilter.h"
 #include "include/effects/SkImageFilters.h"
-
+#include "include/core/SkMaskFilter.h"
 #include "rns_shell/compositor/layers/PictureLayer.h"
 
 #include "react/renderer/components/image/ImageEventEmitter.h"
@@ -32,7 +32,7 @@ using namespace RSkImageUtils;
 RSkComponentImage::RSkComponentImage(const ShadowView &shadowView)
     : RSkComponent(shadowView) {
       imageEventEmitter_ = std::static_pointer_cast<ImageEventEmitter const>(shadowView.eventEmitter);
-    }
+}
 
 void RSkComponentImage::OnPaint(SkCanvas *canvas) {
   sk_sp<SkImage> imageData{nullptr};
@@ -106,8 +106,8 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
     networkImageData_ = nullptr;
     drawBorder(canvas,frame,imageBorderMetrics,imageProps.backgroundColor);
     // Emitting Load completed Event
-    if(hasToTriggerEvent_)
-      sendSuccessEvents();
+    if(hasToTriggerEvent_) sendSuccessEvents();
+
   } else {
   /* Emitting Image Load failed Event*/
     if(imageProps.sources[0].type != ImageSource::Type::Remote) {
@@ -175,8 +175,8 @@ RnsShell::LayerInvalidateMask RSkComponentImage::updateComponentProps(const Shad
       imageProps.tintColor = RSkColorFromSharedColor(newimageProps.tintColor,SK_ColorTRANSPARENT);
     }
     if((forceUpdate) || (oldimageProps.sources[0].uri.compare(newimageProps.sources[0].uri) != 0)) {
-      hasToTriggerEvent_ = true;
       imageEventEmitter_->onLoadStart();
+      hasToTriggerEvent_ = true;
     }
     return updateMask;
 }
@@ -205,9 +205,8 @@ bool RSkComponentImage::processImageData(const char* path, char* response, int s
       return false;
     }
     remoteImageData = SkImage::MakeFromEncoded(data);
-    if(!remoteImageData) {
-      return false;
-    }
+    if(!remoteImageData) return false;
+
     //Add in cache if image data is valid
     if(remoteImageData && canCacheData_){
       imageCacheData.imageData = remoteImageData;
@@ -274,7 +273,6 @@ void RSkComponentImage::requestNetworkImageData(ImageSource source) {
     CurlResponse *responseData =  (CurlResponse *)curlresponseData;
     CurlRequest * curlRequest = (CurlRequest *) userdata;
     if((!responseData
-        || !responseData->responseBuffer
         || !processImageData(responseData->responseurl,responseData->responseBuffer,responseData->contentSize)) && (hasToTriggerEvent_)) {
       sendErrorEvents();
     }
