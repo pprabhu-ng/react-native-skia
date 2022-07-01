@@ -31,7 +31,7 @@ enum partitionID {
 /* KeyBoard Layout for Alpha Numeric KeyBoard */
 
 #define ALPHA_NUMERIC_KB_PARTITION_COUNT   4
-SkPoint alphaNumericKBReturnKeyIndex{2,13};
+SkPoint alphaNumericKBReturnKeyIndex{13,2};/*KeyIndex,RowIndex*/
 KBLayoutKeyPosContainer alphaNumericKBKeyPos;
 KBLayoutSibblingInfoContainer alphaNumericKBKeySiblingInfo;
 KBLayoutKeyInfoContainer alphaNumericKBKeyInfo= {
@@ -119,7 +119,7 @@ keyPlacementConfig_t alphaNumericKBGroupConfig[ALPHA_NUMERIC_KB_PARTITION_COUNT]
 KBLayoutSibblingInfoContainer symbolKBKBKeySiblingInfo;
 KBLayoutKeyPosContainer symbolKBKBKeyPos;
 #define SYMBOL_KB_PARTITION_COUNT 3
-SkPoint symbolKBReturnKeyIndex{2,11};
+SkPoint symbolKBReturnKeyIndex{11,2};/*KeyIndex,RowIndex*/
 KBLayoutKeyInfoContainer symbolKBKBKeyInfo={
   {
     {"123ABC",RNS_KEY_UnKnown,KEY_TYPE_TOGGLE,GROUP1},

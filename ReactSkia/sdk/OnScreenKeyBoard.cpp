@@ -428,12 +428,6 @@ void OnScreenKeyboard::onHWkeyHandler(rnsKey keyValue, rnsKeyAction eventKeyActi
               hlCandidate.set(keyIndex,rowIndex);
               keyFound=true;
               OSKkeyValue =keyValue;
-              /* Enable Reurn Key on Valid Key EVent if disabled*/
-              if(autoActivateReturnKey) {
-                autoActivateReturnKey=false;
-                drawKBKeyFont(oskLayout_.returnKeyIndex,fontColor_);
-                drawCallPendingToRender=true;
-              }
               break;
             }
           }
@@ -445,6 +439,12 @@ void OnScreenKeyboard::onHWkeyHandler(rnsKey keyValue, rnsKeyAction eventKeyActi
   if((lastFocussIndex_ != hlCandidate)) {
     drawHighLightOnKey(hlCandidate);
     currentFocussIndex_=hlCandidate;
+    drawCallPendingToRender=true;
+  }
+  /* Enable Reurn Key on Valid Key EVent if disabled*/
+  if((OSKkeyValue != RNS_KEY_UnKnown) && autoActivateReturnKey) {
+    autoActivateReturnKey=false;
+    drawKBKeyFont(oskLayout_.returnKeyIndex,fontColor_);
     drawCallPendingToRender=true;
   }
   if( drawCallPendingToRender && (oskState_== OSK_STATE_ACTIVE)) commitDrawCall();

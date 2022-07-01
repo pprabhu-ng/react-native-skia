@@ -10,7 +10,6 @@
 #include "ReactSkia/components/RSkComponent.h"
 #include "ReactSkia/core_modules/RSkSpatialNavigator.h"
 #include "ReactSkia/sdk/RNSKeyCodeMapping.h"
-#include "ReactSkia/sdk/OnScreenKeyBoard.h"
 #include "ReactSkia/views/common/RSkDrawUtils.h"
 #include "ReactSkia/views/common/RSkConversion.h"
 #include "ReactSkia/views/common/RSkSdkConversion.h"
@@ -519,7 +518,10 @@ void RSkComponentTextInput::requestForEditingMode(bool isFlushDisplay){
        drawAndSubmit(isFlushDisplay);
     }
   }
-  if(showSoftInputOnFocus_) OnScreenKeyboard::launch(oskLaunchConfig_);
+  if(showSoftInputOnFocus_){
+    OnScreenKeyboard::launch(oskLaunchConfig_);
+    isOSKActive_=true;
+  }
   RNS_LOG_DEBUG("[requestForEditingMode] END");
 }
 
@@ -546,7 +548,10 @@ void RSkComponentTextInput::resignFromEditingMode(bool isFlushDisplay) {
   if (!caretHidden_) {
     drawAndSubmit(isFlushDisplay);
   }
-  if(showSoftInputOnFocus_) OnScreenKeyboard::exit();
+  if(isOSKActive_){
+    OnScreenKeyboard::exit();
+    isOSKActive_=false;
+  }
   RNS_LOG_DEBUG("[requestForEditingMode] *** END ***");
 }
 

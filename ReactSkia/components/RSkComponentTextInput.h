@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <atomic>
+
 #include "modules/skparagraph/include/TextStyle.h"
 #include "react/renderer/components/textinput/TextInputShadowNode.h"
 #include "react/renderer/components/textinput/TextInputEventEmitter.h"
@@ -41,8 +43,8 @@ class RSkComponentTextInput final : public RSkComponent {
   bool isTextInputInFocus_=false;
   bool secureTextEntry_=false;
   bool hasToSetFocus_=false;
-  bool showSoftInputOnFocus_=true;//To decide OnScreen KeyBoard to be used or not
-
+  std::atomic<bool> showSoftInputOnFocus_=true;//To decide OnScreen KeyBoard to be used or not
+  bool isOSKActive_=false; // maintaining KB launch state, to decide need to Exit OSK
   int eventCount_;
   int maxLength_;
   std::string displayString_{}; // Text to be displayed on screen
