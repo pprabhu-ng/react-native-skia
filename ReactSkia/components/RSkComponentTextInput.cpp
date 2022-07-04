@@ -132,15 +132,23 @@ void RSkComponentTextInput::OnPaint(SkCanvas *canvas) {
                           textLayout.paraStyle, data.layoutManager->collection_));
   if (0 == displayString_.size()) {
     textAttributes.foregroundColor = placeholderColor_;
+#if ENABLE(FEATURE_ONSCREEN_KEYBOARD)
+    OnScreenKeyboard::updatePlaceHolderString(displayString_,(cursor_.end - cursor_.locationFromEnd));
+#endif/*FEATURE_ONSCREEN_KEYBOARD*/
+
     data.layoutManager->buildText(textLayout, textInputProps.backgroundColor, textInputProps.paragraphAttributes, textAttributes, placeholderString_, true);
   } else {
     if (secureTextEntry_) {
       std::string secureTextString(displayString_);
       data.layoutManager->buildText(textLayout, textInputProps.backgroundColor, textInputProps.paragraphAttributes, textAttributes, secureTextString.replace( secureTextString.begin(), secureTextString.end(), secureTextString.size(), '*'), true);
+#if ENABLE(FEATURE_ONSCREEN_KEYBOARD)
       OnScreenKeyboard::updatePlaceHolderString(secureTextString,(cursor_.end - cursor_.locationFromEnd));
+#endif/*FEATURE_ONSCREEN_KEYBOARD*/
     } else {
       data.layoutManager->buildText(textLayout, textInputProps.backgroundColor, textInputProps.paragraphAttributes, textAttributes, displayString_, true);
+#if ENABLE(FEATURE_ONSCREEN_KEYBOARD)
       OnScreenKeyboard::updatePlaceHolderString(displayString_,(cursor_.end - cursor_.locationFromEnd));
+#endif/*FEATURE_ONSCREEN_KEYBOARD*/
     }
   }
   drawShadow(canvas, frame, borderMetrics, textInputProps.backgroundColor, layer()->shadowOpacity, layer()->shadowFilter);

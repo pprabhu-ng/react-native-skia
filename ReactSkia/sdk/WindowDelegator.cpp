@@ -102,10 +102,14 @@ inline void WindowDelegator::renderToDisplay(bool signalOnCompletion) {
   if(!windowActive) return;
 
   std::scoped_lock lock(renderCtrlMutex);
+
+#ifdef RNS_SHELL_HAS_GPU_SUPPORT
   int bufferAge=windowContext_->bufferAge();
   if((bufferAge != 1) && (faileSafeCB_)) {
     faileSafeCB_();
   }
+#endif/*RNS_SHELL_HAS_GPU_SUPPORT*/
+
   if(backBuffer_)  backBuffer_->flushAndSubmit();
   if(windowContext_) {
     std::vector<SkIRect> emptyRect;// No partialUpdate handled , so passing emptyRect instead of dirtyRect

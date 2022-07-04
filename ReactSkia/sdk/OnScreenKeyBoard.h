@@ -132,6 +132,8 @@ class OnScreenKeyboard : public WindowDelegator{
     void launchOSKWindow(OSKConfig oskConfig);
     void onHWkeyHandler(rnsKey key, rnsKeyAction eventKeyAction);
     void createOSKLayout(OSKTypes KBtype );
+    void clearPlaceHolder();
+    void getStringBound (std::string & stringToMeasure,unsigned int boundRangeStart,unsigned int boundRangeEnd,SkRect & stringBounds,SkFont & stringFont);
 
     void emitOSKKeyEvent(rnsKey keyValue);
     void windowReadyToDrawCB();
@@ -156,8 +158,11 @@ class OnScreenKeyboard : public WindowDelegator{
     SkPoint       lastFocussIndex_{};
     std::string   displayString_{}; // Text to be displayed on screen
     std::string   lastDisplayedString_{};
+    unsigned int  placeHolderLength_{0};
+    unsigned int  placeHolderStringStartY{0};
+
     int           cursorPosition_{0};
-    SkPoint       visibleDisplayStringRange{0,0};/*x=start , Y-end*/
+    SkPoint       visibleDisplayStringRange_{0,0};/*x=start , Y-end*/
     OSKState      oskState_{OSK_STATE_INACTIVE};
     bool          autoActivateReturnKey{false};
 };

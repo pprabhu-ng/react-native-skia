@@ -62,6 +62,7 @@ void OnScreenKeyboard::exit() {
 
   oskHandle.displayString_.clear();
   oskHandle.lastDisplayedString_.clear();
+  oskHandle.visibleDisplayStringRange_.set(-1,-1);//Setting to invalid
   oskHandle.lastFocussIndex_.set(0,0);
   oskHandle.currentFocussIndex_.set(0,0);
 }
@@ -76,144 +77,6 @@ void  OnScreenKeyboard::updatePlaceHolderString(std::string displayString,int cu
   oskHandle.drawPlaceHolderDisplayString();
   if(oskHandle.oskState_== OSK_STATE_ACTIVE)
     oskHandle.commitDrawCall(true);
-}
-
-void OnScreenKeyboard::drawPlaceHolderDisplayString() {
-
-  if(oskState_!= OSK_STATE_ACTIVE) return;
-
-  SkPaint textPaint,cursorPaint;
-  SkFont font;
-
-  #define CURSOR_WIDTH 3 /* Cursor line thickness*/
-  #define TEXT_TO_CURSOR_GAP 4 /* Space between String end & Cursor*/
-  #define STRING_START_OFFSET 2 /* offset from PlaceHolder Start*/
-  #define BUFFER_WIDTH 3 /* Safe offset to avoid overflow*/
-  #define BUFFER_ZONE (CURSOR_WIDTH+TEXT_TO_CURSOR_GAP+STRING_START_OFFSET+BUFFER_WIDTH)
-
-  static unsigned int placeHolderLength=screenSize_.width()*OSK_PLACEHOLDER_LENGTH;
-  static unsigned int textX=oskLayout_.horizontalStartOffset;
-  static unsigned int textY=(screenSize_.height()*OSK_PLACEHOLDER_VERTICAL_OFFSET) + OSK_PLACEHOLDER_HEIGHT - ((OSK_PLACEHOLDER_HEIGHT-oskLayout_.textFontSize)/2);
-  SkRect bounds;
-  std::string tempString=displayString_;
-  font.setSize(oskLayout_.textFontSize);
-  SkRect maxbounds;
-  SkRect spaceBounds;
-
-  font.measureText("j",1, SkTextEncoding::kUTF8, &maxbounds);//MaxBound character
-  maxbounds.offset(textX,textY);
-  font.measureText(".",1, SkTextEncoding::kUTF8, &spaceBounds);
-
-/*Caculate the vsiisble window Range to display string*/
-  if(!displayString_.empty()) {
-
-/*1. Set Visible window Range or re adjust the existing onw
-     Cases to consider to decide on Visible window Range
-     1. If Visible window Not set, Use complete string range as visible window
-     2. If Visible window set , Use it
-     3. If Curosr position Is outside the Window Range, Ajust start or end of the window
-        to incluse cursor in to visible window Range
-*/
-    int visibleRangeStart=(visibleDisplayStringRange.x() == -1) ? 0:
-                          (( cursorPosition_ > visibleDisplayStringRange.x()) ? visibleDisplayStringRange.x(): cursorPosition_);
-    int visibleRangeEnd= ((visibleDisplayStringRange.y() ==-1 )|| (visibleDisplayStringRange.y() > displayString_.size()-1)) ?
-                            displayString_.size()-1:
-                            ( ( cursorPosition_ <= visibleDisplayStringRange.y()) ? visibleDisplayStringRange.y():cursorPosition_);
-
-/*2. Check string in Visible window Range fits in the PlaceHolder*/
-
-    tempString=displayString_.substr (visibleRangeStart,(visibleRangeEnd-visibleRangeStart)+1);
-    if(!tempString.compare(0,1," "))tempString.replace(0,1,".");
-    if(!tempString.compare(tempString.size()-1,1," "))tempString.replace(tempString.size()-1,1,".");
-    font.measureText(tempString.c_str(),  tempString.size(), SkTextEncoding::kUTF8, &bounds);
-
-/*3  Expand the visible window, if the placeHolder can accomodate more*/
-    if(((bounds.width()+BUFFER_ZONE) < placeHolderLength) &&
-         ((visibleRangeEnd-visibleRangeStart) < (displayString_.size()-1))) {
-            if(visibleRangeEnd != (displayString_.size()-1)) visibleRangeEnd = displayString_.size()-1;
-            else visibleRangeStart=0;
-            tempString=displayString_.substr (visibleRangeStart,(visibleRangeEnd-visibleRangeStart)+1);
-            if(!tempString.compare(0,1," "))tempString.replace(0,1,".");
-            if(!tempString.compare(tempString.size()-1,1," "))tempString.replace(tempString.size()-1,1,".");
-            font.measureText(tempString.c_str(),  tempString.size(), SkTextEncoding::kUTF8, &bounds);
-    }
-    if((bounds.width()+BUFFER_ZONE) < placeHolderLength)  {
-    /* with in PH window*/
-        /*No change needed on display String or the visible window*/
-    } else {
-        /* slide and contract the window to fit to wrap and fit the string in placeHolder Area
-           Anchor Visible window Start or the end w.r.t Cursor position and adjust
-            the free end to fit in the placeholder Length.
-        */
-      while((bounds.width()+BUFFER_ZONE) > placeHolderLength) {
-        if(cursorPosition_ >= (visibleRangeEnd-1)) visibleRangeStart++;
-        else visibleRangeEnd--;
-        tempString=displayString_.substr (visibleRangeStart,(visibleRangeEnd-visibleRangeStart)+1);
-        if(!tempString.compare(0,1," "))tempString.replace(0,1,".");
-        if(!tempString.compare(tempString.size()-1,1," "))tempString.replace(tempString.size()-1,1,".");
-        font.measureText(tempString.c_str(),  tempString.size(), SkTextEncoding::kUTF8, &bounds);
-      }
-    }
-    visibleDisplayStringRange.set(visibleRangeStart,visibleRangeEnd);
-    displayString_=displayString_.substr(visibleRangeStart,(visibleRangeEnd-visibleRangeStart)+1);
-  }
-
-/* Clear old String*/
-  if(!lastDisplayedString_.empty()) {
-    /* Enchenement : To be modified/optimized to draw only from the differed character*/
-    textPaint.setColor((oskConfig_.theme == OSK_LIGHT_THEME) ? OSK_LIGHT_THEME_PLACEHOLDER_COLOR: OSK_DARK_THEME_PLACEHOLDER_COLOR);
-    tempString=lastDisplayedString_;
-    /* Fix: Skfont ignores white spaces in the begining and end of the string, while calculating bounds.
-       So replacing the white space in start and end of the string with "." */
-    if(!tempString.compare(0,1," ")) tempString.replace(0,1,".");
-    if(!tempString.compare(lastDisplayedString_.size()-1,1," ")) tempString.replace(lastDisplayedString_.size()-1,1,".");
-    font.measureText(tempString.c_str(),  tempString.size(), SkTextEncoding::kUTF8, &bounds);
-    bounds.offset(textX,textY);
-    bounds.fLeft=textX;
-    bounds.fRight=((bounds.width()+BUFFER_ZONE) < placeHolderLength ) ? (bounds.fRight +BUFFER_ZONE) :(textX+placeHolderLength);
-    bounds.fTop=maxbounds.fTop;
-    bounds.fBottom=maxbounds.fBottom;
-    windowDelegatorCanvas->drawRect(bounds,textPaint);
-  }
-
-/*Present Current String*/
-  if(!displayString_.empty()) {
-    textPaint.setColor(fontColor_);
-    textPaint.setAntiAlias(true);
-    windowDelegatorCanvas->drawSimpleText(displayString_.c_str(), displayString_.size(), SkTextEncoding::kUTF8,textX+STRING_START_OFFSET,textY,font, textPaint);
-  }
-  lastDisplayedString_=displayString_;
-/* Draw Cursor*/
-  int newcursorPosition = (cursorPosition_ > visibleDisplayStringRange.x()) ? ( cursorPosition_- visibleDisplayStringRange.x()):0;
-  cursorPaint.setColor(SK_ColorBLUE);
-  cursorPaint.setAntiAlias(true);
-  cursorPaint.setStrokeWidth(CURSOR_WIDTH);
-  tempString=displayString_;
-  if(!tempString.empty()) {
-    if(!tempString.compare(0,1," "))tempString.replace(0,1,".");
-    if(newcursorPosition) {
-      if(!tempString.compare(newcursorPosition-1,1," "))tempString.replace(newcursorPosition-1,1,".");
-    }
-    font.measureText(tempString.c_str(),  newcursorPosition, SkTextEncoding::kUTF8, &bounds);
-    bounds.offset(textX,textY);
-  }
-  if(!newcursorPosition) bounds.fRight=textX;
-
-  windowDelegatorCanvas->drawLine(bounds.fRight+TEXT_TO_CURSOR_GAP,maxbounds.fBottom,bounds.fRight+TEXT_TO_CURSOR_GAP,maxbounds.fTop,cursorPaint);
-
-#ifdef  DRAW_STRING_BOUNDING_BOX
-  SkPaint paint;
-  paint.setColor(SK_ColorGREEN);
-  paint.setStrokeWidth(2);
-  paint.setStyle(SkPaint::kStroke_Style);
-  SkRect bounds;
-  font.measureText(lastDisplayedString_.c_str(),  lastDisplayedString_.size(), SkTextEncoding::kUTF8, &bounds);
-  bounds.offset(textX,textY);
-  windowDelegatorCanvas->drawRect(bounds,paint);
-  paint.setColor(SK_ColorRED);
-  bounds.offset(bounds.width(),0);
-  bounds.fRight=bounds.fLeft+(BUFFER_ZONE);;
-#endif /*DRAW_STRING_BOUNDING_BOX*/
 }
 
 void OnScreenKeyboard::launchOSKWindow(OSKConfig oskConfig) {
@@ -245,13 +108,140 @@ void OnScreenKeyboard::launchOSKWindow(OSKConfig oskConfig) {
   unsigned int YscaleFactor =screenSize_.height()/baseScreenSize.height();
   oskLayout_.textFontSize= OSK_FONT_SIZE *XscaleFactor;
   oskLayout_.textHLFontSize= OSK_HIGHLIGHT_FONT_SIZE *XscaleFactor;
-  oskLayout_.horizontalStartOffset= ((screenSize_.width()-(screenSize_.width()*OSK_PLACEHOLDER_LENGTH))/2)*XscaleFactor;
+  placeHolderLength_=screenSize_.width()*OSK_PLACEHOLDER_LENGTH;
+  oskLayout_.horizontalStartOffset= ((screenSize_.width()-placeHolderLength_)/2)*XscaleFactor;
+  placeHolderStringStartY=(screenSize_.height()*OSK_PLACEHOLDER_VERTICAL_OFFSET) + OSK_PLACEHOLDER_HEIGHT - ((OSK_PLACEHOLDER_HEIGHT-oskLayout_.textFontSize)/2);
 
   /*Craeting OSK Window*/
   std::function<void()> createWindowCB = std::bind(&OnScreenKeyboard::windowReadyToDrawCB,this);
   std::function<void()> faileSafeCB = std::bind(&OnScreenKeyboard::drawOSK,this);
   createWindow(screenSize_,createWindowCB,faileSafeCB);
 
+}
+
+void OnScreenKeyboard::drawPlaceHolderDisplayString() {
+
+  if(oskState_!= OSK_STATE_ACTIVE) return;
+
+  #define CURSOR_WIDTH 3 /* Cursor line thickness*/
+  #define TEXT_TO_CURSOR_GAP 4 /* Space between String end & Cursor*/
+  #define LEFT_INSET 2 /* offset from PlaceHolder Start*/
+  #define RIGHT_INSET 3 /* Safe offset to avoid overflow*/
+  #define RESERVED_LENGTH (CURSOR_WIDTH+TEXT_TO_CURSOR_GAP+LEFT_INSET+RIGHT_INSET)
+
+  SkRect bounds,maxbounds,spaceBounds;
+  SkPaint textPaint,cursorPaint;
+  SkFont font;
+
+  font.setSize(oskLayout_.textFontSize);
+  font.measureText("j",1, SkTextEncoding::kUTF8, &maxbounds);//MaxBound character
+  maxbounds.offset(oskLayout_.horizontalStartOffset,placeHolderStringStartY);
+  font.measureText(".",1, SkTextEncoding::kUTF8, &spaceBounds);
+
+/*Caculate the visible string Range to display string*/
+  if(!displayString_.empty()) {
+
+/*1. Set Visible string Range or adjust the existing one
+     Cases considered on decide on Visible string Range
+     1. If Visible string Range Not set, set complete string range as visible
+     2. If Visible string Range set , Use it
+     3. If Curosr position Is outside the visible string Range, Adjust visible string range to include cursor
+*/
+    int visibleRangeStart=(visibleDisplayStringRange_.x() == -1) ? 0:
+                          (( cursorPosition_ > visibleDisplayStringRange_.x()) ? visibleDisplayStringRange_.x(): cursorPosition_);
+    int visibleRangeEnd= ((visibleDisplayStringRange_.y() ==-1 )|| (visibleDisplayStringRange_.y() > displayString_.size()-1)) ?
+                            displayString_.size()-1:
+                            ( ( cursorPosition_ <= visibleDisplayStringRange_.y()) ? visibleDisplayStringRange_.y():cursorPosition_);
+
+/*2. Check string range decided as visible fits in the PlaceHolder*/
+    getStringBound (displayString_,visibleRangeStart,(visibleRangeEnd-visibleRangeStart)+1,bounds,font);
+
+/*3  Expand the visible string range, if the placeHolder can accomodate more*/
+    if(((bounds.width()+RESERVED_LENGTH) < placeHolderLength_) &&
+         ((visibleRangeEnd-visibleRangeStart) < (displayString_.size()-1))) {
+            if(visibleRangeEnd != (displayString_.size()-1)) visibleRangeEnd = displayString_.size()-1;
+            else visibleRangeStart=0;
+            getStringBound (displayString_,visibleRangeStart,(visibleRangeEnd-visibleRangeStart)+1,bounds,font);
+    }
+    if((bounds.width()+RESERVED_LENGTH) < placeHolderLength_)  {
+    /* Visible string range is with in PH Area. So, No change needed */
+    } else {
+        /* slide and contract the visible string range to fit the string in placeHolder Area
+           Anchor Visible string Start or the end w.r.t Cursor position and adjust
+            the free end to fit in the placeholder Length.
+        */
+      while((bounds.width()+RESERVED_LENGTH) > placeHolderLength_) {
+        if(cursorPosition_ >= (visibleRangeEnd-1)) visibleRangeStart++;
+        else visibleRangeEnd--;
+        getStringBound (displayString_,visibleRangeStart,(visibleRangeEnd-visibleRangeStart)+1,bounds,font);
+      }
+    }
+    visibleDisplayStringRange_.set(visibleRangeStart,visibleRangeEnd);
+    displayString_=displayString_.substr(visibleRangeStart,(visibleRangeEnd-visibleRangeStart)+1);
+  }
+
+/* Clear old String*/
+  if(!lastDisplayedString_.empty()) {
+    /* Enchenement : To be modified/optimized to draw only from the differed character*/
+    textPaint.setColor((oskConfig_.theme == OSK_LIGHT_THEME) ? OSK_LIGHT_THEME_PLACEHOLDER_COLOR: OSK_DARK_THEME_PLACEHOLDER_COLOR);
+    getStringBound (lastDisplayedString_,0,lastDisplayedString_.size(),bounds,font);
+    bounds.offset(oskLayout_.horizontalStartOffset,placeHolderStringStartY);
+    bounds.fLeft=oskLayout_.horizontalStartOffset;
+    bounds.fRight=((bounds.width()+RESERVED_LENGTH) < placeHolderLength_ ) ? (bounds.fRight +RESERVED_LENGTH) :(oskLayout_.horizontalStartOffset+placeHolderLength_);
+    bounds.fTop=maxbounds.fTop;
+    bounds.fBottom=maxbounds.fBottom;
+    windowDelegatorCanvas->drawRect(bounds,textPaint);
+  } else {
+    clearPlaceHolder();
+  }
+
+/*Present Current String*/
+  if(!displayString_.empty()) {
+    textPaint.setColor(fontColor_);
+    textPaint.setAntiAlias(true);
+    windowDelegatorCanvas->drawSimpleText(displayString_.c_str(), displayString_.size(), SkTextEncoding::kUTF8,oskLayout_.horizontalStartOffset+LEFT_INSET,placeHolderStringStartY,font, textPaint);
+  } else {
+    clearPlaceHolder();
+  }
+  lastDisplayedString_=displayString_;
+/* Draw Cursor*/
+  int newcursorPosition = (cursorPosition_ > visibleDisplayStringRange_.x()) ? ( cursorPosition_- visibleDisplayStringRange_.x()):0;
+  cursorPaint.setColor(SK_ColorBLUE);
+  cursorPaint.setAntiAlias(true);
+  cursorPaint.setStrokeWidth(CURSOR_WIDTH);
+  getStringBound (displayString_,0,newcursorPosition,bounds,font);
+  bounds.offset(oskLayout_.horizontalStartOffset,placeHolderStringStartY);
+  if(!newcursorPosition) bounds.fRight=oskLayout_.horizontalStartOffset;
+
+  windowDelegatorCanvas->drawLine(bounds.fRight+TEXT_TO_CURSOR_GAP,maxbounds.fBottom,bounds.fRight+TEXT_TO_CURSOR_GAP,maxbounds.fTop,cursorPaint);
+
+#ifdef  DRAW_STRING_BOUNDING_BOX
+  SkPaint paint;
+  paint.setColor(SK_ColorGREEN);
+  paint.setStrokeWidth(2);
+  paint.setStyle(SkPaint::kStroke_Style);
+  SkRect bounds;
+  font.measureText(lastDisplayedString_.c_str(),  lastDisplayedString_.size(), SkTextEncoding::kUTF8, &bounds);
+  bounds.offset(oskLayout_.horizontalStartOffset,placeHolderStringStartY);
+  windowDelegatorCanvas->drawRect(bounds,paint);
+#endif /*DRAW_STRING_BOUNDING_BOX*/
+}
+
+inline void OnScreenKeyboard:: getStringBound (std::string & stringToMeasure,
+                                                      unsigned int boundRangeStart,unsigned int boundRangeEnd,
+                                                      SkRect & stringBounds,SkFont & stringFont) {
+  stringBounds.setWH(0,0);
+  if(!stringToMeasure.empty()) {
+    std::string tempString=stringToMeasure;
+    tempString=tempString.substr (boundRangeStart,boundRangeEnd);
+    if(!tempString.empty()) {
+  /* Fix: Skfont ignores white spaces in the begining and end of the string, while calculating bounds.
+     So replacing the white space in start and end of the string with "." */
+      if(!tempString.compare(0,1," "))tempString.replace(0,1,".");
+      if(!tempString.compare(tempString.size()-1,1," "))tempString.replace(tempString.size()-1,1,".");
+    }
+    stringFont.measureText(tempString.c_str(),  tempString.size(), SkTextEncoding::kUTF8, &stringBounds);
+  }
 }
 
 void OnScreenKeyboard::drawOSK() {
@@ -261,7 +251,7 @@ if(oskState_!= OSK_STATE_ACTIVE) return;
 /*1. Set up OSK Window background*/
   windowDelegatorCanvas->clear(bgColor_);
 
-/*2. Draw PlaceHolder*/
+/*2. Draw PlaceHolder Title*/
   SkPaint paint;
   if(!oskConfig_.placeHolderName.empty()) {
     SkFont font;
@@ -272,16 +262,10 @@ if(oskState_!= OSK_STATE_ACTIVE) return;
                                screenSize_.height()*OSK_PLACEHOLDER_NAME_VERTICAL_OFFSET,
                                font, paint);
   }
-  paint.setColor((oskConfig_.theme == OSK_LIGHT_THEME) ? OSK_LIGHT_THEME_PLACEHOLDER_COLOR: OSK_DARK_THEME_PLACEHOLDER_COLOR);
-  SkRect rect=SkRect::MakeXYWH( oskLayout_.horizontalStartOffset,
-                                screenSize_.height()*OSK_PLACEHOLDER_VERTICAL_OFFSET,
-                                screenSize_.width()*OSK_PLACEHOLDER_LENGTH,
-                                OSK_PLACEHOLDER_HEIGHT
-                              );
-  windowDelegatorCanvas->drawRect(rect,paint);
 
 /*3. Draw PLaceHolder Display String */
-  RNS_LOG_TODO("Update PlaceHolder String on start Up");
+  clearPlaceHolder();
+  drawPlaceHolderDisplayString();
 
 /*4. Draw  KeyBoard Layout*/
   drawKBLayout(oskConfig_.type);
@@ -597,6 +581,17 @@ void OnScreenKeyboard::onHWkeyHandler(rnsKey keyValue, rnsKeyAction eventKeyActi
 
   RNS_LOG_DEBUG("OSK KEY VALUE RECEIVED : "<<RNSKeyMap[OSKkeyValue]);
   if(OSKkeyValue != RNS_KEY_UnKnown)  NotificationCenter::subWindowCenter().emit("onOSKKeyEvent", OSKkeyValue, RNS_KEY_Press);
+}
+
+inline void OnScreenKeyboard::clearPlaceHolder() {
+    SkPaint paint;
+    paint.setColor((oskConfig_.theme == OSK_LIGHT_THEME) ? OSK_LIGHT_THEME_PLACEHOLDER_COLOR: OSK_DARK_THEME_PLACEHOLDER_COLOR);
+    SkRect rect=SkRect::MakeXYWH( oskLayout_.horizontalStartOffset,
+                                  screenSize_.height()*OSK_PLACEHOLDER_VERTICAL_OFFSET,
+                                  placeHolderLength_,
+                                  OSK_PLACEHOLDER_HEIGHT
+                                );
+    windowDelegatorCanvas->drawRect(rect,paint);
 }
 
 void OnScreenKeyboard::createOSKLayout(OSKTypes oskType) {
