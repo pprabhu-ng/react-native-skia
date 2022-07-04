@@ -24,10 +24,10 @@ class WindowDelegator {
     WindowDelegator(){};
    ~WindowDelegator(){};
 
-    void createWindow(SkSize windowSize,std::function<void ()> windowReadyTodrawCB,bool runOnTaskRunner=true);
+    void createWindow(SkSize windowSize,std::function<void ()> windowReadyTodrawCB,std::function<void ()> faileSafeCB=nullptr,bool runOnTaskRunner=true);
     void closeWindow();
     void setWindowTittle(const char* titleString);
-    void commitDrawCall();
+    void commitDrawCall(bool blockRenderCall=false);
 
     SkCanvas *windowDelegatorCanvas{nullptr};
 
@@ -35,7 +35,7 @@ class WindowDelegator {
     void onExposeHandler(RnsShell::Window* window);
     void windowWorkerThread();
     void createNativeWindow();
-    void renderToDisplay();
+    void renderToDisplay(bool blockRenderCall=false);
 
     std::unique_ptr<RnsShell::WindowContext> windowContext_{nullptr};
     RnsShell::Window* window_{nullptr};
@@ -46,7 +46,11 @@ class WindowDelegator {
     bool ownsTaskrunner_{false};
 /* members to fullfill X11 suggestion of "draw on receiving expose event to avoid data loss" */
     sem_t semReadyToDraw_;
+    sem_t semRenderingDone_;
+    std::mutex renderCtrlMutex;
+
     std::function<void ()> windowReadyTodrawCB_{nullptr};
+    std::function<void ()> faileSafeCB_{nullptr};
 
     RnsShell::PlatformDisplay::Type displayPlatForm_;
     int exposeEventID_{-1};
