@@ -75,7 +75,7 @@ void OnScreenKeyboard::launchOSKWindow(OSKConfig oskConfig) {
 
   memcpy(&oskConfig_,&oskConfig,sizeof(oskConfig));
 
-  SkSize mainscreenSize_=RnsShell::PlatformDisplay::sharedDisplay().screenSize();
+  SkSize mainscreenSize_=RnsShell::Window::getMainWindowSize();
   if(screenSize_ != mainscreenSize_) {
     generateOSKLayout_=true;
     screenSize_=mainscreenSize_;
@@ -97,10 +97,9 @@ void OnScreenKeyboard::launchOSKWindow(OSKConfig oskConfig) {
     autoActivateReturnKey=true;
 
   unsigned int XscaleFactor = screenSize_.width()/baseScreenSize.width();
-  unsigned int YscaleFactor =screenSize_.height()/baseScreenSize.height();
   oskLayout_.textFontSize= OSK_FONT_SIZE *XscaleFactor;
   oskLayout_.textHLFontSize= OSK_HIGHLIGHT_FONT_SIZE *XscaleFactor;
-  oskLayout_.horizontalStartOffset= ((screenSize_.width()-(screenSize_.width()*OSK_PLACEHOLDER_LENGTH))/2)*XscaleFactor;
+  oskLayout_.horizontalStartOffset= ((screenSize_.width()-(screenSize_.width()*OSK_PLACEHOLDER_LENGTH))/2);
 
   /*Craeting OSK Window*/
   std::function<void()> createWindowCB = std::bind(&OnScreenKeyboard::windowReadyToDrawCB,this);
@@ -502,12 +501,11 @@ void OnScreenKeyboard::createOSKLayout(OSKTypes oskType) {
   SkString uniChar;
   sk_sp<SkTypeface> defaultTypeface;
 
-  unsigned int YscaleFactor=screenSize_.height()/baseScreenSize.height();
   unsigned int rowSize=oskLayout_.keyInfo->size();
   oskLayout_.keyPos->resize(rowSize);
   oskLayout_.siblingInfo->resize(rowSize);
   SkPoint oskStartpt{ oskLayout_.horizontalStartOffset,
-                     (OSK_KB_VERTICAL_OFFSET*screenSize_.height()*YscaleFactor)};
+                     (OSK_KB_VERTICAL_OFFSET*screenSize_.height())};
 
   for (unsigned int rowIndex = 0; rowIndex < rowSize; rowIndex++) {
 
