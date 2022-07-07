@@ -9,6 +9,7 @@
 #include "include/core/SkClipOp.h"
 #include "include/core/SkImageFilter.h"
 #include "include/effects/SkImageFilters.h"
+#include "include/core/SkMaskFilter.h"
 #include "rns_shell/compositor/layers/PictureLayer.h"
 
 #include "react/renderer/components/image/ImageEventEmitter.h"
@@ -98,10 +99,12 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
        sk_sp<SkImageFilter> imageFilter(SkImageFilters::Tile(targetRect,frameRect,nullptr));
        paint.setImageFilter(std::move(imageFilter));
     }
+    sk_sp<SkImageFilter>  imageFilter = SkImageFilters::Blur(imageProps.blurRadius, imageProps.blurRadius, nullptr);
+    paint.setImageFilter(std::move(imageFilter));
 
     canvas->drawImageRect(imageData,targetRect,&paint);
-    if(needClipAndRestore)
-        canvas->restore();
+    if(needClipAndRestore) canvas->restore();
+
     networkImageData_ = nullptr;
     drawBorder(canvas,frame,imageBorderMetrics,imageProps.backgroundColor);
     // Emitting Load completed Event
