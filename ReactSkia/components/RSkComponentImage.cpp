@@ -9,7 +9,6 @@
 #include "include/core/SkClipOp.h"
 #include "include/core/SkImageFilter.h"
 #include "include/effects/SkImageFilters.h"
-#include "include/core/SkMaskFilter.h"
 #include "rns_shell/compositor/layers/PictureLayer.h"
 
 #include "react/renderer/components/image/ImageEventEmitter.h"
