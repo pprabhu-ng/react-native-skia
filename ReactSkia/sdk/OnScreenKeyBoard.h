@@ -132,6 +132,7 @@ class OnScreenKeyboard : public WindowDelegator{
     void launchOSKWindow(OSKConfig oskConfig);
     void onHWkeyHandler(rnsKey key, rnsKeyAction eventKeyAction);
     void createOSKLayout(OSKTypes KBtype );
+    void clearPlaceHolder();
 
     void emitOSKKeyEvent(rnsKey keyValue);
     void windowReadyToDrawCB();
@@ -147,6 +148,8 @@ class OnScreenKeyboard : public WindowDelegator{
     SkSize        screenSize_{0,0};
     SkColor       bgColor_{SK_ColorWHITE};
     SkColor       fontColor_{SK_ColorWHITE};
+    float         XscaleFactor{1};
+    float         YscaleFactor{1};
 
 // Members for OSK operations
     int           subWindowKeyEventId_{-1};

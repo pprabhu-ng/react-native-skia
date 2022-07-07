@@ -458,7 +458,7 @@ RnsShell::LayerInvalidateMask  RSkComponentTextInput::updateComponentProps(const
   oskLaunchConfig_.theme=RSkToSdkOSKeyboardTheme(textInputProps.traits.keyboardAppearance);
   oskLaunchConfig_.returnKeyLabel=RSkToSdkOSKReturnKeyType(textInputProps.traits.returnKeyType);
   oskLaunchConfig_.enablesReturnKeyAutomatically=textInputProps.traits.enablesReturnKeyAutomatically;
-  oskLaunchConfig_.placeHolderName=placeholderString_;
+  oskLaunchConfig_.placeHolderName=textInputProps.placeholder.c_str();
 #endif/*FEATURE_ONSCREEN_KEYBOARD*/
 
   return (RnsShell::LayerInvalidateMask)mask;
