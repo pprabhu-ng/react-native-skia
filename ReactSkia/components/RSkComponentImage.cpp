@@ -9,7 +9,6 @@
 #include "include/core/SkClipOp.h"
 #include "include/core/SkImageFilter.h"
 #include "include/effects/SkImageFilters.h"
-#include "include/core/SkTileMode.h"
 #include "rns_shell/compositor/layers/PictureLayer.h"
 
 #include "react/renderer/components/image/ImageEventEmitter.h"
@@ -74,17 +73,16 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
     if(contentShadow) {
       if(imageProps.resizeMode == ImageResizeMode::Repeat) {
       /*TODO Not applied any shadow for solid Image when resizeMode is "Repeat"*/
-        sk_sp<SkImageFilter> imageFilter(SkImageFilters::Tile(targetRect,frameRect,layer()->shadowFilter));
-        shadowPaint.setImageFilter(std::move(imageFilter));
+        sk_sp<SkImageFilter> imageTileFilter(SkImageFilters::Tile(targetRect,frameRect,layer()->shadowFilter));
+        shadowPaint.setImageFilter(std::move(imageTileFilter));
         if(imageProps.blurRadius) {
-          sk_sp<SkImageFilter>  imageBlurFilter = SkImageFilters::Blur(imageProps.blurRadius, imageProps.blurRadius,imageFilter);
+          sk_sp<SkImageFilter>  imageBlurFilter = SkImageFilters::Blur(imageProps.blurRadius, imageProps.blurRadius,imageTileFilter);
           shadowPaint.setImageFilter(std::move(imageBlurFilter));
         }
-      } else if(contentShadow && imageProps.blurRadius) {
+      } else if(imageProps.blurRadius) {
         sk_sp<SkImageFilter>  imageBlurFilter = SkImageFilters::Blur(imageProps.blurRadius, imageProps.blurRadius,layer()->shadowFilter);
         shadowPaint.setImageFilter(std::move(imageBlurFilter));
-      }
-      else {
+      } else {
         shadowPaint.setImageFilter(layer()->shadowFilter);
       }
       if(!(isOpaque(layer()->shadowOpacity)))
@@ -104,8 +102,8 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
     /* TODO: Handle filter quality based of configuration. Setting Low Filter Quality as default for now*/
     paint.setFilterQuality(DEFAULT_IMAGE_FILTER_QUALITY);
     if(imageProps.resizeMode == ImageResizeMode::Repeat) {
-       sk_sp<SkImageFilter> imageFilter(SkImageFilters::Tile(targetRect,frameRect,nullptr));
-       sk_sp<SkImageFilter>  imageBlurFilter = SkImageFilters::Blur(imageProps.blurRadius, imageProps.blurRadius,imageFilter);
+       sk_sp<SkImageFilter> imageTileFilter(SkImageFilters::Tile(targetRect,frameRect,nullptr));
+       sk_sp<SkImageFilter>  imageBlurFilter = SkImageFilters::Blur(imageProps.blurRadius, imageProps.blurRadius,imageTileFilter);
        paint.setImageFilter(std::move(imageBlurFilter));
     } else{
       sk_sp<SkImageFilter>  imageBlurFilter = SkImageFilters::Blur(imageProps.blurRadius, imageProps.blurRadius,nullptr);
