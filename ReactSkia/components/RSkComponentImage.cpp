@@ -72,7 +72,6 @@ void RSkComponentImage::OnPaint(SkCanvas *canvas) {
     /*Draw Image Shadow*/
     if(contentShadow) {
       if(imageProps.resizeMode == ImageResizeMode::Repeat) {
-      /*TODO Not applied any shadow for solid Image when resizeMode is "Repeat"*/
         sk_sp<SkImageFilter> imageTileFilter(SkImageFilters::Tile(targetRect,frameRect,layer()->shadowFilter));
         shadowPaint.setImageFilter(std::move(imageTileFilter));
         if(imageProps.blurRadius) {
